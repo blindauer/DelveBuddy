@@ -1,0 +1,11 @@
+## Interface: 110105
+## Title: DelveBuddy
+## Notes: Tracks weekly Delve progress across characters
+## Author: Malevolens
+## Version: 0.1
+## X-Category: Delves
+## SavedVariables: DelveBuddyDB
+
+libs\AceAddon-3.0\AceAddon-3.0.xml
+
+DelveBuddy.lua
