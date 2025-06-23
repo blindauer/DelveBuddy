@@ -33,6 +33,14 @@
         "IsSecureCmd",
         "NUM_CHAT_WINDOWS",
         "ChatEdit_GetActiveWindow",
-        "MouseIsOver"
+        "MouseIsOver",
+        "Delve",
+        "ID",
+        "ActionButton_ShowOverlayGlow",
+        "ActionButton_HideOverlayGlow",
+        "RaidNotice_AddMessage",
+        "RaidWarningFrame",
+        "UIErrorsFrame",
+        "ChatTypeInfo"
     ]
 }

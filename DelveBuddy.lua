@@ -1,11 +1,61 @@
 local DelveBuddy = LibStub("AceAddon-3.0"):NewAddon("DelveBuddy", "AceConsole-3.0", "AceEvent-3.0")
 
+DelveBuddy.IDS = {
+    Currency = {
+        RestoredCofferKey = 3028,
+    },
+    Quest = {
+        KeyEarned = { 84736, 84737, 84738, 84739 },
+        BountyLooted = 86371,
+    },
+    Item = {
+        DelversBounty = 233071,
+    },
+    Widget = {
+        GildedStash = 6659,
+    },
+    Activity = {
+        World = 6
+    },
+    Spell = {
+        DelversBounty = 453004,
+    },
+    DelveMap = {
+        [2269] = true, -- Earthcrawl Mines
+        [2347] = true, -- Spiral Weave
+        -- TODO the rest
+    }
+}
+
 function DelveBuddy:OnInitialize()
     DelveBuddyDB = DelveBuddyDB or {}
     self.db = DelveBuddyDB
 
     self:RegisterChatCommand("delvebuddy", "ShowStatus")
     self:RegisterChatCommand("db", "ShowStatus")
+    self:SetupEventHandler()
+end
+
+function DelveBuddy:SetupEventHandler()
+    if self.eventFrame then return end
+
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("PLAYER_ENTERING_WORLD")
+    f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+
+    f:SetScript("OnEvent", function(_, event, ...)
+        self:OnEvent(event, ...)
+    end)
+
+    self.eventFrame = f
+end
+
+function DelveBuddy:OnEvent(event, ...)
+    C_Timer.After(1, function()
+        if self:IsInDelve() then
+            self:StartBountyFlashing()
+        end
+    end)
 end
 
 function DelveBuddy:GetCharacterKey()
@@ -22,31 +72,33 @@ function DelveBuddy:ShowStatus()
     self:CreateUI()
     self:CollectDelveData()
     self:UpdateUI()
+    -- self:FlashDelversBounty()
 end
 
 function DelveBuddy:CollectDelveData()
     local data = {}
 
+    local IDS = DelveBuddy.IDS
+
     local earned = 0
-    for i = 84736, 84739 do
-        if C_QuestLog.IsQuestFlaggedCompleted(i) then
-            earned = earned + 1
-        end
+    for _, questID in ipairs(IDS.Quest.KeyEarned) do
+        earned = earned + (C_QuestLog.IsQuestFlaggedCompleted(questID) and 1 or 0)
     end
+
     data.keysEarned = earned
 
-    local c = C_CurrencyInfo.GetCurrencyInfo(3028)
+    local c = C_CurrencyInfo.GetCurrencyInfo(IDS.Currency.RestoredCofferKey)
     data.keysOwned = c and c.quantity or 0
 
-    local w = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(6659)
+    local w = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(IDS.Widget.GildedStash)
     local stash = w and w.spellInfo and string.match(w.spellInfo.tooltip or "", "(%d)/3")
     data.gildedStashes = tonumber(stash) or 0
 
-    data.hasBounty = GetItemCount(233071) > 0
-    data.bountyLooted = C_QuestLog.IsQuestFlaggedCompleted(86371) or false
+    data.hasBounty = GetItemCount(IDS.Item.DelversBounty) > 0
+    data.bountyLooted = C_QuestLog.IsQuestFlaggedCompleted(IDS.Quest.BountyLooted) or false
 
     data.vaultRewards = {}
-    for _, a in ipairs(C_WeeklyRewards.GetActivities(6)) do
+    for _, a in ipairs(C_WeeklyRewards.GetActivities(IDS.Activity.World)) do
         table.insert(data.vaultRewards, {
             progress = a.progress,
             threshold = a.threshold,
@@ -124,7 +176,7 @@ function DelveBuddy:UpdateUI()
         end
 
         cell(char, 1)
-        cell(data.keysEarned .. "/4", 2)
+        cell(data.keysEarned .. "/" .. data.keysOwned, 2)
         cell(data.gildedStashes .. "/3", 3)
         cell(data.hasBounty and "Yes" or "No", 4)
         cell(data.bountyLooted and "Yes" or "No", 5)
@@ -134,5 +186,97 @@ function DelveBuddy:UpdateUI()
             local text = vault and string.format("%d/%d (T%s)", vault.progress, vault.threshold, vault.level > 0 and vault.level or "—") or "—"
             cell(text, 5 + i)
         end
+    end
+end
+
+function DelveBuddy:FlashDelversBounty()
+    local itemName = GetItemInfo(233071) -- Delver's Bounty
+    if not itemName then
+        return
+    end
+
+    for i = 1, 12 do
+        for _, prefix in ipairs({
+            "ActionButton",       -- Main bar
+            "MultiBarBottomLeftButton", -- Bar 2
+            "MultiBarBottomRightButton", -- Bar 3
+            "MultiBarRightButton", -- Bar 4
+            "MultiBarLeftButton", -- Bar 5
+            "MultiBar5Button",    -- Bar 6 (in newer UIs)
+            "MultiBar6Button",    -- Bar 7
+            "MultiBar7Button",    -- Bar 8
+        }) do
+            local btn = _G[prefix .. i]
+            if btn and btn.action then
+                local actionType, id = GetActionInfo(btn.action)
+                if actionType == "item" then
+                    local itemLink = GetActionText(btn.action) or GetItemInfo(id)
+                    if itemLink == itemName then
+                        ActionButton_ShowOverlayGlow(btn)
+                        C_Timer.After(10, function()
+                            ActionButton_HideOverlayGlow(btn)
+                        end)
+                        return
+                    end
+                end
+            end
+        end
+    end
+end
+
+function DelveBuddy:IsInDelve()
+    local IDS = self.IDS
+
+    if C_Scenario.IsInScenario() then
+        local mapID = C_Map.GetBestMapForUnit("player")
+        return mapID and IDS.DelveMap[mapID]
+    end
+    return false
+end
+
+function DelveBuddy:HasDelversBountyBuff()
+    local i = 1
+    while true do
+        local aura = C_UnitAuras.GetBuffDataByIndex("player", i)
+        if not aura then break end
+        if aura.spellId == DelveBuddy.IDS.Spell.DelversBounty then
+            return true
+        end
+        i = i + 1
+    end
+    return false
+end
+
+local flashTicker = nil
+
+function DelveBuddy:StartBountyFlashing()
+    if not DelveBuddy:HasDelversBountyBuff() then
+        DelveBuddy:FlashDelversBounty()
+        DelveBuddy:ShowBountyNotice()
+    end
+
+    if flashTicker then
+        flashTicker:Cancel()
+    end
+
+    flashTicker = C_Timer.NewTicker(60, function()
+        if DelveBuddy:IsInDelve() then
+            if not DelveBuddy:HasDelversBountyBuff() then
+                DelveBuddy:FlashDelversBounty()
+                DelveBuddy:ShowBountyNotice()
+            end
+        else
+            flashTicker:Cancel()
+            flashTicker = nil
+        end
+    end)
+end
+
+function DelveBuddy:ShowBountyNotice()
+    local msg = "|cffffd700Delver's Bounty available!|r" -- gold-colored
+    if RaidNotice_AddMessage then
+        RaidNotice_AddMessage(RaidWarningFrame, msg, ChatTypeInfo["RAID_WARNING"])
+    else
+        UIErrorsFrame:AddMessage("Delver's Bounty available!", 1.0, 1.0, 0.0, 53, 5)
     end
 end
