@@ -22,9 +22,34 @@ DelveBuddy.IDS = {
     },
     DelveMap = {
         [2269] = true, -- Earthcrawl Mines
-        [2347] = true, -- Spiral Weave
-        -- TODO the rest
+        [2347] = true, -- The Spiral Weave
+        [2277] = true, -- Nightfall Sanctum
+        [2250] = true, -- Kriegval's Rest
+        [2302] = true, -- The Dread Pit
+        [2396] = true, -- Excavation Site 9
+        [2249] = true, -- Fungal Folly
+        [2312] = true, -- Mycomancer Cavarn
+        [2423] = true, -- Sidestreet Sluice
+        [2301] = true, -- The Sinkhole
+        [2310] = true, -- Skittering Breach
+        [2259] = true, -- Tak-Rethan Abyss
+        [2299] = true, -- The Underkeep
+        [2251] = true, -- The Waterworks
     }
+}
+
+DelveBuddy.TierToVaultiLvl = {
+  [1] = 623,
+  [2] = 626,
+  [3] = 629,
+  [4] = 632,
+  [5] = 639,
+  [6] = 642,
+  [7] = 645,
+  [8] = 649,
+  [9] = 649,
+  [10] = 649,
+  [11] = 649,
 }
 
 function DelveBuddy:OnInitialize()
@@ -33,11 +58,17 @@ function DelveBuddy:OnInitialize()
 
     self:RegisterChatCommand("delvebuddy", "ShowStatus")
     self:RegisterChatCommand("db", "ShowStatus")
+
     self:SetupEventHandler()
+
+    self:CleanupStaleCharacters()
+    self:CollectDelveData()
 end
 
 function DelveBuddy:SetupEventHandler()
     if self.eventFrame then return end
+
+    GetQuestResetTime()
 
     local f = CreateFrame("Frame")
     f:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -52,10 +83,14 @@ end
 
 function DelveBuddy:OnEvent(event, ...)
     C_Timer.After(1, function()
-        if self:IsInDelve() then
+        if self:ShouldShowBounty() then
             self:StartBountyFlashing()
         end
     end)
+end
+
+function DelveBuddy:ShouldShowBounty()
+    return self:IsInDelve() and self:HasDelversBountyItem() and not self:HasDelversBountyBuff()
 end
 
 function DelveBuddy:GetCharacterKey()
@@ -72,7 +107,6 @@ function DelveBuddy:ShowStatus()
     self:CreateUI()
     self:CollectDelveData()
     self:UpdateUI()
-    -- self:FlashDelversBounty()
 end
 
 function DelveBuddy:CollectDelveData()
@@ -94,7 +128,7 @@ function DelveBuddy:CollectDelveData()
     local stash = w and w.spellInfo and string.match(w.spellInfo.tooltip or "", "(%d)/3")
     data.gildedStashes = tonumber(stash) or 0
 
-    data.hasBounty = GetItemCount(IDS.Item.DelversBounty) > 0
+    data.hasBounty = C_Item.GetItemCount(IDS.Item.DelversBounty) > 0
     data.bountyLooted = C_QuestLog.IsQuestFlaggedCompleted(IDS.Quest.BountyLooted) or false
 
     data.vaultRewards = {}
@@ -105,6 +139,8 @@ function DelveBuddy:CollectDelveData()
             level = a.level
         })
     end
+
+    data.lastLogin = GetServerTime()
 
     -- Save to DB under character key
     local charKey = self:GetCharacterKey()
@@ -190,10 +226,8 @@ function DelveBuddy:UpdateUI()
 end
 
 function DelveBuddy:FlashDelversBounty()
-    local itemName = GetItemInfo(233071) -- Delver's Bounty
-    if not itemName then
-        return
-    end
+    local itemName = C_Item.GetItemInfo(DelveBuddy.IDS.Item.DelversBounty)
+    if not itemName then return end
 
     for i = 1, 12 do
         for _, prefix in ipairs({
@@ -210,7 +244,7 @@ function DelveBuddy:FlashDelversBounty()
             if btn and btn.action then
                 local actionType, id = GetActionInfo(btn.action)
                 if actionType == "item" then
-                    local itemLink = GetActionText(btn.action) or GetItemInfo(id)
+                    local itemLink = GetActionText(btn.action) or C_Item.GetItemInfo(id)
                     if itemLink == itemName then
                         ActionButton_ShowOverlayGlow(btn)
                         C_Timer.After(10, function()
@@ -225,13 +259,15 @@ function DelveBuddy:FlashDelversBounty()
 end
 
 function DelveBuddy:IsInDelve()
-    local IDS = self.IDS
-
     if C_Scenario.IsInScenario() then
         local mapID = C_Map.GetBestMapForUnit("player")
-        return mapID and IDS.DelveMap[mapID]
+        return mapID and DelveBuddy.IDS.DelveMap[mapID]
     end
     return false
+end
+
+function DelveBuddy:HasDelversBountyItem()
+    return C_Item.GetItemCount(DelveBuddy.IDS.Item.DelversBounty, false) > 0
 end
 
 function DelveBuddy:HasDelversBountyBuff()
@@ -250,21 +286,17 @@ end
 local flashTicker = nil
 
 function DelveBuddy:StartBountyFlashing()
-    if not DelveBuddy:HasDelversBountyBuff() then
-        DelveBuddy:FlashDelversBounty()
-        DelveBuddy:ShowBountyNotice()
-    end
+    self:FlashDelversBounty()
+    self:ShowBountyNotice()
 
     if flashTicker then
         flashTicker:Cancel()
     end
 
     flashTicker = C_Timer.NewTicker(60, function()
-        if DelveBuddy:IsInDelve() then
-            if not DelveBuddy:HasDelversBountyBuff() then
-                DelveBuddy:FlashDelversBounty()
-                DelveBuddy:ShowBountyNotice()
-            end
+        if self:ShouldShowBounty() then
+            self:FlashDelversBounty()
+            self:ShowBountyNotice()
         else
             flashTicker:Cancel()
             flashTicker = nil
@@ -278,5 +310,29 @@ function DelveBuddy:ShowBountyNotice()
         RaidNotice_AddMessage(RaidWarningFrame, msg, ChatTypeInfo["RAID_WARNING"])
     else
         UIErrorsFrame:AddMessage("Delver's Bounty available!", 1.0, 1.0, 0.0, 53, 5)
+    end
+end
+
+function DelveBuddy:HasWeeklyResetOccurred(lastLogin)
+    if not lastLogin then return true end
+
+    local now = GetServerTime()
+    local secondsUntilNextReset = C_DateAndTime.GetSecondsUntilWeeklyReset()
+    local nextReset = now + secondsUntilNextReset
+    local lastReset = nextReset - 7 * 24 * 60 * 60 -- subtract 1 week
+
+    return lastLogin < lastReset
+end
+
+function DelveBuddy:CleanupStaleCharacters()
+    for charKey, data in pairs(self.db) do
+        if type(data) == "table" and self:HasWeeklyResetOccurred(data.lastLogin) then
+            self:Print("Resetting weekly data for", charKey)
+            data.keysEarned = 0
+            data.gildedStashes = 0
+            data.bountyLooted = false
+            data.vaultRewards = {}
+            -- keysOwned and hasBounty are preserved
+        end
     end
 end
