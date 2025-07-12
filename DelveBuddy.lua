@@ -1,4 +1,7 @@
-local DelveBuddy = LibStub("AceAddon-3.0"):NewAddon("DelveBuddy", "AceConsole-3.0", "AceEvent-3.0")
+-- TODO
+-- Data isn't collected on login? Need to manually db show to get it to update.
+
+local DelveBuddy = LibStub("AceAddon-3.0"):NewAddon("DelveBuddy", "AceConsole-3.0", "AceEvent-3.0", "AceBucket-3.0")
 
 DelveBuddy.IDS = {
     Currency = {
@@ -18,7 +21,7 @@ DelveBuddy.IDS = {
         World = 6
     },
     Spell = {
-        DelversBounty = 453004,
+        DelversBounty = { 453004, 473218 },
     },
     DelveMap = {
         [2269] = true, -- Earthcrawl Mines
@@ -29,7 +32,10 @@ DelveBuddy.IDS = {
         [2396] = true, -- Excavation Site 9
         [2249] = true, -- Fungal Folly
         [2312] = true, -- Mycomancer Cavarn
-        [2423] = true, -- Sidestreet Sluice
+        [2420] = true, -- Sidestreet Sluice, The Pits
+        [2421] = true, -- Sidestreet Sluice, The Low Decks
+        [2422] = true, -- Sidestreet Sluice, The High Decks
+        [2423] = true, -- Sidestreet Sluice, Entrance
         [2301] = true, -- The Sinkhole
         [2310] = true, -- Skittering Breach
         [2259] = true, -- Tak-Rethan Abyss
@@ -39,58 +45,93 @@ DelveBuddy.IDS = {
 }
 
 DelveBuddy.TierToVaultiLvl = {
-  [1] = 623,
-  [2] = 626,
-  [3] = 629,
-  [4] = 632,
-  [5] = 639,
-  [6] = 642,
-  [7] = 645,
-  [8] = 649,
-  [9] = 649,
-  [10] = 649,
-  [11] = 649,
+    [1] = 623,
+    [2] = 626,
+    [3] = 629,
+    [4] = 632,
+    [5] = 639,
+    [6] = 642,
+    [7] = 645,
+    [8] = 649,
+    [9] = 649,
+    [10] = 649,
+    [11] = 649,
 }
 
 function DelveBuddy:OnInitialize()
     DelveBuddyDB = DelveBuddyDB or {}
+    DelveBuddyDB.global = DelveBuddyDB.global or {}
+    DelveBuddyDB.charData = DelveBuddyDB.charData or {}
+    local g = DelveBuddyDB.global
+    if g.debugLogging == nil then g.debugLogging = false end
+    if g.showUI == nil then g.showUI = false end
+    if g.showFullCharName == nil then g.showFullCharName = false end
     self.db = DelveBuddyDB
 
-    self:RegisterChatCommand("delvebuddy", "ShowStatus")
-    self:RegisterChatCommand("db", "ShowStatus")
+    self:RegisterChatCommand("delvebuddy", "SlashCommand")
+    self:RegisterChatCommand("db", "SlashCommand")
 
-    self:SetupEventHandler()
+    -- Batch-throttle the rapid‐fire data events into one OnDataChanged call every 2 seconds
+    self:RegisterBucketEvent({
+        "QUEST_LOG_UPDATE",
+        "CURRENCY_DISPLAY_UPDATE",
+        "WEEKLY_REWARDS_UPDATE",
+    }, 2, "OnDataChanged")
 
     self:CleanupStaleCharacters()
+end
+
+function DelveBuddy:Show()
+    if not self.db.global.showUI or UnitLevel("player") < 80 then return end
+
     self:CollectDelveData()
+    self:CreateUI()
+    self:UpdateUI()
 end
 
-function DelveBuddy:SetupEventHandler()
-    if self.eventFrame then return end
-
-    GetQuestResetTime()
-
-    local f = CreateFrame("Frame")
-    f:RegisterEvent("PLAYER_ENTERING_WORLD")
-    f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-
-    f:SetScript("OnEvent", function(_, event, ...)
-        self:OnEvent(event, ...)
-    end)
-
-    self.eventFrame = f
+function DelveBuddy:Hide()
+    if self.frame then self.frame:Hide() end
 end
 
-function DelveBuddy:OnEvent(event, ...)
-    C_Timer.After(1, function()
-        if self:ShouldShowBounty() then
-            self:StartBountyFlashing()
+function DelveBuddy:SlashCommand(input)
+    local cmd, arg = input:match("^(%S*)%s*(.*)$")
+    cmd = (cmd or ""):lower()
+
+    if cmd == "show" then
+        self.db.global.showUI = true
+        self:CollectDelveData()
+        self:Show()
+    elseif cmd == "hide" then
+        self.db.global.showUI = false
+        self:Hide()
+    elseif cmd == "toggle" then
+        self.db.global.showUI = not self.db.global.showUI
+        if self.frame and self.frame:IsShown() then
+            self:Hide()
+        else
+            self:Show()
         end
-    end)
+    elseif cmd == "debuglogging" then
+        -- arg should be “0” or “1”
+        local enable = tonumber(arg) == 1
+        self.db.global.debugLogging = enable
+        self:Print("Debug logging %s", enable and "enabled" or "disabled")
+    elseif cmd == "showrealm" then
+        local enable = tonumber(arg) == 1
+        self.db.global.showFullCharName = enable
+        self:Print("Character realm display %s", enable and "enabled" or "disabled")
+    else
+        self:Print("Usage: /db show|hide|toggle|debugLogging 0|1")
+    end
 end
 
 function DelveBuddy:ShouldShowBounty()
-    return self:IsInDelve() and self:HasDelversBountyItem() and not self:HasDelversBountyBuff()
+    self:Log("ShouldShowBounty")
+    return
+        self:IsInDelve()                          -- must be in a scenario recognized as a delve
+        and not self:IsDelveComplete()            -- must not be in the post-delve phase
+        and self:HasDelversBountyItem()           -- must have the item
+        and not self:HasDelversBountyBuff()       -- must not have already used it
 end
 
 function DelveBuddy:GetCharacterKey()
@@ -100,19 +141,50 @@ function DelveBuddy:GetCharacterKey()
 end
 
 function DelveBuddy:OnEnable()
-    -- Placeholder for future event handling
+    self:RegisterBucketEvent({
+        "PLAYER_ENTERING_WORLD",
+        "ZONE_CHANGED_NEW_AREA",
+        "BAG_UPDATE_DELAYED",
+    }, 1, "OnBountyCheck")
+
+    self:CollectDelveData()
+
+    if self.db.global.showUI then
+        self:Show()
+    end
 end
 
-function DelveBuddy:ShowStatus()
-    self:CreateUI()
+function DelveBuddy:OnDataChanged()
     self:CollectDelveData()
-    self:UpdateUI()
+    if self.frame and self.frame:IsShown() then
+        self:UpdateUI()
+    end
+end
+
+function DelveBuddy:OnBountyCheck()
+    self:Log("OnBountyCheck")
+    C_Timer.After(1, function()
+        if self:ShouldShowBounty() then
+            self:StartBountyFlashing()
+        end
+    end)
 end
 
 function DelveBuddy:CollectDelveData()
+    self:Log("CollectDelveData")
+
+    -- Skip collecting for low-level characters (<80).
+    if UnitLevel("player") < 80 then
+        self:Log("Player level %d < 80, skipping data collect", UnitLevel("player"))
+        return
+    end
+
     local data = {}
 
     local IDS = DelveBuddy.IDS
+
+    -- Class
+    data.class = select(2, UnitClass("player"))
 
     local earned = 0
     for _, questID in ipairs(IDS.Quest.KeyEarned) do
@@ -144,9 +216,12 @@ function DelveBuddy:CollectDelveData()
 
     -- Save to DB under character key
     local charKey = self:GetCharacterKey()
-    self.db[charKey] = data
+    self.db.charData[charKey] = data
 
-    return data
+    if self.db.global.debugLogging then
+        -- Too spammy
+        -- DevTools_Dump(data)
+    end
 end
 
 function DelveBuddy:CreateUI()
@@ -196,10 +271,23 @@ function DelveBuddy:UpdateUI()
         table.insert(self.rows, label)
     end
 
+    local charKeyList = {}
+    local currentCharKey = self:GetCharacterKey()
+    for charKey in pairs(self.db.charData) do
+        if charKey ~= currentCharKey then
+            table.insert(charKeyList, charKey)
+        end
+    end
+    table.sort(charKeyList)
+
+    -- Insert the current character key at the beginning
+    table.insert(charKeyList, 1, currentCharKey)
+
     local rowIndex = 0
-    for char, data in pairs(DelveBuddyDB) do
+    for _, charKey in ipairs(charKeyList) do
+        local data = self.db.charData[charKey]
         rowIndex = rowIndex + 1
-        local yOffset = -35 - (rowIndex * 20)
+        local yOffset = -38 - (rowIndex * 20)
 
         local function cell(text, col)
             local x = 15
@@ -211,7 +299,29 @@ function DelveBuddy:UpdateUI()
             table.insert(self.rows, fs)
         end
 
-        cell(char, 1)
+        -- Extract character name and apply class color
+        local name = charKey
+        if not self.db.global.showFullCharName then
+            name = name:match("^[^-]+") or name
+        end
+        local coloredName = self:ClassColoredName(name, data.class)
+
+        -- Add class icon
+        local icon = "Interface\\TargetingFrame\\UI-Classes-Circles"
+        local coords = CLASS_ICON_TCOORDS[data.class or "PRIEST"] or {0, 1, 0, 1}
+
+        local tx = self.frame:CreateTexture(nil, "ARTWORK")
+        tx:SetSize(14, 14)
+        tx:SetPoint("LEFT", self.frame, "TOPLEFT", 15, yOffset - 8)
+        tx:SetTexture(icon)
+        tx:SetTexCoord(unpack(coords))
+        table.insert(self.rows, tx)
+
+        local nameFS = self.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        nameFS:SetPoint("LEFT", tx, "RIGHT", 5, 0)
+        nameFS:SetText(coloredName)
+        table.insert(self.rows, nameFS)
+
         cell(data.keysEarned .. "/" .. data.keysOwned, 2)
         cell(data.gildedStashes .. "/3", 3)
         cell(data.hasBounty and "Yes" or "No", 4)
@@ -259,11 +369,15 @@ function DelveBuddy:FlashDelversBounty()
 end
 
 function DelveBuddy:IsInDelve()
+    local result = false
+
     if C_Scenario.IsInScenario() then
         local mapID = C_Map.GetBestMapForUnit("player")
-        return mapID and DelveBuddy.IDS.DelveMap[mapID]
+        result = mapID and DelveBuddy.IDS.DelveMap[mapID]
     end
-    return false
+
+    self:Log("IsInDelve: (%s)", tostring(result))
+    return result
 end
 
 function DelveBuddy:HasDelversBountyItem()
@@ -271,12 +385,15 @@ function DelveBuddy:HasDelversBountyItem()
 end
 
 function DelveBuddy:HasDelversBountyBuff()
+    local buffIDs = self.IDS.Spell.DelversBounty
     local i = 1
     while true do
         local aura = C_UnitAuras.GetBuffDataByIndex("player", i)
         if not aura then break end
-        if aura.spellId == DelveBuddy.IDS.Spell.DelversBounty then
-            return true
+        for _, id in ipairs(buffIDs) do
+            if aura.spellId == id then
+                return true
+            end
         end
         i = i + 1
     end
@@ -325,9 +442,11 @@ function DelveBuddy:HasWeeklyResetOccurred(lastLogin)
 end
 
 function DelveBuddy:CleanupStaleCharacters()
-    for charKey, data in pairs(self.db) do
+    self:Log("CleanupStaleCharacters")
+
+    for charKey, data in pairs(self.db.charData) do
         if type(data) == "table" and self:HasWeeklyResetOccurred(data.lastLogin) then
-            self:Print("Resetting weekly data for", charKey)
+            self:Log("Resetting weekly data for", charKey)
             data.keysEarned = 0
             data.gildedStashes = 0
             data.bountyLooted = false
@@ -335,4 +454,63 @@ function DelveBuddy:CleanupStaleCharacters()
             -- keysOwned and hasBounty are preserved
         end
     end
+end
+
+function DelveBuddy:Log(fmt, ...)
+    if not self.db.global.debugLogging then return end
+    local msg = ("[DelveBuddy] " .. fmt):format(...)
+
+    self:Print(msg)
+end
+
+function DelveBuddy:IsDelveComplete()
+    if not C_Scenario.IsInScenario() then return false end
+
+    local _, currentStage, totalStages = C_Scenario.GetInfo()
+    self:Log("IsDelveComplete: currentStage=%s, totalStages=%s", tostring(currentStage), tostring(totalStages))
+
+    if currentStage >= totalStages then
+        self:Log("IsDelveComplete: At or beyond final stage — assuming complete")
+        return true
+    end
+
+    local stepName, _, numCriteria = C_Scenario.GetStepInfo()
+    self:Log("IsDelveComplete: stepName=%s, numCriteria=%s", tostring(stepName), tostring(numCriteria))
+
+    for i = 1, numCriteria do
+        local info = C_ScenarioInfo.GetCriteriaInfo(i)
+        if info then
+            self:Log("Criteria %d: id %s (quantity %d/%d), completed=%s, quantityString=%s", i,
+                tostring(info.criteriaID),
+                info.quantity or 0,
+                info.totalQuantity or 0,
+                tostring(info.completed),
+                tostring(info.quantityString))
+
+            self:Log("Criteria desc=%s type=%s flags=%s", info.description, 
+                tostring(info.criteriaType), tostring(info.flags))
+
+			if not info.isWeightedProgress and not info.isFormatted then
+				local criteriaString = string.format("%d/%d %s", info.quantity, info.totalQuantity, info.description);
+                self:Log("criteriaString=%s", criteriaString)
+			end
+
+            -- Heuristics to skip optional criteria (probably doesn't work for non-English clients)
+            local maybeOptional = (info.totalQuantity == 0)
+                or (info.description and info.description:lower():find("optional"))
+
+            if not info.completed and not maybeOptional then
+                self:Log("IsDelveComplete: Found incomplete, required criteria")
+                return false
+            end
+        end
+    end
+
+    self:Log("IsDelveComplete: All criteria complete or optional — assuming complete")
+    return true
+end
+
+function DelveBuddy:ClassColoredName(name, class)
+    local classColor = RAID_CLASS_COLORS[class] or {["r"] = 1, ["g"] = 1, ["b"] = 0}
+    return format("|cff%02x%02x%02x%s|r", classColor["r"] * 255, classColor["g"] * 255, classColor["b"] * 255, name)
 end
