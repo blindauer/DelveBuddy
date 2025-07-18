@@ -1,6 +1,3 @@
--- TODO
--- Data isn't collected on login? Need to manually db show to get it to update.
-
 local DelveBuddy = LibStub("AceAddon-3.0"):NewAddon("DelveBuddy", "AceConsole-3.0", "AceEvent-3.0", "AceBucket-3.0")
 
 DelveBuddy.IDS = {
@@ -59,6 +56,7 @@ DelveBuddy.TierToVaultiLvl = {
 }
 
 function DelveBuddy:OnInitialize()
+    -- Initialize DB
     DelveBuddyDB = DelveBuddyDB or {}
     DelveBuddyDB.global = DelveBuddyDB.global or {}
     DelveBuddyDB.charData = DelveBuddyDB.charData or {}
@@ -68,6 +66,7 @@ function DelveBuddy:OnInitialize()
     if g.showFullCharName == nil then g.showFullCharName = false end
     self.db = DelveBuddyDB
 
+    -- Slash commands
     self:RegisterChatCommand("delvebuddy", "SlashCommand")
     self:RegisterChatCommand("db", "SlashCommand")
 
@@ -101,6 +100,8 @@ function DelveBuddy:SlashCommand(input)
         self.db.global.showUI = true
         self:CollectDelveData()
         self:Show()
+        -- HACK
+        self:DumpPOIs(C_Map.GetBestMapForUnit("player"))
     elseif cmd == "hide" then
         self.db.global.showUI = false
         self:Hide()
@@ -222,6 +223,9 @@ function DelveBuddy:CollectDelveData()
         -- Too spammy
         -- DevTools_Dump(data)
     end
+
+    -- Hack
+    self:GetDelves()
 end
 
 function DelveBuddy:CreateUI()
@@ -287,14 +291,14 @@ function DelveBuddy:UpdateUI()
     for _, charKey in ipairs(charKeyList) do
         local data = self.db.charData[charKey]
         rowIndex = rowIndex + 1
-        local yOffset = -38 - (rowIndex * 20)
+        local yOffset = -38 - (rowIndex * 16)
 
         local function cell(text, col)
             local x = 15
             for j = 1, col - 1 do x = x + columnWidths[j] end
 
             local fs = self.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            fs:SetPoint("TOPLEFT", x, yOffset)
+            fs:SetPoint("TOPLEFT", x, yOffset - 1)
             fs:SetText(text)
             table.insert(self.rows, fs)
         end
@@ -323,13 +327,30 @@ function DelveBuddy:UpdateUI()
         table.insert(self.rows, nameFS)
 
         cell(data.keysEarned .. "/" .. data.keysOwned, 2)
-        cell(data.gildedStashes .. "/3", 3)
+        local stashesText
+        if data.gildedStashes == 3 then
+            stashesText = string.format("|cff00ff003/3|r")
+        else
+            stashesText = string.format("|cffaaaaaa%d/3|r", data.gildedStashes)
+        end
+        cell(stashesText, 3)
         cell(data.hasBounty and "Yes" or "No", 4)
         cell(data.bountyLooted and "Yes" or "No", 5)
 
         for i = 1, 3 do
             local vault = data.vaultRewards and data.vaultRewards[i]
-            local text = vault and string.format("%d/%d (T%s)", vault.progress, vault.threshold, vault.level > 0 and vault.level or "—") or "—"
+            local text
+            if vault then
+                if vault.progress >= vault.threshold then
+                    local tier = vault.level > 0 and vault.level or "—"
+                    local iLevel = self.TierToVaultiLvl[vault.level] or "?"
+                    text = string.format("|cff00ff00Tier %s (%s)|r", tier, iLevel)
+                else
+                    text = string.format("|cffaaaaaa%d/%d|r", vault.progress, vault.threshold)
+                end
+            else
+                text = "—"
+            end
             cell(text, 5 + i)
         end
     end
@@ -513,4 +534,91 @@ end
 function DelveBuddy:ClassColoredName(name, class)
     local classColor = RAID_CLASS_COLORS[class] or {["r"] = 1, ["g"] = 1, ["b"] = 0}
     return format("|cff%02x%02x%02x%s|r", classColor["r"] * 255, classColor["g"] * 255, classColor["b"] * 255, name)
+end
+
+local DelvePois = {
+    [2248] = { -- Isle of Dorn
+        { ["id"] = 7787, ["x"] = 38.60, ["y"] = 74.00 }, -- Earthcrawl Mines
+        { ["id"] = 7779, ["x"] = 52.03, ["y"] = 65.77 }, -- Fungal Folly
+        { ["id"] = 7781, ["x"] = 62.19, ["y"] = 42.70 }, -- Kriegval's Rest
+    },
+    [2214] = { -- The Ringing Deeps
+        { ["id"] = 7782, ["x"] = 42.15, ["y"] = 48.71 }, -- The Waterworks
+        { ["id"] = 7788, ["x"] = 70.20, ["y"] = 37.30 }, -- The Dread Pit
+        { ["id"] = 8181, ["x"] = 76.00, ["y"] = 96.50 }, -- Excavation Site 9
+    },
+    [2215] = { -- Hallowfall
+        { ["id"] = 7780, ["x"] = 71.30, ["y"] = 31.20 }, -- Mycomancer Cavern
+        { ["id"] = 7785, ["x"] = 34.32, ["y"] = 47.43 }, -- Nightfall Sanctum
+        { ["id"] = 7783, ["x"] = 50.60, ["y"] = 53.30 }, -- The Sinkhole
+        { ["id"] = 7789, ["x"] = 65.48, ["y"] = 61.74 }, -- Skittering Breach
+    },
+    [2255] = { -- Azj-Kahet
+        { ["id"] = 7790, ["x"] = 45.00, ["y"] = 19.00 }, -- The Spiral Weave
+        { ["id"] = 7784, ["x"] = 55.00, ["y"] = 73.92 }, -- Tak-Rethan Abyss
+        { ["id"] = 7786, ["x"] = 51.85, ["y"] = 88.30 }, -- The Underkeep
+    },
+    [2346] = { -- Undermine
+        { ["id"] = 8246, ["x"] = 35.20, ["y"] = 52.80 }, -- Sidestreet Sluice
+    },
+}
+
+function DelveBuddy:GetDelves()
+    local delves = {}
+
+    for zoneID, poiList in pairs(DelvePois) do
+        for _, poi in ipairs(poiList) do
+            local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poi.id)
+            if info and info.atlasName == "delves-bountiful" then
+                local widgets = C_UIWidgetManager.GetAllWidgetsBySetID(info.iconWidgetSet)
+                local isOvercharged = (#widgets == 2)
+
+                delves[poi.id] = {
+                    name        = info.name,
+                    zoneID      = zoneID,
+                    x           = poi.x,
+                    y           = poi.y,
+                    overcharged = isOvercharged,
+                }
+            end
+        end
+    end
+
+    -- Spammy
+    -- self:Print("Dumping Delves")
+    -- DevTools_Dump(Delves)
+
+    return delves
+end
+
+function DelveBuddy:DumpPOIs(mapID)
+    if not mapID then
+        print("DelveBuddy: No mapID provided.")
+        return
+    end
+    local mapInfo = C_Map.GetMapInfo(mapID)
+    print(("DelveBuddy: Dumping POIs for map %d (%s)"):format(mapID, mapInfo and mapInfo.name or "unknown"))
+
+    local poiIDs = C_AreaPoiInfo.GetDelvesForMap(mapID) or {}
+    if #poiIDs == 0 then
+        print("DelveBuddy: No POIs found on map", mapID)
+        return
+    end
+
+    for _, poiID in ipairs(poiIDs) do
+        local info = C_AreaPoiInfo.GetAreaPOIInfo(mapID, poiID)
+        if info then
+            print((
+                "POI %d: name=%q, atlas=%q, texIdx=%d, x=%.2f, y=%.2f, widgetSet=%s"
+            ):format(
+                poiID,
+                info.name or "",
+                info.atlasName or "",
+                info.textureIndex or 0,
+                (info.x or 0) * 100,
+                (info.y or 0) * 100,
+                tostring(info.iconWidgetSet)
+            ))
+        end
+    end
 end

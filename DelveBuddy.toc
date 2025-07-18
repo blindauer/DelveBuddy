@@ -11,4 +11,10 @@ libs\Ace3\AceConsole-3.0\AceConsole-3.0.xml
 libs\Ace3\AceEvent-3.0\AceEvent-3.0.xml
 libs\Ace3\AceBucket-3.0\AceBucket-3.0.xml
 
+## OptionalDeps: LibStub LibDataBroker-1.1 LibQTip-1.0 Blizzard_UIDropDownMenu
+libs\LibStub\LibStub.lua
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibQTip-1.0\LibQTip-1.0.lua
+
 DelveBuddy.lua
+DelveBuddy_LDB.lua
