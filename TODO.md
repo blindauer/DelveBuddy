@@ -1,11 +1,8 @@
 == DelveBuddy TODO: PTR Edition ==
 * If you enter a delve, and you don't have any coffer keys, show raid warning
 * Improve Tooltip UI
-* Put API calls in locals for (tiny) perf optimization
+* Put API calls in locals for (tiny) perf optimization?
 * Reduce how many times collect data called?
-* Implement options
-    * Remove character
-    √ Debug Logging
 
 == Stuff that's broken in 11.2 ==
 * Keys earned wrong? OR wait, maybe it *does* work??

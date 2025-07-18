@@ -1,9 +1,10 @@
-## Interface: 110105
+## Interface: 110107
 ## Title: DelveBuddy
+## Category: Delves
+## IconTexture: Interface\Addons\DelveBuddy\media\DelveIcon.tga
 ## Notes: Tracks weekly Delve progress across characters
 ## Author: Malevolens
 ## Version: 0.1
-## X-Category: Delves
 ## SavedVariables: DelveBuddyDB
 
 libs\Ace3\AceAddon-3.0\AceAddon-3.0.xml
@@ -16,6 +17,8 @@ libs\Ace3\AceTimer-3.0\AceTimer-3.0.lua
 libs\LibStub\LibStub.lua
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibQTip-1.0\LibQTip-1.0.lua
+libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 
 DelveBuddy.lua
 DelveBuddy_LDB.lua
+
