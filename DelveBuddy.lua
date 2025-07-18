@@ -38,6 +38,7 @@ DelveBuddy.IDS = {
         [2259] = true, -- Tak-Rethan Abyss
         [2299] = true, -- The Underkeep
         [2251] = true, -- The Waterworks
+        [2452] = true, -- Archival Assault
     }
 }
 
@@ -55,6 +56,20 @@ DelveBuddy.TierToVaultiLvl = {
     [11] = 649,
 }
 
+DelveBuddy.TierToVaultiLvl_Season3 = {
+    [1] = 668,
+    [2] = 671,
+    [3] = 675,
+    [4] = 678,
+    [5] = 681,
+    [6] = 642, -- ??
+    [7] = 645, -- ??
+    [8] = 649, -- ??
+    [9] = 649, -- ??
+    [10] = 649, -- ??
+    [11] = 649, -- ??
+}
+
 function DelveBuddy:OnInitialize()
     -- Initialize DB
     DelveBuddyDB = DelveBuddyDB or {}
@@ -62,7 +77,6 @@ function DelveBuddy:OnInitialize()
     DelveBuddyDB.charData = DelveBuddyDB.charData or {}
     local g = DelveBuddyDB.global
     if g.debugLogging == nil then g.debugLogging = false end
-    if g.showUI == nil then g.showUI = false end
     if g.showFullCharName == nil then g.showFullCharName = false end
     self.db = DelveBuddyDB
 
@@ -80,40 +94,11 @@ function DelveBuddy:OnInitialize()
     self:CleanupStaleCharacters()
 end
 
-function DelveBuddy:Show()
-    if not self.db.global.showUI or UnitLevel("player") < 80 then return end
-
-    self:CollectDelveData()
-    self:CreateUI()
-    self:UpdateUI()
-end
-
-function DelveBuddy:Hide()
-    if self.frame then self.frame:Hide() end
-end
-
 function DelveBuddy:SlashCommand(input)
     local cmd, arg = input:match("^(%S*)%s*(.*)$")
     cmd = (cmd or ""):lower()
 
-    if cmd == "show" then
-        self.db.global.showUI = true
-        self:CollectDelveData()
-        self:Show()
-        -- HACK
-        self:DumpPOIs(C_Map.GetBestMapForUnit("player"))
-    elseif cmd == "hide" then
-        self.db.global.showUI = false
-        self:Hide()
-    elseif cmd == "toggle" then
-        self.db.global.showUI = not self.db.global.showUI
-        if self.frame and self.frame:IsShown() then
-            self:Hide()
-        else
-            self:Show()
-        end
-    elseif cmd == "debuglogging" then
-        -- arg should be “0” or “1”
+    if cmd == "debuglogging" then
         local enable = tonumber(arg) == 1
         self.db.global.debugLogging = enable
         self:Print("Debug logging %s", enable and "enabled" or "disabled")
@@ -122,17 +107,17 @@ function DelveBuddy:SlashCommand(input)
         self.db.global.showFullCharName = enable
         self:Print("Character realm display %s", enable and "enabled" or "disabled")
     else
-        self:Print("Usage: /db show|hide|toggle|debugLogging 0|1")
+        self:Print("Usage: /db showrealm 0|1 | debugLogging 0|1")
     end
 end
 
 function DelveBuddy:ShouldShowBounty()
     self:Log("ShouldShowBounty")
     return
-        self:IsInDelve()                          -- must be in a scenario recognized as a delve
-        and not self:IsDelveComplete()            -- must not be in the post-delve phase
-        and self:HasDelversBountyItem()           -- must have the item
-        and not self:HasDelversBountyBuff()       -- must not have already used it
+        self:IsInDelve()
+        and not self:IsDelveComplete()
+        and self:HasDelversBountyItem()
+        and not self:HasDelversBountyBuff()
 end
 
 function DelveBuddy:GetCharacterKey()
@@ -149,17 +134,10 @@ function DelveBuddy:OnEnable()
     }, 1, "OnBountyCheck")
 
     self:CollectDelveData()
-
-    if self.db.global.showUI then
-        self:Show()
-    end
 end
 
 function DelveBuddy:OnDataChanged()
     self:CollectDelveData()
-    if self.frame and self.frame:IsShown() then
-        self:UpdateUI()
-    end
 end
 
 function DelveBuddy:OnBountyCheck()
@@ -187,23 +165,27 @@ function DelveBuddy:CollectDelveData()
     -- Class
     data.class = select(2, UnitClass("player"))
 
+    -- Keys earned (this week)
     local earned = 0
     for _, questID in ipairs(IDS.Quest.KeyEarned) do
         earned = earned + (C_QuestLog.IsQuestFlaggedCompleted(questID) and 1 or 0)
     end
-
     data.keysEarned = earned
 
+    -- Keys owned
     local c = C_CurrencyInfo.GetCurrencyInfo(IDS.Currency.RestoredCofferKey)
     data.keysOwned = c and c.quantity or 0
 
+    -- Gilded stashes looted
     local w = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(IDS.Widget.GildedStash)
     local stash = w and w.spellInfo and string.match(w.spellInfo.tooltip or "", "(%d)/3")
     data.gildedStashes = tonumber(stash) or 0
 
+    -- Have bounty / looted bounty
     data.hasBounty = C_Item.GetItemCount(IDS.Item.DelversBounty) > 0
     data.bountyLooted = C_QuestLog.IsQuestFlaggedCompleted(IDS.Quest.BountyLooted) or false
 
+    -- Vault rewards
     data.vaultRewards = {}
     for _, a in ipairs(C_WeeklyRewards.GetActivities(IDS.Activity.World)) do
         table.insert(data.vaultRewards, {
@@ -213,6 +195,7 @@ function DelveBuddy:CollectDelveData()
         })
     end
 
+    -- Last login (used for data reset on reset day)
     data.lastLogin = GetServerTime()
 
     -- Save to DB under character key
@@ -222,137 +205,6 @@ function DelveBuddy:CollectDelveData()
     if self.db.global.debugLogging then
         -- Too spammy
         -- DevTools_Dump(data)
-    end
-
-    -- Hack
-    self:GetDelves()
-end
-
-function DelveBuddy:CreateUI()
-    if self.frame then
-        self.frame:Show()
-        return
-    end
-
-    local f = CreateFrame("Frame", "DelveBuddyFrame", UIParent, "UIPanelDialogTemplate")
-    f:SetSize(600, 300)
-    f:SetPoint("CENTER")
-    f:SetMovable(true)
-    f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", f.StopMovingOrSizing)
-
-    f.titleText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    f.titleText:SetPoint("TOP", 0, -10)
-    f.titleText:SetText("DelveBuddy - Weekly Delves Summary")
-
-    self.frame = f
-    self.rows = {}
-end
-
-function DelveBuddy:UpdateUI()
-    if not self.frame then return end
-
-    local headerLabels = {
-        "Character", "Keys", "Stashes", "Bounty", "Looted", "Vault 1", "Vault 2", "Vault 3"
-    }
-
-    local columnWidths = { 150, 56, 56, 56, 56, 72, 72, 72 }
-
-    -- Clear previous rows
-    for _, row in ipairs(self.rows) do
-        row:Hide()
-    end
-    self.rows = {}
-
-    local x = 15
-    for i, text in ipairs(headerLabels) do
-        local label = self.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        label:SetPoint("TOPLEFT", x, -35)
-        label:SetText(text)
-        x = x + columnWidths[i]
-        table.insert(self.rows, label)
-    end
-
-    local charKeyList = {}
-    local currentCharKey = self:GetCharacterKey()
-    for charKey in pairs(self.db.charData) do
-        if charKey ~= currentCharKey then
-            table.insert(charKeyList, charKey)
-        end
-    end
-    table.sort(charKeyList)
-
-    -- Insert the current character key at the beginning
-    table.insert(charKeyList, 1, currentCharKey)
-
-    local rowIndex = 0
-    for _, charKey in ipairs(charKeyList) do
-        local data = self.db.charData[charKey]
-        rowIndex = rowIndex + 1
-        local yOffset = -38 - (rowIndex * 16)
-
-        local function cell(text, col)
-            local x = 15
-            for j = 1, col - 1 do x = x + columnWidths[j] end
-
-            local fs = self.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            fs:SetPoint("TOPLEFT", x, yOffset - 1)
-            fs:SetText(text)
-            table.insert(self.rows, fs)
-        end
-
-        -- Extract character name and apply class color
-        local name = charKey
-        if not self.db.global.showFullCharName then
-            name = name:match("^[^-]+") or name
-        end
-        local coloredName = self:ClassColoredName(name, data.class)
-
-        -- Add class icon
-        local icon = "Interface\\TargetingFrame\\UI-Classes-Circles"
-        local coords = CLASS_ICON_TCOORDS[data.class or "PRIEST"] or {0, 1, 0, 1}
-
-        local tx = self.frame:CreateTexture(nil, "ARTWORK")
-        tx:SetSize(14, 14)
-        tx:SetPoint("LEFT", self.frame, "TOPLEFT", 15, yOffset - 8)
-        tx:SetTexture(icon)
-        tx:SetTexCoord(unpack(coords))
-        table.insert(self.rows, tx)
-
-        local nameFS = self.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        nameFS:SetPoint("LEFT", tx, "RIGHT", 5, 0)
-        nameFS:SetText(coloredName)
-        table.insert(self.rows, nameFS)
-
-        cell(data.keysEarned .. "/" .. data.keysOwned, 2)
-        local stashesText
-        if data.gildedStashes == 3 then
-            stashesText = string.format("|cff00ff003/3|r")
-        else
-            stashesText = string.format("|cffaaaaaa%d/3|r", data.gildedStashes)
-        end
-        cell(stashesText, 3)
-        cell(data.hasBounty and "Yes" or "No", 4)
-        cell(data.bountyLooted and "Yes" or "No", 5)
-
-        for i = 1, 3 do
-            local vault = data.vaultRewards and data.vaultRewards[i]
-            local text
-            if vault then
-                if vault.progress >= vault.threshold then
-                    local tier = vault.level > 0 and vault.level or "—"
-                    local iLevel = self.TierToVaultiLvl[vault.level] or "?"
-                    text = string.format("|cff00ff00Tier %s (%s)|r", tier, iLevel)
-                else
-                    text = string.format("|cffaaaaaa%d/%d|r", vault.progress, vault.threshold)
-                end
-            else
-                text = "—"
-            end
-            cell(text, 5 + i)
-        end
     end
 end
 
@@ -402,10 +254,17 @@ function DelveBuddy:IsInDelve()
 end
 
 function DelveBuddy:HasDelversBountyItem()
-    return C_Item.GetItemCount(DelveBuddy.IDS.Item.DelversBounty, false) > 0
+    local result = false
+
+    result = C_Item.GetItemCount(DelveBuddy.IDS.Item.DelversBounty, false) > 0
+
+    self:Log("HasDelversBountyItem: (%s)", tostring(result))
+    return result
 end
 
 function DelveBuddy:HasDelversBountyBuff()
+    local result = false
+
     local buffIDs = self.IDS.Spell.DelversBounty
     local i = 1
     while true do
@@ -413,12 +272,15 @@ function DelveBuddy:HasDelversBountyBuff()
         if not aura then break end
         for _, id in ipairs(buffIDs) do
             if aura.spellId == id then
-                return true
+                result = true
+                break
             end
         end
         i = i + 1
     end
-    return false
+
+    self:Log("HasDelversBountyBuff: (%s)", tostring(result))
+    return result
 end
 
 local flashTicker = nil
@@ -480,7 +342,6 @@ end
 function DelveBuddy:Log(fmt, ...)
     if not self.db.global.debugLogging then return end
     local msg = ("[DelveBuddy] " .. fmt):format(...)
-
     self:Print(msg)
 end
 
@@ -561,6 +422,9 @@ local DelvePois = {
     [2346] = { -- Undermine
         { ["id"] = 8246, ["x"] = 35.20, ["y"] = 52.80 }, -- Sidestreet Sluice
     },
+    [2371] = { -- K'aresh
+        { ["id"] = 8273, ["x"] = 55.08, ["y"] = 48.08 }, -- Archival Assault
+    },
 }
 
 function DelveBuddy:GetDelves()
@@ -569,6 +433,11 @@ function DelveBuddy:GetDelves()
     for zoneID, poiList in pairs(DelvePois) do
         for _, poi in ipairs(poiList) do
             local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poi.id)
+            if info then
+                print("Found poi %s in zone %s", tostring(poi.id), tostring(zoneID))
+                print("name= %s", info.atlasName)
+            end
+
             if info and info.atlasName == "delves-bountiful" then
                 local widgets = C_UIWidgetManager.GetAllWidgetsBySetID(info.iconWidgetSet)
                 local isOvercharged = (#widgets == 2)
@@ -591,24 +460,25 @@ function DelveBuddy:GetDelves()
     return delves
 end
 
+-- Only for discovering new delves.
 function DelveBuddy:DumpPOIs(mapID)
     if not mapID then
-        print("DelveBuddy: No mapID provided.")
+        self:Log("DelveBuddy: No mapID provided.")
         return
     end
     local mapInfo = C_Map.GetMapInfo(mapID)
-    print(("DelveBuddy: Dumping POIs for map %d (%s)"):format(mapID, mapInfo and mapInfo.name or "unknown"))
+    self:Log(("DelveBuddy: Dumping POIs for map %d (%s)"):format(mapID, mapInfo and mapInfo.name or "unknown"))
 
     local poiIDs = C_AreaPoiInfo.GetDelvesForMap(mapID) or {}
     if #poiIDs == 0 then
-        print("DelveBuddy: No POIs found on map", mapID)
+        self:Log("DelveBuddy: No POIs found on map", mapID)
         return
     end
 
     for _, poiID in ipairs(poiIDs) do
         local info = C_AreaPoiInfo.GetAreaPOIInfo(mapID, poiID)
         if info then
-            print((
+            self:Log((
                 "POI %d: name=%q, atlas=%q, texIdx=%d, x=%.2f, y=%.2f, widgetSet=%s"
             ):format(
                 poiID,
@@ -622,3 +492,4 @@ function DelveBuddy:DumpPOIs(mapID)
         end
     end
 end
+
