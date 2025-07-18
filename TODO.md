@@ -1,12 +1,11 @@
 == DelveBuddy TODO: PTR Edition ==
-* Make tooltips stay on screen when hovered over
-* Remove window UI entirely - go Broker only
-* Implement clicking on delves to make waypoint and/or TomTom
 * If you enter a delve, and you don't have any coffer keys, show raid warning
 * Improve Tooltip UI
 * Put API calls in locals for (tiny) perf optimization
 * Reduce how many times collect data called?
-* Implement options?
+* Implement options
+    * Remove character
+    √ Debug Logging
 
 == Stuff that's broken in 11.2 ==
 * Keys earned wrong? OR wait, maybe it *does* work??

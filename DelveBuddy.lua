@@ -77,7 +77,6 @@ function DelveBuddy:OnInitialize()
     DelveBuddyDB.charData = DelveBuddyDB.charData or {}
     local g = DelveBuddyDB.global
     if g.debugLogging == nil then g.debugLogging = false end
-    if g.showFullCharName == nil then g.showFullCharName = false end
     self.db = DelveBuddyDB
 
     -- Slash commands
@@ -102,12 +101,8 @@ function DelveBuddy:SlashCommand(input)
         local enable = tonumber(arg) == 1
         self.db.global.debugLogging = enable
         self:Print("Debug logging %s", enable and "enabled" or "disabled")
-    elseif cmd == "showrealm" then
-        local enable = tonumber(arg) == 1
-        self.db.global.showFullCharName = enable
-        self:Print("Character realm display %s", enable and "enabled" or "disabled")
     else
-        self:Print("Usage: /db showrealm 0|1 | debugLogging 0|1")
+        self:Print("Usage: /db debugLogging 0|1")
     end
 end
 
@@ -434,8 +429,8 @@ function DelveBuddy:GetDelves()
         for _, poi in ipairs(poiList) do
             local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poi.id)
             if info then
-                print("Found poi %s in zone %s", tostring(poi.id), tostring(zoneID))
-                print("name= %s", info.atlasName)
+                self:Log("Found poi %s in zone %s", tostring(poi.id), tostring(zoneID))
+                self:Log("name= %s", info.atlasName)
             end
 
             if info and info.atlasName == "delves-bountiful" then
