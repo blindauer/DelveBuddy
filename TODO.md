@@ -1,8 +1,9 @@
 == DelveBuddy TODO: PTR Edition ==
-* If you enter a delve, and you don't have any coffer keys, show raid warning
+* If you enter a bountiful delve, and you don't have any coffer keys, show raid warning
 * Improve Tooltip UI
-* Put API calls in locals for (tiny) perf optimization?
+* Also show/track Worldsoul memories POIs?
 * Reduce how many times collect data called?
+* Put API calls in locals for (tiny) perf optimization?
 
 == Stuff that's broken in 11.2 ==
 * Keys earned wrong? OR wait, maybe it *does* work??

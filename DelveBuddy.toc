@@ -17,7 +17,7 @@ libs\Ace3\AceTimer-3.0\AceTimer-3.0.lua
 libs\LibStub\LibStub.lua
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibQTip-1.0\LibQTip-1.0.lua
-libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
 
 DelveBuddy.lua
 DelveBuddy_LDB.lua
