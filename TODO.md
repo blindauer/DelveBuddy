@@ -1,9 +1,9 @@
 == DelveBuddy TODO: PTR Edition ==
-* If you enter a bountiful delve, and you don't have any coffer keys, show raid warning
 * Improve Tooltip UI
 * Also show/track Worldsoul memories POIs?
 * Reduce how many times collect data called?
 * Put API calls in locals for (tiny) perf optimization?
+* Logging is weird: shows "DelveBuddy" twice
 
 == Stuff that's broken in 11.2 ==
 * Keys earned wrong? OR wait, maybe it *does* work??
@@ -19,3 +19,9 @@
 
 == Stuff to Test ==
 * Test with Titan Panel
+
+== Test Cases ==
+* Enter bountiful delve with 0 keys: Immediate key warning
+* Enter non-bountiful delve with no keys: No key warning
+* Use Bounty: stop bounty flashing
+

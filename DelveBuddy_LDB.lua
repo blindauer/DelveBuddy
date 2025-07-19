@@ -150,8 +150,19 @@ function DelveBuddy:PopulateCharacterSection(tip)
                     c[1]*256, c[2]*256, c[3]*256, c[4]*256)
             end
             local displayName = icon .. self:ClassColoredName(name, data.class)
-            local keysText    = string.format("%d/%d", data.keysEarned, data.keysOwned)
-            local stashesText = (data.gildedStashes == 3) and "|cff00ff003/3|r" or (data.gildedStashes.."/3")
+            local keysText = self:FormatKeys(data.keysEarned, data.keysOwned)
+
+            local stashesValue = data.gildedStashes
+            local stashesText
+            if stashesValue == 3 then
+                stashesText = "|cff00ff003/3|r"
+            elseif stashesValue == self.IDS.CONST.UNKNOWN_GILDED_STASHES then
+                -- Unknown / unavailable
+                stashesText = "|cffaaaaaa?/3|r"
+            else
+                stashesText = tostring(stashesValue or 0) .. "/3"
+            end
+
             local bountyText  = data.hasBounty and "Yes" or "No"
             local lootedText  = data.bountyLooted and "Yes" or "No"
             local vault1 = (function(v)
@@ -224,4 +235,19 @@ function DelveBuddy:PopulateDelveSection(tip)
             inDelveTip = true
         end)
     end
+end
+
+function DelveBuddy:FormatKeys(earned, owned)
+    local earnedPart = tostring(earned)
+    local ownedPart  = tostring(owned)
+
+    if earned >= 4 then
+        earnedPart = ("|cff00ff00%s|r"):format(earnedPart)
+    end
+
+    if owned == 0 then
+        ownedPart = ("|cffff3333%s|r"):format(ownedPart)
+    end
+
+    return earnedPart .. "/" .. ownedPart
 end

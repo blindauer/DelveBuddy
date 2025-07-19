@@ -20,26 +20,58 @@ DelveBuddy.IDS = {
     Spell = {
         DelversBounty = { 453004, 473218 },
     },
-    DelveMap = {
-        [2269] = true, -- Earthcrawl Mines
-        [2347] = true, -- The Spiral Weave
-        [2277] = true, -- Nightfall Sanctum
-        [2250] = true, -- Kriegval's Rest
-        [2302] = true, -- The Dread Pit
-        [2396] = true, -- Excavation Site 9
-        [2249] = true, -- Fungal Folly
-        [2312] = true, -- Mycomancer Cavarn
-        [2420] = true, -- Sidestreet Sluice, The Pits
-        [2421] = true, -- Sidestreet Sluice, The Low Decks
-        [2422] = true, -- Sidestreet Sluice, The High Decks
-        [2423] = true, -- Sidestreet Sluice, Entrance
-        [2301] = true, -- The Sinkhole
-        [2310] = true, -- Skittering Breach
-        [2259] = true, -- Tak-Rethan Abyss
-        [2299] = true, -- The Underkeep
-        [2251] = true, -- The Waterworks
-        [2452] = true, -- Archival Assault
-    }
+    DelveMapToPoi = {
+        [2269] = 7787, -- Earthcrawl Mines
+        [2249] = 7779, -- Fungal Folly
+        [2250] = 7781, -- Kriegval's Rest
+        [2251] = 7782, -- The Waterworks
+        [2310] = 7789, -- Skittering Breach
+        [2302] = 7788, -- The Dread Pit
+        [2396] = 8181, -- Excavation Site 9
+        [2312] = 7780, -- Mycomancer Cavern
+        [2277] = 7785, -- Nightfall Sanctum
+        [2301] = 7783, -- The Sinkhole
+        [2259] = 7784, -- Tak-Rethan Abyss
+        [2299] = 7786, -- The Underkeep
+        [2347] = 7790, -- The Spiral Weave
+        [2420] = 8246, -- Sidestreet Sluice, The Pits
+        [2421] = 8246, -- Sidestreet Sluice, The Low Decks
+        [2422] = 8246, -- Sidestreet Sluice, The High Decks
+        [2423] = 8246, -- Sidestreet Sluice, Entrance
+        [2452] = 8273, -- Archival Assault
+    },
+    DelvePois = {
+        [2248] = { -- Isle of Dorn
+            { ["id"] = 7787, ["x"] = 38.60, ["y"] = 74.00 }, -- Earthcrawl Mines
+            { ["id"] = 7779, ["x"] = 52.03, ["y"] = 65.77 }, -- Fungal Folly
+            { ["id"] = 7781, ["x"] = 62.19, ["y"] = 42.70 }, -- Kriegval's Rest
+        },
+        [2214] = { -- The Ringing Deeps
+            { ["id"] = 7782, ["x"] = 42.15, ["y"] = 48.71 }, -- The Waterworks
+            { ["id"] = 7788, ["x"] = 70.20, ["y"] = 37.30 }, -- The Dread Pit
+            { ["id"] = 8181, ["x"] = 76.00, ["y"] = 96.50 }, -- Excavation Site 9
+        },
+        [2215] = { -- Hallowfall
+            { ["id"] = 7780, ["x"] = 71.30, ["y"] = 31.20 }, -- Mycomancer Cavern
+            { ["id"] = 7785, ["x"] = 34.32, ["y"] = 47.43 }, -- Nightfall Sanctum
+            { ["id"] = 7783, ["x"] = 50.60, ["y"] = 53.30 }, -- The Sinkhole
+            { ["id"] = 7789, ["x"] = 65.48, ["y"] = 61.74 }, -- Skittering Breach
+        },
+        [2255] = { -- Azj-Kahet
+            { ["id"] = 7790, ["x"] = 45.00, ["y"] = 19.00 }, -- The Spiral Weave
+            { ["id"] = 7784, ["x"] = 55.00, ["y"] = 73.92 }, -- Tak-Rethan Abyss
+            { ["id"] = 7786, ["x"] = 51.85, ["y"] = 88.30 }, -- The Underkeep
+        },
+        [2346] = { -- Undermine
+            { ["id"] = 8246, ["x"] = 35.20, ["y"] = 52.80 }, -- Sidestreet Sluice
+        },
+        [2371] = { -- K'aresh
+            { ["id"] = 8273, ["x"] = 55.08, ["y"] = 48.08 }, -- Archival Assault
+        },
+    },
+    CONST = {
+        UNKNOWN_GILDED_STASH_COUNT = -1,
+    },
 }
 
 DelveBuddy.TierToVaultiLvl = {
@@ -65,9 +97,9 @@ DelveBuddy.TierToVaultiLvl_Season3 = {
     [6] = 688,
     [7] = 691,
     [8] = 694,
-    [9] = 694, -- ??
-    [10] = 694, -- ??
-    [11] = 694, -- ??
+    [9] = 694, -- Need to verify
+    [10] = 694, -- Need to verify
+    [11] = 694, -- Need to verify
 }
 
 DelveBuddy.RecommendedGearForTier_Season3 = {
@@ -80,8 +112,8 @@ DelveBuddy.RecommendedGearForTier_Season3 = {
     [7] = 668,
     [8] = 678,
     [9] = 684,
-    [10] = 678, -- ??
-    [11] = 678, -- ??
+    [10] = 678, -- Need to verify
+    [11] = 678, -- Need to verify
 }
 
 function DelveBuddy:OnInitialize()
@@ -104,7 +136,18 @@ function DelveBuddy:OnInitialize()
         "WEEKLY_REWARDS_UPDATE",
     }, 2, "OnDataChanged")
 
+    -- Clean up after weekly reset, if appropriate
     self:CleanupStaleCharacters()
+end
+
+function DelveBuddy:OnEnable()
+    self:RegisterBucketEvent({
+        "PLAYER_ENTERING_WORLD",
+        "ZONE_CHANGED_NEW_AREA",
+        "BAG_UPDATE_DELAYED",
+    }, 1, "OnBountyCheck")
+
+    self:CollectDelveData()
 end
 
 function DelveBuddy:SlashCommand(input)
@@ -120,29 +163,31 @@ function DelveBuddy:SlashCommand(input)
     end
 end
 
+function DelveBuddy:ShouldShowKeyWarning()
+    local result =
+        self:IsInBountifulDelve()
+        and not self:IsDelveComplete()
+        and self:GetKeyCount() == 0
+
+    self:Log("ShouldShowKeyWarning: %s", tostring(result))
+    return result
+end
+
 function DelveBuddy:ShouldShowBounty()
-    self:Log("ShouldShowBounty")
-    return
+    local result =
         self:IsInDelve()
         and not self:IsDelveComplete()
         and self:HasDelversBountyItem()
         and not self:HasDelversBountyBuff()
+
+    self:Log("ShouldShowBounty: %s", tostring(result))
+    return result
 end
 
 function DelveBuddy:GetCharacterKey()
     local name = UnitName("player")
     local realm = GetRealmName():gsub("%s+", "") -- remove spaces from realm
     return name .. "-" .. realm
-end
-
-function DelveBuddy:OnEnable()
-    self:RegisterBucketEvent({
-        "PLAYER_ENTERING_WORLD",
-        "ZONE_CHANGED_NEW_AREA",
-        "BAG_UPDATE_DELAYED",
-    }, 1, "OnBountyCheck")
-
-    self:CollectDelveData()
 end
 
 function DelveBuddy:OnDataChanged()
@@ -152,7 +197,9 @@ end
 function DelveBuddy:OnBountyCheck()
     self:Log("OnBountyCheck")
     C_Timer.After(1, function()
-        if self:ShouldShowBounty() then
+        if self:ShouldShowKeyWarning() then
+            self:ShowKeyWarning()
+        elseif self:ShouldShowBounty() then
             self:StartBountyFlashing()
         end
     end)
@@ -182,13 +229,18 @@ function DelveBuddy:CollectDelveData()
     data.keysEarned = earned
 
     -- Keys owned
-    local c = C_CurrencyInfo.GetCurrencyInfo(IDS.Currency.RestoredCofferKey)
-    data.keysOwned = c and c.quantity or 0
+    data.keysOwned = self:GetKeyCount()
 
     -- Gilded stashes looted
-    local w = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(IDS.Widget.GildedStash)
-    local stash = w and w.spellInfo and string.match(w.spellInfo.tooltip or "", "(%d)/3")
-    data.gildedStashes = tonumber(stash) or 0
+    local stashes = self.IDS.CONST.UNKNOWN_GILDED_STASHES
+    local w = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(6659)
+    if w and w.spellInfo and w.spellInfo.tooltip then
+        local count = w.spellInfo.tooltip:match("(%d)/3")
+        if count then
+            stashes = tonumber(count) or 0
+        end
+    end
+    data.gildedStashes = stashes
 
     -- Have bounty / looted bounty
     data.hasBounty = C_Item.GetItemCount(IDS.Item.DelversBounty) > 0
@@ -255,10 +307,15 @@ function DelveBuddy:IsInDelve()
 
     if C_Scenario.IsInScenario() then
         local mapID = C_Map.GetBestMapForUnit("player")
-        result = mapID and DelveBuddy.IDS.DelveMap[mapID]
+        result = mapID and DelveBuddy.IDS.DelveMapToPoi[mapID] ~= nil
     end
 
-    self:Log("IsInDelve: (%s)", tostring(result))
+    self:Log("IsInDelve: (%s) map=%s poi=%s", 
+        tostring(result),
+        tostring(mapID),
+        tostring(result and DelveBuddy.IDS.DelveMapToPoi[mapID])
+    )
+
     return result
 end
 
@@ -313,12 +370,25 @@ function DelveBuddy:StartBountyFlashing()
     end)
 end
 
+function DelveBuddy:ShowKeyWarning()
+    self:DisplayRaidWarning("|cffff4444DelveBuddy: In a bountiful delve, with no Restored Coffer Keys!|r", true)
+end
+
 function DelveBuddy:ShowBountyNotice()
-    local msg = "|cffffd700Delver's Bounty available!|r" -- gold-colored
-    if RaidNotice_AddMessage then
+    self:DisplayRaidWarning("|cffffd700Delver's Bounty available!|r", false)
+end
+
+function DelveBuddy:DisplayRaidWarning(msg, playSound)
+    if RaidNotice_AddMessage and RaidWarningFrame and ChatTypeInfo and ChatTypeInfo["RAID_WARNING"] then
         RaidNotice_AddMessage(RaidWarningFrame, msg, ChatTypeInfo["RAID_WARNING"])
+    elseif UIErrorsFrame then
+        UIErrorsFrame:AddMessage(msg, 1, 0.1, 0.1, 53, 5)
     else
-        UIErrorsFrame:AddMessage("Delver's Bounty available!", 1.0, 1.0, 0.0, 53, 5)
+        self:Print(msg)
+    end
+
+    if playSound and PlaySound then
+        PlaySound(SOUNDKIT.RAID_WARNING, "Master")
     end
 end
 
@@ -350,8 +420,7 @@ end
 
 function DelveBuddy:Log(fmt, ...)
     if not self.db.global.debugLogging then return end
-    local msg = ("[DelveBuddy] " .. fmt):format(...)
-    self:Print(msg)
+    self:Print(fmt:format(...))
 end
 
 function DelveBuddy:IsDelveComplete()
@@ -406,40 +475,16 @@ function DelveBuddy:ClassColoredName(name, class)
     return format("|cff%02x%02x%02x%s|r", classColor["r"] * 255, classColor["g"] * 255, classColor["b"] * 255, name)
 end
 
-local DelvePois = {
-    [2248] = { -- Isle of Dorn
-        { ["id"] = 7787, ["x"] = 38.60, ["y"] = 74.00 }, -- Earthcrawl Mines
-        { ["id"] = 7779, ["x"] = 52.03, ["y"] = 65.77 }, -- Fungal Folly
-        { ["id"] = 7781, ["x"] = 62.19, ["y"] = 42.70 }, -- Kriegval's Rest
-    },
-    [2214] = { -- The Ringing Deeps
-        { ["id"] = 7782, ["x"] = 42.15, ["y"] = 48.71 }, -- The Waterworks
-        { ["id"] = 7788, ["x"] = 70.20, ["y"] = 37.30 }, -- The Dread Pit
-        { ["id"] = 8181, ["x"] = 76.00, ["y"] = 96.50 }, -- Excavation Site 9
-    },
-    [2215] = { -- Hallowfall
-        { ["id"] = 7780, ["x"] = 71.30, ["y"] = 31.20 }, -- Mycomancer Cavern
-        { ["id"] = 7785, ["x"] = 34.32, ["y"] = 47.43 }, -- Nightfall Sanctum
-        { ["id"] = 7783, ["x"] = 50.60, ["y"] = 53.30 }, -- The Sinkhole
-        { ["id"] = 7789, ["x"] = 65.48, ["y"] = 61.74 }, -- Skittering Breach
-    },
-    [2255] = { -- Azj-Kahet
-        { ["id"] = 7790, ["x"] = 45.00, ["y"] = 19.00 }, -- The Spiral Weave
-        { ["id"] = 7784, ["x"] = 55.00, ["y"] = 73.92 }, -- Tak-Rethan Abyss
-        { ["id"] = 7786, ["x"] = 51.85, ["y"] = 88.30 }, -- The Underkeep
-    },
-    [2346] = { -- Undermine
-        { ["id"] = 8246, ["x"] = 35.20, ["y"] = 52.80 }, -- Sidestreet Sluice
-    },
-    [2371] = { -- K'aresh
-        { ["id"] = 8273, ["x"] = 55.08, ["y"] = 48.08 }, -- Archival Assault
-    },
-}
+function DelveBuddy:GetKeyCount()
+    local c = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.RestoredCofferKey)
+    return c and c.quantity or 0
+end
 
 function DelveBuddy:GetDelves()
     local delves = {}
 
-    for zoneID, poiList in pairs(DelvePois) do
+    local delvePois = self.IDS.DelvePois
+    for zoneID, poiList in pairs(delvePois) do
         for _, poi in ipairs(poiList) do
             local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poi.id)
             if info then
@@ -502,3 +547,29 @@ function DelveBuddy:DumpPOIs(mapID)
     end
 end
 
+function DelveBuddy:IsInBountifulDelve()
+    if not C_Scenario.IsInScenario() then return false end
+    local mapID = C_Map.GetBestMapForUnit("player")
+    local poiID = mapID and self.IDS.DelveMapToPoi[mapID]
+    if not poiID then return false end
+
+    -- Ascend to zone map (mapType 3) to query POI
+    local zoneMap = mapID
+    local info = C_Map.GetMapInfo(zoneMap)
+    while info and info.parentMapID and info.mapType ~= 3 do
+        zoneMap = info.parentMapID
+        info = C_Map.GetMapInfo(zoneMap)
+    end
+
+    local poiInfo = C_AreaPoiInfo.GetAreaPOIInfo(zoneMap, poiID)
+    local bountiful = poiInfo and poiInfo.atlasName == "delves-bountiful"
+
+    self:Log("IsInBountifulDelve: map=%s zone=%s poi=%s bountiful=%s",
+        tostring(mapID),
+        tostring(zoneMap),
+        tostring(poiID),
+        tostring(bountiful)
+    )
+
+    return bountiful
+end
