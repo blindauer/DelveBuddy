@@ -30,7 +30,7 @@
 
 ## Screenshots
 ![DelveBuddy Data Broker Tooltip](screenshots/DataBrokerTooltip.jpg)
-![DelveBuddy Minimap Icon Tooltip](screenshots/MinimapTooltip.jpg)
+![DelveBuddy Minimap Icon Tooltip](screenshots/MiniMapTooltip.jpg)
 
 ## License
 
