@@ -42,13 +42,23 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
             if DelveBuddy.delveTip then QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
             GameTooltip:Hide()
             ToggleDropDownMenu(1, nil, DelveBuddyMenu, self, 0, 0)
+        else
+            -- left click toggle tooltips (or show/hide main UI if you re-enable it)
+            if DelveBuddy.charTip then
+                -- hide all
+                if DelveBuddy.charTip then QTip:Release(DelveBuddy.charTip); DelveBuddy.charTip=nil end
+                if DelveBuddy.delveTip then QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip=nil end
+            else
+                -- show
+                DelveBuddy.ldb.OnEnter(self)
+            end
         end
     end,
     OnEnter = function(display)
         inMenuArea = true
 
         -- Character summary tooltip (8 columns)
-        local charTip = QTip:Acquire("DelveBuddyCharTip", 8,
+        local charTip = QTip:Acquire("DelveBuddyCharTip", 9,
             "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER")
         charTip:EnableMouse(true)
         charTip:SetScript("OnEnter", function() inCharTip = true end)
@@ -73,18 +83,39 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
     end,
 })
 
+local LDBIcon = LibStub("LibDBIcon-1.0", true)
+
 DelveBuddyMenu.initialize = function(self, level)
     local info = UIDropDownMenu_CreateInfo()
 
     if level == 1 then
+        -- Minimap Icon Show/Hide
+        info.text = "Show Minimap Icon"
+        info.checked = not DelveBuddy.db.global.minimap.hide
+        info.keepShownOnClick = true
+        info.isNotRadio = true
+        info.func = function(_, _, _, checked)
+            -- Toggle the saved setting
+            DelveBuddy.db.global.minimap.hide = not checked
+            -- Show or hide via LibDBIcon
+            if LDBIcon then
+                if checked then
+                    LDBIcon:Show("DelveBuddy")
+                else
+                    LDBIcon:Hide("DelveBuddy")
+                end
+            end
+        end
+        UIDropDownMenu_AddButton(info, level)
+
         -- Checkbox: Debug Logging
         info.text = "Debug Logging"
         info.checked = DelveBuddy.db.global.debugLogging
+        info.keepShownOnClick = true
+        info.isNotRadio = true
         info.func = function(_, _, _, checked)
             DelveBuddy.db.global.debugLogging = checked
         end
-        info.keepShownOnClick = true
-        info.isNotRadio = true
         UIDropDownMenu_AddButton(info, level)
 
         -- Divider
@@ -127,10 +158,40 @@ DelveBuddyMenu.initialize = function(self, level)
     end
 end
 
--- Populate the character summary (8 columns)
 function DelveBuddy:PopulateCharacterSection(tip)
     tip:Clear()
-    tip:AddHeader("Character", "Keys", "Stashes", "Bounty", "Looted", "Vault 1", "Vault 2", "Vault 3")
+
+    local KEY_ICON   = "|TInterface\\Icons\\Inv_10_blacksmithing_consumable_key_color1:16:16:0:0|t"
+    local BOUNTY_ICON = "|TInterface\\Icons\\Icon_treasuremap:16:16:0:0|t"
+    local STASH_ICON = "|TInterface\\Icons\\Inv_cape_special_treasure_c_01:16:16:0:0|t"
+    local VAULT_ICON = "|TInterface\\Icons\\Delves-scenario-treasure-upgrade:16:16:0:0|t"
+
+    -- Row 1: Icons (blank where you don't want one)
+    tip:AddHeader(
+        " ",
+        KEY_ICON,
+        KEY_ICON,
+        STASH_ICON,
+        BOUNTY_ICON,
+        BOUNTY_ICON,
+        VAULT_ICON,
+        VAULT_ICON,
+        VAULT_ICON
+    )
+
+    -- Row 2: Text labels
+    local labelLine = tip:AddLine(
+        " ",
+        "Earned",
+        "Owned",
+        "Stashes",
+        "Owned",
+        "Looted",
+        "Vault 1",
+        "Vault 2",
+        "Vault 3"
+    )
+
     local charKeyList, current = {}, self:GetCharacterKey()
     for key in pairs(self.db.charData) do
         if key ~= current then table.insert(charKeyList, key) end
@@ -150,59 +211,27 @@ function DelveBuddy:PopulateCharacterSection(tip)
                     c[1]*256, c[2]*256, c[3]*256, c[4]*256)
             end
             local displayName = icon .. self:ClassColoredName(name, data.class)
-            local keysText = self:FormatKeys(data.keysEarned, data.keysOwned)
+            local keysEarnedText = self:FormatKeysEarned(data.keysEarned)
+            local keysOwnedText = self:FormatKeysOwned(data.keysOwned)
+            local stashesText = self:FormatStashes(data.gildedStashes)
 
-            local stashesValue = data.gildedStashes
-            local stashesText
-            if stashesValue == 3 then
-                stashesText = "|cff00ff003/3|r"
-            elseif stashesValue == self.IDS.CONST.UNKNOWN_GILDED_STASHES then
-                -- Unknown / unavailable
-                stashesText = "|cffaaaaaa?/3|r"
-            else
-                stashesText = tostring(stashesValue or 0) .. "/3"
-            end
+            local CHECK = "|A:common-icon-checkmark:14:14|a"
+            local CROSS = "|A:common-icon-redx:14:14|a"
+            local bountyText  = data.hasBounty and CHECK or CROSS
+            local lootedText  = data.bountyLooted and CHECK or CROSS
 
-            local bountyText  = data.hasBounty and "Yes" or "No"
-            local lootedText  = data.bountyLooted and "Yes" or "No"
-            local vault1 = (function(v)
-                if not v then return "—" end
-                if v.progress >= v.threshold then
-                    local tier = v.level > 0 and v.level or "—"
-                    local iLvl = self.TierToVaultiLvl[v.level] or "?"
-                    return ("|cff00ff00Tier %s (%s)|r"):format(tier, iLvl)
-                else
-                    return ("|cffaaaaaa%d/%d|r"):format(v.progress, v.threshold)
-                end
-            end)(data.vaultRewards and data.vaultRewards[1])
-            local vault2 = (function(v)
-                if not v then return "—" end
-                if v.progress >= v.threshold then
-                    local tier = v.level > 0 and v.level or "—"
-                    local iLvl = self.TierToVaultiLvl[v.level] or "?"
-                    return ("|cff00ff00Tier %s (%s)|r"):format(tier, iLvl)
-                else
-                    return ("|cffaaaaaa%d/%d|r"):format(v.progress, v.threshold)
-                end
-            end)(data.vaultRewards and data.vaultRewards[2])
-            local vault3 = (function(v)
-                if not v then return "—" end
-                if v.progress >= v.threshold then
-                    local tier = v.level > 0 and v.level or "—"
-                    local iLvl = self.TierToVaultiLvl[v.level] or "?"
-                    return ("|cff00ff00Tier %s (%s)|r"):format(tier, iLvl)
-                else
-                    return ("|cffaaaaaa%d/%d|r"):format(v.progress, v.threshold)
-                end
-            end)(data.vaultRewards and data.vaultRewards[3])
+            local rewards = data.vaultRewards
+            local vault1 = self:FormatVaultCell(rewards and rewards[1])
+            local vault2 = self:FormatVaultCell(rewards and rewards[2])
+            local vault3 = self:FormatVaultCell(rewards and rewards[3])
 
-            tip:AddLine(displayName, keysText, stashesText, bountyText, lootedText, vault1, vault2, vault3)
+            tip:AddLine(displayName, keysEarnedText, keysOwnedText, stashesText, bountyText, lootedText, vault1, vault2, vault3)
         end
     end
 end
 
--- Populate the delve list (2 columns)
 function DelveBuddy:PopulateDelveSection(tip)
+    tip:Clear()
     tip:SetColumnLayout(2, "LEFT", "LEFT")
     tip:AddHeader("|cffdda0ddBountiful Delves|r", "")
     local delves = self:GetDelves() or {}
@@ -220,14 +249,14 @@ function DelveBuddy:PopulateDelveSection(tip)
         local zoneName = (mapInfo and mapInfo.name) or "?"
         local line = tip:AddLine(name, zoneName)
         tip:SetLineScript(line, "OnMouseUp", function(_, button)
-            DelveBuddy:Log("DelveBuddy: clicked delve ->", d.name)
+            self:Log("DelveBuddy: clicked delve ->", d.name)
             if C_Map.CanSetUserWaypointOnMap(d.zoneID) then
                 local point = UiMapPoint.CreateFromCoordinates(d.zoneID, d.x/100, d.y/100)
                 C_Map.SetUserWaypoint(point)
                 C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                DelveBuddy:Print(("DelveBuddy: Waypoint set to %s"):format(d.name))
+                self:Print(("DelveBuddy: Waypoint set to %s"):format(d.name))
             else
-                DelveBuddy:Print(("DelveBuddy: Cannot set waypoint on map %s"):format(d.zoneID))
+                self:Print(("DelveBuddy: Cannot set waypoint on map %s"):format(d.zoneID))
             end
         end)
         tip:SetLineScript(line, "OnEnter", function()
@@ -237,17 +266,60 @@ function DelveBuddy:PopulateDelveSection(tip)
     end
 end
 
-function DelveBuddy:FormatKeys(earned, owned)
+function DelveBuddy:FormatKeysEarned(earned)
     local earnedPart = tostring(earned)
-    local ownedPart  = tostring(owned)
 
     if earned >= 4 then
         earnedPart = ("|cff00ff00%s|r"):format(earnedPart)
     end
 
+    return earnedPart
+end
+
+function DelveBuddy:FormatKeysOwned(owned)
+    local ownedPart  = tostring(owned)
+
     if owned == 0 then
         ownedPart = ("|cffff3333%s|r"):format(ownedPart)
     end
 
-    return earnedPart .. "/" .. ownedPart
+    return ownedPart
+end
+
+function DelveBuddy:FormatStashes(stashes)
+    local stashesText
+
+    if stashes == 3 then
+        stashesText = "|cff00ff003/3|r"
+    elseif stashes == self.IDS.CONST.UNKNOWN_GILDED_STASHES then
+        -- Unknown / unavailable
+        stashesText = "|cffaaaaaa?/3|r"
+    else
+        stashesText = tostring(stashes or 0) .. "/3"
+    end
+
+    return stashesText
+end
+
+function DelveBuddy:FormatVaultCell(v)
+    if not v then return "—" end
+
+    if v.progress >= v.threshold then
+        local tier = v.level > 0 and v.level or "—"
+        local iLvl = self.TierToVaultiLvl[v.level] or "?"
+        return ("|cff00ff00Tier %s (%s)|r"):format(tier, iLvl)
+    else
+        return ("|cffaaaaaa%d/%d|r"):format(v.progress, v.threshold)
+    end
+end
+
+function DelveBuddy:InitMinimapIcon()
+    if not LDBIcon then return end
+    -- Ensure settings table exists
+    self.db.global.minimap = self.db.global.minimap or {}
+    -- Register only once
+    if not self.minimapIconRegistered then
+        LDBIcon:Register("DelveBuddy", self.ldb, self.db.global.minimap)
+        self.minimapIconRegistered = true
+    end
 end

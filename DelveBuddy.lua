@@ -125,6 +125,10 @@ function DelveBuddy:OnInitialize()
     if g.debugLogging == nil then g.debugLogging = false end
     self.db = DelveBuddyDB
 
+    -- LibDBIcon
+    DelveBuddyDB.global.minimap = DelveBuddyDB.global.minimap or {}
+    self:InitMinimapIcon()
+
     -- Slash commands
     self:RegisterChatCommand("delvebuddy", "SlashCommand")
     self:RegisterChatCommand("db", "SlashCommand")
@@ -157,7 +161,21 @@ function DelveBuddy:SlashCommand(input)
     if cmd == "debuglogging" then
         local enable = tonumber(arg) == 1
         self.db.global.debugLogging = enable
-        self:Print("Debug logging %s", enable and "enabled" or "disabled")
+        self:Print("Debug logging", enable and "enabled" or "disabled")
+    elseif cmd == "minimap" or cmd == "mm" then
+        local LDBIcon = LibStub("LibDBIcon-1.0", true)
+        if not LDBIcon then
+            self:Print("LibDBIcon-1.0 not loaded.")
+        else
+            self.db.global.minimap.hide = not self.db.global.minimap.hide
+            if self.db.global.minimap.hide then
+                LDBIcon:Hide("DelveBuddy")
+                self:Print("Minimap icon hidden.")
+            else
+                LDBIcon:Show("DelveBuddy")
+                self:Print("Minimap icon shown.")
+            end
+        end
     else
         self:Print("Usage: /db debugLogging 0|1")
     end
