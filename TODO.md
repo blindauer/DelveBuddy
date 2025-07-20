@@ -10,9 +10,6 @@
 == Stuff that seems to work in 11.2 ==
 * Keys owned correct (is same item ID?)
 
-== Stuff to Test ==
-* Test with Titan Panel
-
 == Test Cases ==
 * Enter bountiful delve with 0 keys: Immediate key warning
 * Enter non-bountiful delve with no keys: No key warning
