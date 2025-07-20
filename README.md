@@ -5,10 +5,10 @@
 ## Features
 
 - Tracks weekly delve activities across characters
- - **Restored Coffer Keys**: Tracks weekly earned and total owned keys.
- - **Gilded Stashes**: Tracks weekly Gilded Stash loots.
- - **Delver’s Bounty**: Indicates if you have a bounty item and whether you’ve looted one this week.
- - **Great Vault (World Delves)**: Displays your World activity vault rewards per-tier.
+  - **Restored Coffer Keys**: Tracks weekly earned and total owned keys.
+  - **Gilded Stashes**: Tracks weekly Gilded Stash loots.
+  - **Delver’s Bounty**: Indicates if you have a bounty item and whether you’ve looted one this week.
+  - **Great Vault (World Delves)**: Displays your World activity vault rewards per-tier.
 - Displays the currently active Bountiful Delves (and which are overcharged)
  - Click a delve to make a waypoint to it
 - Displays a warning you if you enter a Bountiful Delve and do not have a Restored Coffer Key
