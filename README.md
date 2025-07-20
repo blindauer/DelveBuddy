@@ -1,6 +1,6 @@
 # DelveBuddy
 
-**DelveBuddy** is a World of Warcraft addon for tracking weekly delve activities and rewards on a per-character basis.
+**DelveBuddy** is a World of Warcraft addon for tracking weekly delve activities and rewards on a per-character basis. It's a Data Broker addon, so if you have a data broker display addon (like Titan Panel, ChocolateBar, or Bazooka), you can add it there, and hover over it to see your data in tooltips. There's also a minimap icon to display that info.
 
 ## Features
 
