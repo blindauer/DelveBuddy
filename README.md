@@ -28,6 +28,10 @@
 - **Data Broker:** Hover over the LibDataBroker icon to see per-character stats, delve lists, and more.
 - **Right-click** the broker icon for options (debug logging, minimap icon toggle, remove character).
 
+## Screenshots
+![DelveBuddy Data Broker Tooltip](screenshots/DataBrokerTooltip.jpg)
+![DelveBuddy Minimap Icon Tooltip](screenshots/MinimapTooltip.jpg)
+
 ## License
 
 See [LICENSE](./LICENSE) for details.
