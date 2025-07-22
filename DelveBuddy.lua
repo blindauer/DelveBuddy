@@ -97,9 +97,9 @@ DelveBuddy.TierToVaultiLvl_Season3 = {
     [6] = 688,
     [7] = 691,
     [8] = 694,
-    [9] = 694, -- Need to verify
-    [10] = 694, -- Need to verify
-    [11] = 694, -- Need to verify
+    [9] = 694,
+    [10] = 694,
+    [11] = 694,
 }
 
 DelveBuddy.RecommendedGearForTier_Season3 = {
@@ -112,7 +112,7 @@ DelveBuddy.RecommendedGearForTier_Season3 = {
     [7] = 668,
     [8] = 678,
     [9] = 684,
-    [10] = 678, -- Need to verify
+    [10] = 691,
     [11] = 678, -- Need to verify
 }
 
@@ -415,6 +415,7 @@ function DelveBuddy:HasWeeklyResetOccurred(lastLogin)
 
     local now = GetServerTime()
     local secondsUntilNextReset = C_DateAndTime.GetSecondsUntilWeeklyReset()
+    self:Log("Next weekly reset: %s hours", tostring(secondsUntilNextReset / 60 / 60))
     local nextReset = now + secondsUntilNextReset
     local lastReset = nextReset - 7 * 24 * 60 * 60 -- subtract 1 week
 
