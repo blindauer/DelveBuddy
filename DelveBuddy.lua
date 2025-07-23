@@ -71,6 +71,7 @@ DelveBuddy.IDS = {
     },
     CONST = {
         UNKNOWN_GILDED_STASH_COUNT = -1,
+        MAX_WEEKLY_GILDED_STASHES = 3,
     },
 }
 
@@ -250,15 +251,7 @@ function DelveBuddy:CollectDelveData()
     data.keysOwned = self:GetKeyCount()
 
     -- Gilded stashes looted
-    local stashes = self.IDS.CONST.UNKNOWN_GILDED_STASHES
-    local w = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(6659)
-    if w and w.spellInfo and w.spellInfo.tooltip then
-        local count = w.spellInfo.tooltip:match("(%d)/3")
-        if count then
-            stashes = tonumber(count) or 0
-        end
-    end
-    data.gildedStashes = stashes
+    data.gildedStashes, _ = self:GetGildedStashCounts()
 
     -- Have bounty / looted bounty
     data.hasBounty = C_Item.GetItemCount(IDS.Item.DelversBounty) > 0
@@ -285,6 +278,26 @@ function DelveBuddy:CollectDelveData()
         -- Too spammy
         -- DevTools_Dump(data)
     end
+end
+
+function DelveBuddy:GetGildedStashCounts()
+    local UNKNOWN = self.IDS.CONST.UNKNOWN_GILDED_STASH_COUNT
+    local fallbackMax = self.IDS.CONST.MAX_WEEKLY_GILDED_STASHES
+
+    local w = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(self.IDS.Widget.GildedStash)
+    if not (w and w.spellInfo and w.spellInfo.tooltip) then
+        return UNKNOWN, fallbackMax
+    end
+
+    -- Locale-safe-ish: grab two numbers around a slash
+    local cur, max = w.spellInfo.tooltip:match("(%d+)%s*/%s*(%d+)")
+    cur = tonumber(cur)
+    max = tonumber(max) or fallbackMax
+
+    if not cur then
+        return UNKNOWN, max
+    end
+    return cur, max
 end
 
 function DelveBuddy:FlashDelversBounty()
@@ -431,7 +444,8 @@ function DelveBuddy:CleanupStaleCharacters()
             data.keysEarned = 0
             data.gildedStashes = 0
             data.bountyLooted = false
-            data.vaultRewards = {}
+            -- data.vaultRewards = {} keep vaultRewards
+            -- TODO some indication of when you have a reward in the vault?
             -- keysOwned and hasBounty are preserved
         end
     end

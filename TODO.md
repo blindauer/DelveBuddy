@@ -1,4 +1,6 @@
 == DelveBuddy TODO: PTR Edition ==
+* Show indication when vault rewards available?
+* Click vault cell to open vault window (only current character)
 * Also show/track Worldsoul memories POIs?
 
 == Stuff that's broken in 11.2 ==

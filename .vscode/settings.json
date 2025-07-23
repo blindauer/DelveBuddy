@@ -41,6 +41,18 @@
         "RaidNotice_AddMessage",
         "RaidWarningFrame",
         "UIErrorsFrame",
-        "ChatTypeInfo"
+        "ChatTypeInfo",
+        "RAID_CLASS_COLORS",
+        "SOUNDKIT",
+        "UIDropDownMenu_CreateInfo",
+        "UIDropDownMenu_AddButton",
+        "CLASS_ICON_TCOORDS",
+        "ToggleDropDownMenu",
+        "UiMapPoint",
+        "AddonCompartmentFrame",
+        "BACKDROP_SLIDER_8_8",
+        "TooltipBackdropTemplateMixin",
+        "NineSlicePanelMixin",
+        "UNKNOWN"
     ]
 }

@@ -286,19 +286,20 @@ function DelveBuddy:FormatKeysOwned(owned)
     return ownedPart
 end
 
-function DelveBuddy:FormatStashes(stashes)
-    local stashesText
+function DelveBuddy:FormatStashes(cur)
+    local UNKNOWN = self.IDS.CONST.UNKNOWN_GILDED_STASH_COUNT
+    local _, max = self:GetGildedStashCounts()
 
-    if stashes == 3 then
-        stashesText = "|cff00ff003/3|r"
-    elseif stashes == self.IDS.CONST.UNKNOWN_GILDED_STASHES then
-        -- Unknown / unavailable
-        stashesText = "|cffaaaaaa?/3|r"
-    else
-        stashesText = tostring(stashes or 0) .. "/3"
+    if cur == UNKNOWN then
+        return ("|cffaaaaaa?/%d|r"):format(max)
     end
 
-    return stashesText
+    cur = cur or 0
+    if cur >= max then
+        return ("|cff00ff00%d/%d|r"):format(cur, max)
+    end
+
+    return ("%d/%d"):format(cur, max)
 end
 
 function DelveBuddy:FormatVaultCell(v)
