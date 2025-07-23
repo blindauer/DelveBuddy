@@ -225,7 +225,20 @@ function DelveBuddy:PopulateCharacterSection(tip)
             local vault2 = self:FormatVaultCell(rewards and rewards[2])
             local vault3 = self:FormatVaultCell(rewards and rewards[3])
 
-            tip:AddLine(displayName, keysEarnedText, keysOwnedText, stashesText, bountyText, lootedText, vault1, vault2, vault3)
+            local line = tip:AddLine(displayName, keysEarnedText, keysOwnedText, stashesText, bountyText, lootedText, vault1, vault2, vault3)
+
+            -- Only for current character: open vault if clicking vault cells.
+            if name == UnitName("player") then
+                for col = 7, 9 do -- Vault cells
+                    tip:SetCellScript(line, col, "OnMouseUp", function()
+                        WeeklyRewardsFrame:Show()
+                    end)
+                    tip:SetCellScript(line, col, "OnEnter", function()
+                        -- Because hovering over the cell calls charTip's OnLeave, dismissing the tips otherwise.
+                        inCharTip = true
+                    end)
+                end
+            end
         end
     end
 end
