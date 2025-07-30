@@ -245,9 +245,18 @@ end
 
 function DelveBuddy:PopulateDelveSection(tip)
     tip:Clear()
+    
+    -- Get all bountiful delves; if none, show a placeholder message
+    local delves = self:GetDelves() or {}
+    if not next(delves) then
+        tip:SetColumnLayout(1, "LEFT")
+        tip:AddLine("|cffaaaaaaNo bountiful delves available|r")
+        return
+    end
+
+    -- Otherwise show the normal two-column list
     tip:SetColumnLayout(2, "LEFT", "LEFT")
     tip:AddHeader("|cffdda0ddBountiful Delves|r", "")
-    local delves = self:GetDelves() or {}
     for poiID, d in pairs(delves) do
         local info = C_AreaPoiInfo.GetAreaPOIInfo(d.zoneID, poiID)
         local icon = ""
