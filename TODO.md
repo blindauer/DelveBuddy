@@ -1,5 +1,4 @@
 == DelveBuddy TODO: PTR Edition ==
-* Show indication when vault rewards available?
 * Also show/track Worldsoul memories POIs?
 
 == Stuff that's broken in 11.2 ==
@@ -9,7 +8,7 @@
     * Are OC delves still a thing?
 
 == Stuff that seems to work in 11.2 ==
-* Keys owned correct (is same item ID?)
+* Keys owned correct (is same item ID)
 
 == Test Cases ==
 * Enter bountiful delve with 0 keys: Immediate key warning

@@ -76,20 +76,6 @@ DelveBuddy.IDS = {
 }
 
 DelveBuddy.TierToVaultiLvl = {
-    [1] = 623,
-    [2] = 626,
-    [3] = 629,
-    [4] = 632,
-    [5] = 639,
-    [6] = 642,
-    [7] = 645,
-    [8] = 649,
-    [9] = 649,
-    [10] = 649,
-    [11] = 649,
-}
-
-DelveBuddy.TierToVaultiLvl_Season3 = {
     [1] = 668,
     [2] = 671,
     [3] = 675,
@@ -103,7 +89,7 @@ DelveBuddy.TierToVaultiLvl_Season3 = {
     [11] = 694,
 }
 
-DelveBuddy.RecommendedGearForTier_Season3 = {
+DelveBuddy.RecommendedGearForTier = {
     [1] = 626,
     [2] = 629,
     [3] = 632,
