@@ -98,20 +98,6 @@ DelveBuddy.TierToVaultiLvl = {
     [11] = 694,
 }
 
-DelveBuddy.RecommendedGearForTier = {
-    [1] = 626,
-    [2] = 629,
-    [3] = 632,
-    [4] = 636,
-    [5] = 645,
-    [6] = 652,
-    [7] = 668,
-    [8] = 678,
-    [9] = 684,
-    [10] = 691,
-    [11] = 697,
-}
-
 function DelveBuddy:OnInitialize()
     -- Initialize DB
     DelveBuddyDB = DelveBuddyDB or {}
