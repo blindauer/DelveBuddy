@@ -264,9 +264,6 @@ function DelveBuddy:PopulateDelveSection(tip)
             icon = ("|A:%s:14:14|a "):format(info.atlasName)
         end
         local name = icon .. d.name
-        if d.overcharged then
-            name = ("|cff80c0ff%s (OC)|r"):format(name)
-        end
         local mapInfo = C_Map.GetMapInfo(d.zoneID)
         local zoneName = (mapInfo and mapInfo.name) or "?"
         local line = tip:AddLine(name, zoneName)

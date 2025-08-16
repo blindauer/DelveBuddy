@@ -513,14 +513,12 @@ function DelveBuddy:GetDelves()
 
             if info and info.atlasName == "delves-bountiful" then
                 local widgets = C_UIWidgetManager.GetAllWidgetsBySetID(info.iconWidgetSet)
-                local isOvercharged = (#widgets == 2)
 
                 delves[poi.id] = {
                     name        = info.name,
                     zoneID      = zoneID,
                     x           = poi.x,
                     y           = poi.y,
-                    overcharged = isOvercharged,
                 }
             end
         end
