@@ -1,18 +1,21 @@
 # DelveBuddy
 
-**DelveBuddy** is a World of Warcraft addon for tracking weekly delve activities and rewards on a per-character basis. It's a Data Broker addon, so if you have a data broker display addon (like Titan Panel, ChocolateBar, or Bazooka), you can add it there, and hover over it to see your data in tooltips. There's also a minimap icon to display that info.
+**DelveBuddy** is a World of Warcraft addon that helps you track weekly Delve activities and rewards across all your characters. It integrates with Data Broker displays (e.g., Titan Panel, ChocolateBar, Bazooka) and provides a minimap icon for quick access.
 
 ## Features
 
-- Tracks weekly delve activities across characters
-  - **Restored Coffer Keys**: Tracks weekly earned and total owned keys.
-  - **Gilded Stashes**: Tracks weekly Gilded Stash loots.
-  - **Delver’s Bounty**: Indicates if you have a bounty item and whether you’ve looted one this week.
-  - **Great Vault (World Delves)**: Displays your World activity vault rewards per-tier.
-- Displays the currently active Bountiful Delves (and which are overcharged)
- - Click a delve to make a waypoint to it
-- Displays a warning you if you enter a Bountiful Delve and do not have a Restored Coffer Key
-- Reminds you to use your Delver's Bounty (if you have one) when you're in a Bountiful Delve
+-	Tracking
+  -	**Restored Coffer Keys** (weekly earned and total owned)
+  -	**Gilded Stashes** (weekly loots)
+  -	**Delver’s Bounty** (ownership and loot status)
+  -	**Great Vault Rewards** (World Delves progress per-tier)
+-	UI Enhancements
+  - Shows currently active Bountiful Delves
+  -	Shows currently active Worldsoul Memories
+  -	Click a Delve or World Soul Memory to create a waypoint
+-	Reminders & Warnings
+  -	Warns when entering a Bountiful Delve without a Restored Coffer Key
+  -	Reminds you to use Delver’s Bounty when inside a Bountiful Delve
 
 ## Installation
 
@@ -25,7 +28,7 @@
   - `/db minimap` — Show/hide the minimap icon.
   - `/db debugLogging 1|0` — Enable/disable debug logs.
 
-- **Data Broker:** Hover over the LibDataBroker icon to see per-character stats, delve lists, and more.
+- **Data Broker:** Hover over the LibDataBroker icon or minimap icon to see DelveBuddy's tooltip UI
 - **Right-click** the broker icon for options (debug logging, minimap icon toggle, remove character).
 
 ## Screenshots
