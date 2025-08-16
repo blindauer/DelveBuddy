@@ -1,22 +1,22 @@
-local LDB = LibStub("LibDataBroker-1.1")
-local QTip = LibStub("LibQTip-1.0")
-
 local DelveBuddy = LibStub("AceAddon-3.0"):GetAddon("DelveBuddy")
 DelveBuddy.db = DelveBuddy.db or {}
+
+local LDB = LibStub("LibDataBroker-1.1")
+local QTip = LibStub("LibQTip-1.0")
 
 -- For tooltip mouse tracking
 local inMenuArea, inCharTip, inDelveTip, inWorldTip = false, false, false, false
 
--- helper to dismiss all tooltips
+-- Helper to dismiss all tooltips
 local function HideAllTips()
     if DelveBuddy.charTip  then QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
     if DelveBuddy.delveTip then QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
     if DelveBuddy.worldTip then QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip = nil end
 end
 
--- helper to check flags (call after every OnLeave)
+-- Helper to check flags (call after every OnLeave)
 local function TryHide()
-    -- small delay to allow OnEnter of another frame to fire first
+    -- Small delay to allow OnEnter of another frame to fire first
     C_Timer.After(0.1, function()
         if not (inMenuArea or inCharTip or inDelveTip or inWorldTip) then
             HideAllTips()
@@ -161,7 +161,8 @@ DelveBuddyMenu.initialize = function(self, level)
             info.text         = displayName
             info.func         = function()
                                    DelveBuddy.db.charData[charKey] = nil
-                                   print(("DelveBuddy: Removed character %s"):format(charKey))
+                                   DelveBuddy:Print(("Removed character %s"):format(charKey))
+                                   CloseDropDownMenus()
                                end
             info.notCheckable = true
             UIDropDownMenu_AddButton(info, level)
@@ -215,19 +216,14 @@ function DelveBuddy:PopulateCharacterSection(tip)
             -- Build displayName as in OnTooltipShow
             local name = charKey
             name = name:match("^[^-]+") or name
-            local icon = ""
-            if data.class and CLASS_ICON_TCOORDS[data.class] then
-                local c = CLASS_ICON_TCOORDS[data.class]
-                icon = string.format("|TInterface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES:14:14:0:0:256:256:%d:%d:%d:%d|t ",
-                    c[1]*256, c[2]*256, c[3]*256, c[4]*256)
-            end
+            local icon = self:ClassIconMarkup(data.class)
             local displayName = icon .. self:ClassColoredName(name, data.class)
             local keysEarnedText = self:FormatKeysEarned(data.keysEarned)
             local keysOwnedText = self:FormatKeysOwned(data.keysOwned)
             local stashesText = self:FormatStashes(data.gildedStashes)
 
-            local CHECK = "|A:common-icon-checkmark:14:14|a"
-            local CROSS = "|A:common-icon-redx:14:14|a"
+            local CHECK = self:AtlasIcon("common-icon-checkmark")
+            local CROSS = self:AtlasIcon("common-icon-redx")
             local bountyText  = data.hasBounty and CHECK or CROSS
             local lootedText  = data.bountyLooted and CHECK or CROSS
 
@@ -272,7 +268,7 @@ function DelveBuddy:PopulateDelveSection(tip)
         local info = C_AreaPoiInfo.GetAreaPOIInfo(d.zoneID, poiID)
         local icon = ""
         if info and info.atlasName then
-            icon = ("|A:%s:14:14|a "):format(info.atlasName)
+            icon = self:AtlasIcon(info.atlasName) .. " "
         end
         local name = icon .. d.name
         local mapInfo = C_Map.GetMapInfo(d.zoneID)
@@ -315,10 +311,10 @@ function DelveBuddy:PopulateWorldSoulSection(tip)
         local poiInfo = C_AreaPoiInfo.GetAreaPOIInfo(m.zoneID, poiID)
         local icon = ""
         if poiInfo and poiInfo.atlasName then
-            icon = ("|A:%s:14:14|a "):format(poiInfo.atlasName)
+            icon = self:AtlasIcon(poiInfo.atlasName) .. " "
         else
             -- Fallback to the known World Soul Memory atlas if not provided
-            icon = "|A:UI-EventPoi-WorldSoulMemory:14:14|a "
+            icon = self:AtlasIcon("UI-EventPoi-WorldSoulMemory") .. " "
         end
         local displayName = icon .. (m.name or "World Soul Memory")
 
@@ -335,11 +331,17 @@ function DelveBuddy:PopulateWorldSoulSection(tip)
     end
 end
 
+DelveBuddy.Colors = {
+    Green = "00ff00",
+    Red   = "ff3333",
+    Gray  = "aaaaaa",
+}
+
 function DelveBuddy:FormatKeysEarned(earned)
     local earnedPart = tostring(earned)
 
     if earned >= 4 then
-        earnedPart = ("|cff00ff00%s|r"):format(earnedPart)
+        earnedPart = self:ColorText(earnedPart, self.Colors.Green)
     end
 
     return earnedPart
@@ -349,7 +351,7 @@ function DelveBuddy:FormatKeysOwned(owned)
     local ownedPart  = tostring(owned)
 
     if owned == 0 then
-        ownedPart = ("|cffff3333%s|r"):format(ownedPart)
+        ownedPart = self:ColorText(ownedPart, self.Colors.Red)
     end
 
     return ownedPart
@@ -360,12 +362,12 @@ function DelveBuddy:FormatStashes(cur)
     local _, max = self:GetGildedStashCounts()
 
     if cur == UNKNOWN then
-        return ("|cffaaaaaa?/%d|r"):format(max)
+        return self:ColorText(("?/%%d"):format(max), self.Colors.Gray)
     end
 
     cur = cur or 0
     if cur >= max then
-        return ("|cff00ff00%d/%d|r"):format(cur, max)
+        return self:ColorText(("%d/%d"):format(cur, max), self.Colors.Green)
     end
 
     return ("%d/%d"):format(cur, max)
@@ -377,10 +379,32 @@ function DelveBuddy:FormatVaultCell(v)
     if v.progress >= v.threshold then
         local tier = v.level > 0 and v.level or "—"
         local iLvl = self.TierToVaultiLvl[v.level] or "?"
-        return ("|cff00ff00Tier %s (%s)|r"):format(tier, iLvl)
+        return self:ColorText(("Tier %s (%s)"):format(tier, iLvl), self.Colors.Green)
     else
-        return ("|cffaaaaaa%d/%d|r"):format(v.progress, v.threshold)
+        return self:ColorText(("%d/%d"):format(v.progress, v.threshold), self.Colors.Gray)
     end
+end
+
+function DelveBuddy:AtlasIcon(name, size)
+    size = size or 14
+    return ("|A:%s:%d:%d|a"):format(name, size, size)
+end
+
+function DelveBuddy:TextureIcon(path, size)
+    size = size or 14
+    return ("|T%s:%d:%d|t"):format(path, size, size)
+end
+
+function DelveBuddy:ClassIconMarkup(class, size)
+    size = size or 14
+    local c = CLASS_ICON_TCOORDS[class]
+    if not c then return "" end
+    return ("|TInterface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES:%d:%d:0:0:256:256:%d:%d:%d:%d|t "):format(
+        size, size, c[1]*256, c[2]*256, c[3]*256, c[4]*256)
+end
+
+function DelveBuddy:ColorText(text, color)
+    return ("|cff%s%s|r"):format(color, tostring(text))
 end
 
 function DelveBuddy:InitMinimapIcon()

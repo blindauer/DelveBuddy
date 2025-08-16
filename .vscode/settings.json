@@ -55,6 +55,7 @@
         "NineSlicePanelMixin",
         "UNKNOWN",
         "UIParentLoadAddOn",
-        "WeeklyRewardsFrame"
+        "WeeklyRewardsFrame",
+        "CloseDropDownMenus"
     ]
 }
