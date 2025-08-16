@@ -172,8 +172,6 @@ function DelveBuddy:SlashCommand(input)
                 self:Print("Minimap icon shown.")
             end
         end
-    elseif cmd == "mem" then
-        self:PrintWorldSoulMemoryZones()
     else
         self:Print("Usage: /db debugLogging 0|1")
     end
@@ -633,23 +631,4 @@ function DelveBuddy:GetZoneName(uiMapID)
         self._zoneNameCache[uiMapID] = name
     end
     return name
-end
-
-function DelveBuddy:PrintWorldSoulMemoryZones()
-    local memories = self:GetWorldSoulMemories()
-
-    if next(memories) then
-        print("Active World Soul Memories:")
-        for poiID, info in pairs(memories) do
-            print(("- %s in %s (%.1f, %.1f) [poi:%d]"):format(
-                info.name,
-                self:GetZoneName(info.zoneID),
-                info.x,
-                info.y,
-                poiID
-            ))
-        end
-    else
-        print("No active World Soul Memories found.")
-    end
 end
