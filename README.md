@@ -5,17 +5,17 @@
 ## Features
 
 -	Tracking
-  -	**Restored Coffer Keys** (weekly earned and total owned)
-  -	**Gilded Stashes** (weekly loots)
-  -	**Delver’s Bounty** (ownership and loot status)
-  -	**Great Vault Rewards** (World Delves progress per-tier)
+    -	**Restored Coffer Keys** (weekly earned and total owned)
+    -	**Gilded Stashes** (weekly loots)
+    -	**Delver’s Bounty** (ownership and loot status)
+    -	**Great Vault Rewards** (World Delves progress per-tier)
 -	UI Enhancements
-  - Shows currently active Bountiful Delves
-  -	Shows currently active Worldsoul Memories
-  -	Click a Delve or World Soul Memory to create a waypoint
+    - Shows currently active Bountiful Delves
+    -	Shows currently active Worldsoul Memories
+    -	Click a Delve or World Soul Memory to create a waypoint
 -	Reminders & Warnings
-  -	Warns when entering a Bountiful Delve without a Restored Coffer Key
-  -	Reminds you to use Delver’s Bounty when inside a Bountiful Delve
+    -	Warns when entering a Bountiful Delve without a Restored Coffer Key
+    -	Reminds you to use Delver’s Bounty when inside a Bountiful Delve
 
 ## Installation
 
