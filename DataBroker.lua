@@ -362,7 +362,7 @@ function DelveBuddy:FormatStashes(cur)
     local _, max = self:GetGildedStashCounts()
 
     if cur == UNKNOWN then
-        return self:ColorText(("?/%%d"):format(max), self.Colors.Gray)
+        return self:ColorText("?/" .. max, self.Colors.Gray)
     end
 
     cur = cur or 0
