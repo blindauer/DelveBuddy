@@ -1,5 +1,14 @@
 local DelveBuddy = LibStub("AceAddon-3.0"):NewAddon("DelveBuddy", "AceConsole-3.0", "AceEvent-3.0", "AceBucket-3.0")
 
+DelveBuddy.Zone = {
+    IsleOfDorn = 2248,
+    Hallowfall = 2215,
+    RingingDeeps = 2214,
+    AzjKahet = 2255,
+    Undermine = 2346,
+    Karesh = 2371,
+}
+
 DelveBuddy.IDS = {
     Currency = {
         RestoredCofferKey = 3028,
@@ -41,31 +50,31 @@ DelveBuddy.IDS = {
         [2452] = 8273, -- Archival Assault
     },
     DelvePois = {
-        [2248] = { -- Isle of Dorn
+        [DelveBuddy.Zone.IsleOfDorn] = {
             { ["id"] = 7787, ["x"] = 38.60, ["y"] = 74.00 }, -- Earthcrawl Mines
             { ["id"] = 7779, ["x"] = 52.03, ["y"] = 65.77 }, -- Fungal Folly
             { ["id"] = 7781, ["x"] = 62.19, ["y"] = 42.70 }, -- Kriegval's Rest
         },
-        [2214] = { -- The Ringing Deeps
+        [DelveBuddy.Zone.RingingDeeps] = {
             { ["id"] = 7782, ["x"] = 42.15, ["y"] = 48.71 }, -- The Waterworks
             { ["id"] = 7788, ["x"] = 70.20, ["y"] = 37.30 }, -- The Dread Pit
             { ["id"] = 8181, ["x"] = 76.00, ["y"] = 96.50 }, -- Excavation Site 9
         },
-        [2215] = { -- Hallowfall
+        [DelveBuddy.Zone.Hallowfall] = {
             { ["id"] = 7780, ["x"] = 71.30, ["y"] = 31.20 }, -- Mycomancer Cavern
             { ["id"] = 7785, ["x"] = 34.32, ["y"] = 47.43 }, -- Nightfall Sanctum
             { ["id"] = 7783, ["x"] = 50.60, ["y"] = 53.30 }, -- The Sinkhole
             { ["id"] = 7789, ["x"] = 65.48, ["y"] = 61.74 }, -- Skittering Breach
         },
-        [2255] = { -- Azj-Kahet
+        [DelveBuddy.Zone.AzjKahet] = {
             { ["id"] = 7790, ["x"] = 45.00, ["y"] = 19.00 }, -- The Spiral Weave
             { ["id"] = 7784, ["x"] = 55.00, ["y"] = 73.92 }, -- Tak-Rethan Abyss
             { ["id"] = 7786, ["x"] = 51.85, ["y"] = 88.30 }, -- The Underkeep
         },
-        [2346] = { -- Undermine
+        [DelveBuddy.Zone.Undermine] = {
             { ["id"] = 8246, ["x"] = 35.20, ["y"] = 52.80 }, -- Sidestreet Sluice
         },
-        [2371] = { -- K'aresh
+        [DelveBuddy.Zone.Karesh] = {
             { ["id"] = 8273, ["x"] = 55.08, ["y"] = 48.08 }, -- Archival Assault
         },
     },
@@ -163,6 +172,8 @@ function DelveBuddy:SlashCommand(input)
                 self:Print("Minimap icon shown.")
             end
         end
+    elseif cmd == "mem" then
+        self:PrintWorldSoulMemoryZones()
     else
         self:Print("Usage: /db debugLogging 0|1")
     end
@@ -531,6 +542,28 @@ function DelveBuddy:GetDelves()
     return delves
 end
 
+function DelveBuddy:GetWorldSoulMemories()
+    local memories = {}
+
+    for _, zoneID in pairs(self.Zone) do
+        local pois = C_AreaPoiInfo.GetEventsForMap(zoneID) or {}
+        for _, poiID in ipairs(pois) do
+            local poi = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poiID)
+            if poi and poi.atlasName == "UI-EventPoi-WorldSoulMemory" then
+                local name = (poi.name and (poi.name:match(":%s*(.+)") or poi.name)) or "World Soul Memory"
+                memories[poiID] = {
+                    name   = name,
+                    zoneID = zoneID,
+                    x      = poi.position and poi.position.x * 100 or 0,
+                    y      = poi.position and poi.position.y * 100 or 0,
+                }
+            end
+        end
+    end
+
+    return memories
+end
+
 -- Only for discovering new delves.
 function DelveBuddy:DumpPOIs(mapID)
     if not mapID then
@@ -589,4 +622,34 @@ function DelveBuddy:IsInBountifulDelve()
     )
 
     return bountiful
+end
+
+function DelveBuddy:GetZoneName(uiMapID)
+    self._zoneNameCache = self._zoneNameCache or {}
+    local name = self._zoneNameCache[uiMapID]
+    if not name then
+        local info = C_Map.GetMapInfo(uiMapID)
+        name = (info and info.name) or ("Map " .. tostring(uiMapID))
+        self._zoneNameCache[uiMapID] = name
+    end
+    return name
+end
+
+function DelveBuddy:PrintWorldSoulMemoryZones()
+    local memories = self:GetWorldSoulMemories()
+
+    if next(memories) then
+        print("Active World Soul Memories:")
+        for poiID, info in pairs(memories) do
+            print(("- %s in %s (%.1f, %.1f) [poi:%d]"):format(
+                info.name,
+                self:GetZoneName(info.zoneID),
+                info.x,
+                info.y,
+                poiID
+            ))
+        end
+    else
+        print("No active World Soul Memories found.")
+    end
 end
