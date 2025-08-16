@@ -9,9 +9,9 @@ local inMenuArea, inCharTip, inDelveTip, inWorldTip = false, false, false, false
 
 -- helper to dismiss all tooltips
 local function HideAllTips()
-  if DelveBuddy.charTip  then QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
-  if DelveBuddy.delveTip then QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
-  if DelveBuddy.worldTip then QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip = nil end
+    if DelveBuddy.charTip  then QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
+    if DelveBuddy.delveTip then QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
+    if DelveBuddy.worldTip then QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip = nil end
 end
 
 -- helper to check flags (call after every OnLeave)
@@ -39,18 +39,13 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
     icon = "Interface\\AddOns\\DelveBuddy\\media\\DelveIcon",
     OnClick = function(self, button)
         if button == "RightButton" then
-            if DelveBuddy.charTip  then QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
-            if DelveBuddy.delveTip then QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
-            if DelveBuddy.worldTip then QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip = nil end
+            HideAllTips()
             GameTooltip:Hide()
             ToggleDropDownMenu(1, nil, DelveBuddyMenu, self, 0, 0)
         else
             -- left click toggle tooltips (or show/hide main UI if you re-enable it)
             if DelveBuddy.charTip then
-                -- hide all
-                if DelveBuddy.charTip  then QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip=nil end
-                if DelveBuddy.delveTip then QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip=nil end
-                if DelveBuddy.worldTip then QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip=nil end
+                HideAllTips()
             else
                 -- show
                 DelveBuddy.ldb.OnEnter(self)
@@ -60,9 +55,9 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
     OnEnter = function(display)
         inMenuArea = true
 
-        -- Character summary tooltip (8 columns)
+        -- Character summary tooltip
         local charTip = QTip:Acquire("DelveBuddyCharTip", 9,
-            "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER")
+            "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER")
         charTip:EnableMouse(true)
         charTip:SetScript("OnEnter", function() inCharTip = true end)
         charTip:SetScript("OnLeave", function() inCharTip = false TryHide() end)
@@ -71,23 +66,23 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
         DelveBuddy.charTip = charTip
         charTip:Show()
 
-        -- Delve list tooltip (2 columns), anchored below charTip (LEFT side now)
+        -- Delve list tooltip
         local delveTip = QTip:Acquire("DelveBuddyDelveTip", 2, "LEFT","LEFT")
         delveTip:EnableMouse(true)
         delveTip:SetScript("OnEnter", function() inDelveTip = true end)
         delveTip:SetScript("OnLeave", function() inDelveTip = false TryHide() end)
-        if delveTip.ClearAllPoints then delveTip:ClearAllPoints() end
+        delveTip:ClearAllPoints()
         delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
         DelveBuddy:PopulateDelveSection(delveTip)
         DelveBuddy.delveTip = delveTip
         delveTip:Show()
 
-        -- World Soul Memories tooltip (2 columns), anchored below charTip (RIGHT side now)
+        -- World Soul Memories tooltip
         local worldTip = QTip:Acquire("DelveBuddyWorldTip", 2, "LEFT","LEFT")
         worldTip:EnableMouse(true)
         worldTip:SetScript("OnEnter", function() inWorldTip = true end)
         worldTip:SetScript("OnLeave", function() inWorldTip = false TryHide() end)
-        if worldTip.ClearAllPoints then worldTip:ClearAllPoints() end
+        worldTip:ClearAllPoints()
         worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
         DelveBuddy:PopulateWorldSoulSection(worldTip)
         DelveBuddy.worldTip = worldTip
@@ -247,7 +242,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
             if name == UnitName("player") then
                 for col = 7, 9 do -- Vault cells
                     tip:SetCellScript(line, col, "OnMouseUp", function()
-                        WeeklyRewardsFrame:Show()
+                        DelveBuddy:OpenVaultUI()
                     end)
                     tip:SetCellScript(line, col, "OnEnter", function()
                         -- Because hovering over the cell calls charTip's OnLeave, dismissing the tips otherwise.
@@ -261,7 +256,7 @@ end
 
 function DelveBuddy:PopulateDelveSection(tip)
     tip:Clear()
-    
+
     -- Get all bountiful delves; if none, show a placeholder message
     local delves = self:GetDelves() or {}
     if not next(delves) then
@@ -270,7 +265,7 @@ function DelveBuddy:PopulateDelveSection(tip)
         return
     end
 
-    -- Otherwise show the normal two-column list
+    -- Otherwise show the list
     tip:SetColumnLayout(2, "LEFT", "LEFT")
     tip:AddHeader("|cffdda0ddBountiful Delves|r", "")
     for poiID, d in pairs(delves) do
@@ -307,14 +302,14 @@ function DelveBuddy:PopulateWorldSoulSection(tip)
     local memories = self:GetWorldSoulMemories() or {}
     if not next(memories) then
         tip:SetColumnLayout(1, "LEFT")
-        tip:AddLine("|cffaaaaaaNo World Soul Memories active|r")
+        tip:AddLine("|cffaaaaaaNo World Soul Memories available|r")
         return
     end
 
     tip:SetColumnLayout(2, "LEFT", "LEFT")
     tip:AddHeader("|cff80c0ffWorld Soul Memories|r", "")
 
-    -- name, zone (coords)
+    -- name, zone
     for poiID, m in pairs(memories) do
         local zoneName = self:GetZoneName(m.zoneID)
         local poiInfo = C_AreaPoiInfo.GetAreaPOIInfo(m.zoneID, poiID)
@@ -334,7 +329,7 @@ function DelveBuddy:PopulateWorldSoulSection(tip)
                 local p = UiMapPoint.CreateFromCoordinates(m.zoneID, (m.x or 0)/100, (m.y or 0)/100)
                 C_Map.SetUserWaypoint(p)
                 C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                DelveBuddy:Print(("DelveBuddy: Waypoint set to %s"):format(m.name))
+                self:Print(("DelveBuddy: Waypoint set to %s"):format(m.name))
             end
         end)
     end

@@ -109,7 +109,7 @@ DelveBuddy.RecommendedGearForTier = {
     [8] = 678,
     [9] = 684,
     [10] = 691,
-    [11] = 678, -- Need to verify
+    [11] = 697,
 }
 
 function DelveBuddy:OnInitialize()
@@ -631,4 +631,9 @@ function DelveBuddy:GetZoneName(uiMapID)
         self._zoneNameCache[uiMapID] = name
     end
     return name
+end
+
+function DelveBuddy:OpenVaultUI()
+    C_AddOns.LoadAddOn("Blizzard_WeeklyRewards")
+    WeeklyRewardsFrame:Show()
 end
