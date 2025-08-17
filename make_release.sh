@@ -20,12 +20,14 @@ RELEASE_FOLDER="$RELEASES_DIR/$FOLDER"
 # 4. Create the release folder and copy files, excluding specified items
 mkdir "$RELEASE_FOLDER"
 
-rsync -av --exclude="assets-external" \
-          --exclude="screenshots" \
-          --exclude="deploy.sh" \
-          --exclude="release.sh" \
-          --exclude="Releases" \
-          ./ "$RELEASE_FOLDER" > /dev/null
+rsync -av \
+  --exclude=".*" \
+  --exclude="assets-external" \
+  --exclude="screenshots" \
+  --exclude="deploy.sh" \
+  --exclude="make_release.sh" \
+  --exclude="Releases" \
+  ./ "$RELEASE_FOLDER" > /dev/null
 
  # 5. Zip it up
 (cd "$RELEASES_DIR" && zip -r "$ZIP_NAME" "$FOLDER") > /dev/null
