@@ -14,7 +14,8 @@ DelveBuddy.IDS = {
         RestoredCofferKey = 3028,
     },
     Quest = {
-        KeyEarned = { 84736, 84737, 84738, 84739 },
+        ShardsEarned = { 84736, 84737, 84738, 84739 },
+        KeyEarned = { 91175, 91176, 91177, 91178 },
         BountyLooted = 86371,
     },
     Item = {
@@ -81,6 +82,8 @@ DelveBuddy.IDS = {
     CONST = {
         UNKNOWN_GILDED_STASH_COUNT = -1,
         MAX_WEEKLY_GILDED_STASHES = 3,
+        MAX_WEEKLY_SHARDS = 200,
+        MAX_WEEKLY_KEYS = 4,
     },
 }
 

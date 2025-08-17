@@ -123,12 +123,19 @@ function DelveBuddy:CollectDelveData()
     -- Class
     data.class = select(2, UnitClass("player"))
 
-    -- Keys earned (this week)
-    local earned = 0
-    for _, questID in ipairs(IDS.Quest.KeyEarned) do
-        earned = earned + (C_QuestLog.IsQuestFlaggedCompleted(questID) and 1 or 0)
+    -- Shards earned (this week)
+    local shardsEarned = 0
+    for _, questID in ipairs(IDS.Quest.ShardsEarned) do
+        shardsEarned = shardsEarned + (C_QuestLog.IsQuestFlaggedCompleted(questID) and 1 or 0)
     end
-    data.keysEarned = earned
+    data.shardsEarned = shardsEarned * 50
+
+    -- Keys earned (this week)
+    local keysEarned = 0
+    for _, questID in ipairs(IDS.Quest.KeyEarned) do
+        keysEarned = keysEarned + (C_QuestLog.IsQuestFlaggedCompleted(questID) and 1 or 0)
+    end
+    data.keysEarned = keysEarned
 
     -- Keys owned
     data.keysOwned = self:GetKeyCount()
@@ -324,6 +331,7 @@ function DelveBuddy:CleanupStaleCharacters()
     for charKey, data in pairs(self.db.charData) do
         if type(data) == "table" and self:HasWeeklyResetOccurred(data.lastLogin) then
             self:Log("Resetting weekly data for", charKey)
+            data.shardsEarned = 0
             data.keysEarned = 0
             data.gildedStashes = 0
             data.bountyLooted = false

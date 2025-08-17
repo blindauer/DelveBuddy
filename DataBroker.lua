@@ -56,8 +56,8 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
         inMenuArea = true
 
         -- Character summary tooltip
-        local charTip = QTip:Acquire("DelveBuddyCharTip", 9,
-            "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER")
+        local charTip = QTip:Acquire("DelveBuddyCharTip", 10,
+            "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER", "CENTER")
         charTip:EnableMouse(true)
         charTip:SetScript("OnEnter", function() inCharTip = true end)
         charTip:SetScript("OnLeave", function() inCharTip = false TryHide() end)
@@ -173,6 +173,7 @@ end
 function DelveBuddy:PopulateCharacterSection(tip)
     tip:Clear()
 
+    local SHARD_ICON = "|TInterface\\Icons\\inv_gizmo_hardenedadamantitetube:16:16:0:0|t"
     local KEY_ICON   = "|TInterface\\Icons\\Inv_10_blacksmithing_consumable_key_color1:16:16:0:0|t"
     local BOUNTY_ICON = "|TInterface\\Icons\\Icon_treasuremap:16:16:0:0|t"
     local STASH_ICON = "|TInterface\\Icons\\Inv_cape_special_treasure_c_01:16:16:0:0|t"
@@ -181,6 +182,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
     -- Row 1: Icons (blank where you don't want one)
     tip:AddHeader(
         " ",
+        SHARD_ICON,
         KEY_ICON,
         KEY_ICON,
         STASH_ICON,
@@ -194,6 +196,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
     -- Row 2: Text labels
     local labelLine = tip:AddLine(
         " ",
+        "Earned",
         "Earned",
         "Owned",
         "Stashes",
@@ -218,7 +221,8 @@ function DelveBuddy:PopulateCharacterSection(tip)
             name = name:match("^[^-]+") or name
             local icon = self:ClassIconMarkup(data.class)
             local displayName = icon .. self:ClassColoredName(name, data.class)
-            local keysEarnedText = self:FormatKeysEarned(data.keysEarned)
+            local shardsEarnedText = self:FormatKeysEarned(data.shardsEarned or 0, self.IDS.CONST.MAX_WEEKLY_SHARDS)
+            local keysEarnedText = self:FormatKeysEarned(data.keysEarned, self.IDS.CONST.MAX_WEEKLY_KEYS)
             local keysOwnedText = self:FormatKeysOwned(data.keysOwned)
             local stashesText = self:FormatStashes(data.gildedStashes)
 
@@ -232,7 +236,8 @@ function DelveBuddy:PopulateCharacterSection(tip)
             local vault2 = self:FormatVaultCell(rewards and rewards[2])
             local vault3 = self:FormatVaultCell(rewards and rewards[3])
 
-            local line = tip:AddLine(displayName, keysEarnedText, keysOwnedText, stashesText, bountyText, lootedText, vault1, vault2, vault3)
+            local line = tip:AddLine(displayName, shardsEarnedText, keysEarnedText, keysOwnedText, 
+            stashesText, bountyText, lootedText, vault1, vault2, vault3)
 
             -- Only for current character: open vault if clicking vault cells.
             if name == UnitName("player") then
@@ -303,7 +308,9 @@ function DelveBuddy:PopulateWorldSoulSection(tip)
     end
 
     tip:SetColumnLayout(2, "LEFT", "LEFT")
-    tip:AddHeader("|cff80c0ffWorld Soul Memories|r", "")
+    tip:AddHeader(
+        "|cff80c0ffWorld Soul Memories|r",
+        ("|TInterface\\Icons\\spell_holy_pureofheart:16:16:0:0|t x %d"):format(GetItemCount(246771)))
 
     -- name, zone
     for poiID, m in pairs(memories) do
@@ -337,10 +344,10 @@ DelveBuddy.Colors = {
     Gray  = "aaaaaa",
 }
 
-function DelveBuddy:FormatKeysEarned(earned)
+function DelveBuddy:FormatKeysEarned(earned, max)
     local earnedPart = tostring(earned)
 
-    if earned >= 4 then
+    if earned >= max then
         earnedPart = self:ColorText(earnedPart, self.Colors.Green)
     end
 

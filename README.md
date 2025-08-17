@@ -6,12 +6,13 @@
 
 -	Tracking
     -	**Restored Coffer Keys** (weekly earned and total owned)
+    -	**Coffer Key Shards** (weekly earned)
     -	**Gilded Stashes** (weekly loots)
     -	**Delver’s Bounty** (ownership and loot status)
     -	**Great Vault Rewards** (World Delves progress per-tier)
 -	UI Enhancements
     - Shows currently active Bountiful Delves
-    -	Shows currently active Worldsoul Memories
+    -	Shows currently active Worldsoul Memories (and Radiant Echoes owned)
     -	Click a Delve or World Soul Memory to create a waypoint
 -	Reminders & Warnings
     -	Warns when entering a Bountiful Delve without a Restored Coffer Key
