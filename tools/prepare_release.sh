@@ -31,7 +31,7 @@ git add "$TOC_FILE"
 git commit -m "Set version to $VERSION"
 
 # Tag the version
-echo "🏷️ Tagging version v$VERSION..."
-git tag "v$VERSION"
+echo "🏷️ Tagging version $VERSION..."
+git tag "$VERSION"
 
 echo "✅ Done. Version set to $VERSION, committed and tagged."
