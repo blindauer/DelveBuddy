@@ -24,8 +24,7 @@ rsync -av \
   --exclude=".*" \
   --exclude="assets-external" \
   --exclude="screenshots" \
-  --exclude="deploy.sh" \
-  --exclude="make_release.sh" \
+  --exclude="tools" \
   --exclude="Releases" \
   ./ "$RELEASE_FOLDER" > /dev/null
 
