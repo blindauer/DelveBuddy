@@ -19,7 +19,7 @@ DelveBuddy.IDS = {
         BountyLooted = 86371,
     },
     Item = {
-        DelversBounty = 233071,
+        DelversBounty = 248142,
     },
     Widget = {
         GildedStash = 6659,
