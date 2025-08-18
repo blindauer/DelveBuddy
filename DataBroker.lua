@@ -241,7 +241,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
 
             -- Only for current character: open vault if clicking vault cells.
             if name == UnitName("player") then
-                for col = 7, 9 do -- Vault cells
+                for col = 8, 10 do -- Vault cells
                     tip:SetCellScript(line, col, "OnMouseUp", function()
                         DelveBuddy:OpenVaultUI()
                     end)
