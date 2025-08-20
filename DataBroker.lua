@@ -43,12 +43,8 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
             GameTooltip:Hide()
             ToggleDropDownMenu(1, nil, DelveBuddyMenu, self, 0, 0)
         else
-            -- left click toggle tooltips (or show/hide main UI if you re-enable it)
             if DelveBuddy.charTip then
                 HideAllTips()
-            else
-                -- show
-                DelveBuddy.ldb.OnEnter(self)
             end
         end
     end,
@@ -243,6 +239,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
             if name == UnitName("player") then
                 for col = 8, 10 do -- Vault cells
                     tip:SetCellScript(line, col, "OnMouseUp", function()
+                        HideAllTips()
                         DelveBuddy:OpenVaultUI()
                     end)
                     tip:SetCellScript(line, col, "OnEnter", function()
@@ -280,15 +277,8 @@ function DelveBuddy:PopulateDelveSection(tip)
         local zoneName = (mapInfo and mapInfo.name) or "?"
         local line = tip:AddLine(name, zoneName)
         tip:SetLineScript(line, "OnMouseUp", function(_, button)
-            self:Log("DelveBuddy: clicked delve ->", d.name)
-            if C_Map.CanSetUserWaypointOnMap(d.zoneID) then
-                local point = UiMapPoint.CreateFromCoordinates(d.zoneID, d.x/100, d.y/100)
-                C_Map.SetUserWaypoint(point)
-                C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                self:Print(("DelveBuddy: Waypoint set to %s"):format(d.name))
-            else
-                self:Print(("DelveBuddy: Cannot set waypoint on map %s"):format(d.zoneID))
-            end
+            HideAllTips()
+            self:SetWaypoint(d)
         end)
         tip:SetLineScript(line, "OnEnter", function()
             -- Because hovering over the line calls delveTip's OnLeave, dismissing the tips otherwise.
@@ -328,12 +318,8 @@ function DelveBuddy:PopulateWorldSoulSection(tip)
         local line = tip:AddLine(displayName, zoneName)
         tip:SetLineScript(line, "OnEnter", function() inWorldTip = true end)
         tip:SetLineScript(line, "OnMouseUp", function(_, button)
-            if C_Map.CanSetUserWaypointOnMap(m.zoneID) then
-                local p = UiMapPoint.CreateFromCoordinates(m.zoneID, (m.x or 0)/100, (m.y or 0)/100)
-                C_Map.SetUserWaypoint(p)
-                C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                self:Print(("DelveBuddy: Waypoint set to %s"):format(m.name))
-            end
+            HideAllTips()
+            self:SetWaypoint(m)
         end)
     end
 end

@@ -533,3 +533,14 @@ function DelveBuddy:OpenVaultUI()
     C_AddOns.LoadAddOn("Blizzard_WeeklyRewards")
     WeeklyRewardsFrame:Show()
 end
+
+function DelveBuddy:SetWaypoint(poi)
+    if C_Map.CanSetUserWaypointOnMap(poi.zoneID) then
+        local point = UiMapPoint.CreateFromCoordinates(poi.zoneID, poi.x/100, poi.y/100)
+        C_Map.SetUserWaypoint(point)
+        C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+        self:Print(("DelveBuddy: Waypoint set to %s"):format(poi.name))
+    else
+        self:Print(("DelveBuddy: Cannot set waypoint on map %s"):format(poi.zoneID))
+    end
+end

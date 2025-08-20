@@ -1,6 +1,6 @@
 == DelveBuddy TODO ==
 * Feature: implement TomTom for waypoint tracking?
+* Feature: tooltip on delve which displays the story?
 * Bug: IsDelveComplete sometimes fails
     * E.g.: Excavation Site 9, A Knightly Quest: when at stage 3 (the boss: "0/1 Beste Glatisant defeated", assumes complete)
     * BUT THEN: stage 4 (0/1 Treasure Found) says not complete :(
-* Bug: tooltips sometimes hang out, requiring click to dismiss
