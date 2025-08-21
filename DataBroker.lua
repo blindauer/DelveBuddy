@@ -115,6 +115,14 @@ DelveBuddyMenu.initialize = function(self, level)
         end
         UIDropDownMenu_AddButton(info, level)
 
+        -- Menu: Waypoint optinos
+        info = UIDropDownMenu_CreateInfo()
+        info.text      = "Set Waypoints via"
+        info.hasArrow  = true
+        info.value     = "WAYPOINT_OPTIONS"
+        info.notCheckable = true
+        UIDropDownMenu_AddButton(info, level)
+
         -- Checkbox: Debug Logging
         info.text = "Debug Logging"
         info.checked = DelveBuddy.db.global.debugLogging
@@ -161,6 +169,30 @@ DelveBuddyMenu.initialize = function(self, level)
                                    CloseDropDownMenus()
                                end
             info.notCheckable = true
+            UIDropDownMenu_AddButton(info, level)
+        end
+    elseif level == 2 and UIDROPDOWNMENU_MENU_VALUE == "WAYPOINT_OPTIONS" then
+        local function setWaypointPrefs(useBlizz, useTomTom)
+            DelveBuddy.db.global.waypoints.useBlizzard = useBlizz
+            DelveBuddy.db.global.waypoints.useTomTom = useTomTom
+        end
+        local choices = {
+            { text = "Blizzard", useBlizzard = true,  useTomTom = false },
+            { text = "TomTom",   useBlizzard = false, useTomTom = true  },
+            { text = "Both",     useBlizzard = true,  useTomTom = true  },
+        }
+
+        local curBlizzard = DelveBuddy.db.global.waypoints.useBlizzard
+        local curTomTom   = DelveBuddy.db.global.waypoints.useTomTom
+
+        for _, c in ipairs(choices) do
+            info = UIDropDownMenu_CreateInfo()
+            info.text = c.text
+            info.checked = (curBlizzard == c.useBlizzard) and (curTomTom == c.useTomTom)
+            info.func = function()
+                setWaypointPrefs(c.useBlizzard, c.useTomTom)
+                CloseDropDownMenus()
+            end
             UIDropDownMenu_AddButton(info, level)
         end
     end

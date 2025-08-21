@@ -6,12 +6,17 @@ function DelveBuddy:OnInitialize()
     DelveBuddyDB.global = DelveBuddyDB.global or {}
     DelveBuddyDB.charData = DelveBuddyDB.charData or {}
     local g = DelveBuddyDB.global
-    if g.debugLogging == nil then g.debugLogging = false end
+    if g.debugLogging == nil then g.debugLogging = false end    
     self.db = DelveBuddyDB
 
     -- LibDBIcon
     DelveBuddyDB.global.minimap = DelveBuddyDB.global.minimap or {}
     self:InitMinimapIcon()
+
+    -- Waypoints
+    DelveBuddyDB.global.waypoints = DelveBuddyDB.global.waypoints or {}
+    if DelveBuddyDB.global.waypoints.useBlizzard == nil then DelveBuddyDB.global.waypoints.useBlizzard = true end
+    if DelveBuddyDB.global.waypoints.useTomTom == nil then DelveBuddyDB.global.waypoints.useTomTom = false end
 
     -- Slash commands
     self:RegisterChatCommand("delvebuddy", "SlashCommand")
@@ -535,12 +540,39 @@ function DelveBuddy:OpenVaultUI()
 end
 
 function DelveBuddy:SetWaypoint(poi)
-    if C_Map.CanSetUserWaypointOnMap(poi.zoneID) then
-        local point = UiMapPoint.CreateFromCoordinates(poi.zoneID, poi.x/100, poi.y/100)
-        C_Map.SetUserWaypoint(point)
-        C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-        self:Print(("DelveBuddy: Waypoint set to %s"):format(poi.name))
-    else
-        self:Print(("DelveBuddy: Cannot set waypoint on map %s"):format(poi.zoneID))
+    local usedAny = false
+
+    -- Blizzard waypoint
+    if self.db.global.waypoints.useBlizzard then
+        if C_Map.CanSetUserWaypointOnMap(poi.zoneID) then
+            local point = UiMapPoint.CreateFromCoordinates(poi.zoneID, poi.x / 100, poi.y / 100)
+            C_Map.SetUserWaypoint(point)
+            C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+            self:Print(("Waypoint set to %s"):format(poi.name))
+            usedAny = true
+        else
+            self:Print(("Cannot set waypoint on map %s"):format(poi.zoneID))
+        end
+    end
+
+    -- TomTom waypoint
+    if self.db.global.waypoints.useTomTom then
+        local tt = _G.TomTom
+        if tt and tt.AddWaypoint then
+            tt:AddWaypoint(poi.zoneID, poi.x / 100, poi.y / 100, {
+                title = poi.name,
+                persistent = false,
+                minimap = true,
+                world = true,
+            })
+            self:Print(("TomTom waypoint set to %s"):format(poi.name))
+            usedAny = true
+        else
+            self:Print("TomTom not detected. Enable/install TomTom or disable it in DelveBuddy options.")
+        end
+    end
+
+    if not usedAny then
+        self:Print("No waypoint providers active.")
     end
 end
