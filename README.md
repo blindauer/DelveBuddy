@@ -33,8 +33,11 @@
 - **Right-click** the broker icon for options (debug logging, minimap icon toggle, remove character).
 
 ## Screenshots
-![DelveBuddy Data Broker Tooltip](screenshots/DataBrokerTooltip.jpg)
-![DelveBuddy Minimap Icon Tooltip](screenshots/MiniMapTooltip.jpg)
+![DelveBuddy Tooltip](screenshots/Tooltip-Minimap.jpg)
+![DelveBuddy Full Screenshot](screenshots/screenshot-full.jpg)
+![TomTom Waypoint to Delve](screenshots/TomTom.jpg)
+![Bounty Reminder](screenshots/BountyReminder.jpg)
+![Bounty Highlight](screenshots/BountyHighlight.jpg)
 
 ## License
 
