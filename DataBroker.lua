@@ -297,7 +297,18 @@ function DelveBuddy:PopulateDelveSection(tip)
 
     -- Otherwise show the list
     tip:SetColumnLayout(2, "LEFT", "LEFT")
-    tip:AddHeader("|cffdda0ddBountiful Delves|r", "")
+
+    -- Header: show coffer keys owned for current character
+    local curKey = self:GetCharacterKey()
+    local curData = self.db.charData and self.db.charData[curKey] or nil
+    local ownedKeys = (curData and curData.keysOwned) or 0
+    local keyIcon = self:TextureIcon("Interface\\Icons\\Inv_10_blacksmithing_consumable_key_color1", 16)
+    local ownedText = self:FormatKeysOwned(ownedKeys)
+    if ownedKeys == 0 then
+        ownedText = self:ColorText(ownedText, self.Colors.Red)
+    end
+    local keysHeaderText = ("%s x %s"):format(keyIcon, ownedText)
+    tip:AddHeader("|cffdda0ddBountiful Delves|r", keysHeaderText)
     for poiID, d in pairs(delves) do
         local info = C_AreaPoiInfo.GetAreaPOIInfo(d.zoneID, poiID)
         local icon = ""
@@ -330,9 +341,12 @@ function DelveBuddy:PopulateWorldSoulSection(tip)
     end
 
     tip:SetColumnLayout(2, "LEFT", "LEFT")
-    tip:AddHeader(
-        "|cff80c0ffWorld Soul Memories|r",
-        ("|TInterface\\Icons\\spell_holy_pureofheart:16:16:0:0|t x %d"):format(GetItemCount(246771)))
+    local echoesCount = GetItemCount(246771)
+    local echoesText = ("|TInterface\\Icons\\spell_holy_pureofheart:16:16:0:0|t x %d"):format(echoesCount)
+    if echoesCount > 5 then
+        echoesText = self:ColorText(echoesText, self.Colors.Green)
+    end
+    tip:AddHeader("|cff80c0ffWorld Soul Memories|r", echoesText)
 
     -- name, zone
     for poiID, m in pairs(memories) do

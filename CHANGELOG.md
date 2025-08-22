@@ -1,5 +1,10 @@
 = DelveBuddy Changelog =
 
+== 1.1.1 ==
+Enhancements:
+* Show Restored Coffer Key count on delves tooltip
+* Show Radiant Echoes count in green if it's 5 or more
+
 == 1.1 ==
 Enhancements:
 * Added TomTom waypoint option. Use Blizzard, TomTom, or both for setting waypoints.
