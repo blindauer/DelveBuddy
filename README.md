@@ -24,13 +24,15 @@
 2. Ensure the folder name is `DelveBuddy`.
 
 ## Usage
-
-- **Slash Commands:**
-  - `/db minimap` — Show/hide the minimap icon.
-  - `/db debugLogging 1|0` — Enable/disable debug logs.
-
-- **Data Broker:** Hover over the LibDataBroker icon or minimap icon to see DelveBuddy's tooltip UI
-- **Right-click** the broker icon for options (debug logging, minimap icon toggle, remove character).
+* **Minimap icon:** Click the minimap icon to show/hide DelveBuddy's tooltip UI.
+* **Data Broker:** Hover over the LibDataBroker icon to see DelveBuddy's tooltip UI.
+* **Right-click** the broker or minimap icon for options
+* **Slash Commands:**
+    * `/db minimap` — Show/hide the minimap icon.
+    * `/db scale <0.75-2.0>` -- Set tooltip scale
+    * `/db reminders <coffer|bounty> <on||off>` -- Enable/disable reminders
+    * `/db waypoints <blizzard|tomtom|both>` -- Set waypoint providers
+    * `/db debugLogging <on|off>` — Enable/disable debug logs.
 
 ## Screenshots
 ![DelveBuddy Tooltip](screenshots/ToolTip-Minimap.jpg)
