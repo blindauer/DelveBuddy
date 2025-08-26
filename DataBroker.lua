@@ -40,6 +40,7 @@ local function OpenAllTips(display)
     charTip:SetScript("OnEnter", function() inCharTip = true end)
     charTip:SetScript("OnLeave", function() inCharTip = false TryHide() end)
     charTip:SmartAnchorTo(display, "ANCHOR_CURSOR")
+    charTip:SetScale(DelveBuddy.db.global.tooltipScale)
     DelveBuddy:PopulateCharacterSection(charTip)
     DelveBuddy.charTip = charTip
     charTip:Show()
@@ -51,6 +52,7 @@ local function OpenAllTips(display)
     delveTip:SetScript("OnLeave", function() inDelveTip = false TryHide() end)
     delveTip:ClearAllPoints()
     delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
+    delveTip:SetScale(DelveBuddy.db.global.tooltipScale)
     DelveBuddy:PopulateDelveSection(delveTip)
     DelveBuddy.delveTip = delveTip
     delveTip:Show()
@@ -62,15 +64,60 @@ local function OpenAllTips(display)
     worldTip:SetScript("OnLeave", function() inWorldTip = false TryHide() end)
     worldTip:ClearAllPoints()
     worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
+    worldTip:SetScale(DelveBuddy.db.global.tooltipScale)
     DelveBuddy:PopulateWorldSoulSection(worldTip)
     DelveBuddy.worldTip = worldTip
     worldTip:Show()
+end
+
+-- Custom dropdown entry: slider for tooltip scale
+local function CreateTooltipScaleDropdownEntry()
+    if DelveBuddy.tooltipScaleEntry then return DelveBuddy.tooltipScaleEntry end
+
+    local entry = CreateFrame("Frame", "DelveBuddyTooltipScaleEntry", nil, "UIDropDownCustomMenuEntryTemplate")
+    entry:SetSize(220, 56)
+
+    local title = entry:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("TOPLEFT", 10, -6)
+    title:SetText("Tooltip Scale")
+
+    local slider = CreateFrame("Slider", "DelveBuddyTooltipScaleSlider", entry, "OptionsSliderTemplate")
+    slider:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
+    slider:SetWidth(200)
+    slider:SetMinMaxValues(0.8, 2.0)
+    slider:SetObeyStepOnDrag(true)
+    slider:SetValueStep(0.05)
+
+    -- Initialize labels
+    _G[slider:GetName() .. "Low"]:SetText("75%")
+    _G[slider:GetName() .. "High"]:SetText("200%")
+
+    local function applyScale(val)
+        val = math.max(0.75, math.min(2.0, tonumber(val) or 1.0))
+        DelveBuddy.db.global.tooltipScale = val
+        _G[slider:GetName() .. "Text"]:SetText(string.format("%d%%", math.floor(val * 100 + 0.5)))
+        if DelveBuddy.charTip then DelveBuddy.charTip:SetScale(val) end
+        if DelveBuddy.delveTip then DelveBuddy.delveTip:SetScale(val) end
+        if DelveBuddy.worldTip then DelveBuddy.worldTip:SetScale(val) end
+    end
+
+    slider:SetScript("OnValueChanged", function(self, value)
+        applyScale(value)
+    end)
+
+    -- Prime initial value; may be updated each time menu opens
+    slider:SetValue(DelveBuddy.db.global.tooltipScale or 1.0)
+    _G[slider:GetName() .. "Text"]:SetText(string.format("%d%%", math.floor((DelveBuddy.db.global.tooltipScale or 1.0) * 100 + 0.5)))
+
+    DelveBuddy.tooltipScaleEntry = entry
+    return entry
 end
 
 -- Initialize settings in the global table
 DelveBuddy.db.global = DelveBuddy.db.global or {}
 if DelveBuddy.db.global.showIcon == nil then DelveBuddy.db.global.showIcon = true end
 if DelveBuddy.db.global.mode == nil then DelveBuddy.db.global.mode = "A" end
+if DelveBuddy.db.global.tooltipScale == nil then DelveBuddy.db.global.tooltipScale = 1.0 end
 
 local DelveBuddyMenu = CreateFrame("Frame", "DelveBuddyMenu", nil, "UIDropDownMenuTemplate")
 DelveBuddyMenu.displayMode = "MENU"
@@ -155,6 +202,15 @@ DelveBuddyMenu.initialize = function(self, level)
         info.notCheckable = true
         UIDropDownMenu_AddButton(info, level)
 
+
+        -- Menu: Tooltip Scale (Slider)
+        info = UIDropDownMenu_CreateInfo()
+        info.text      = "Tooltip Scale"
+        info.hasArrow  = true
+        info.value     = "TOOLTIP_SCALE"
+        info.notCheckable = true
+        UIDropDownMenu_AddButton(info, level)
+
         -- Divider
         info = UIDropDownMenu_CreateInfo()
         info.disabled = true
@@ -209,6 +265,16 @@ DelveBuddyMenu.initialize = function(self, level)
         info.tooltipTitle = "Delver's Bounty reminder"
         info.tooltipText = "Reminds you to use your Delver's Bounty (if you have one) when in a Bountiful Delve."
         info.tooltipOnButton = true
+        UIDropDownMenu_AddButton(info, level)
+    elseif level == 2 and UIDROPDOWNMENU_MENU_VALUE == "TOOLTIP_SCALE" then
+        local entry = CreateTooltipScaleDropdownEntry()
+        -- Ensure the slider reflects current DB value on open
+        if DelveBuddyTooltipScaleSlider then
+            DelveBuddyTooltipScaleSlider:SetValue(DelveBuddy.db.global.tooltipScale or 1.0)
+        end
+        local info = UIDropDownMenu_CreateInfo()
+        info.customFrame = entry
+        info.notCheckable = true
         UIDropDownMenu_AddButton(info, level)
     elseif level == 2 and UIDROPDOWNMENU_MENU_VALUE == "ADVANCED_MENU" then
         -- Checkbox: Debug Logging
@@ -538,7 +604,7 @@ function DelveBuddy:ShowMinimapHint(owner)
     GameTooltip:ClearLines()
     GameTooltip:SetPoint("TOPRIGHT", owner, "BOTTOMRIGHT")
     GameTooltip:AddLine("DelveBuddy")
-    GameTooltip:AddLine("|cffffff00Left-click|r to show tooltips")
+    GameTooltip:AddLine("|cffffff00Click|r to show/hide UI")
     GameTooltip:AddLine("|cffffff00Right-click|r for options")
     GameTooltip:Show()
 end

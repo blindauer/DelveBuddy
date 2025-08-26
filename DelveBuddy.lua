@@ -48,14 +48,68 @@ function DelveBuddy:OnEnable()
     self:CollectDelveData()
 end
 
+-- Helper: parse on/off/true/false/1/0
+local function StringToBool(v)
+    v = tostring(v or ""):lower()
+    if v == "on" or v == "true" or v == "1" then return true end
+    if v == "off" or v == "false" or v == "0" then return false end
+    return nil
+end
+
 function DelveBuddy:SlashCommand(input)
     local cmd, arg = input:match("^(%S*)%s*(.*)$")
     cmd = (cmd or ""):lower()
 
     if cmd == "debuglogging" then
-        local enable = tonumber(arg) == 1
-        self.db.global.debugLogging = enable
-        self:Print("Debug logging", enable and "enabled" or "disabled")
+        local onoff = StringToBool(arg)
+        if onoff == nil then
+            self:Print("Usage: /db debugLogging <on||off>")
+        else
+            self.db.global.debugLogging = onoff
+            self:Print("Debug logging " .. (onoff and "enabled" or "disabled"))
+        end
+    elseif cmd == "scale" then
+        local v = tonumber(arg)
+        if v and v >= 0.75 and v <= 2.0 then
+            self.db.global.tooltipScale = v
+            -- apply immediately if our LibQTip tips are open
+            if self.charTip then self.charTip:SetScale(v) end
+            if self.delveTip then self.delveTip:SetScale(v) end
+            if self.worldTip then self.worldTip:SetScale(v) end
+            self:Print(("Tooltip scale set to %d%%"):format(math.floor(v*100+0.5)))
+        else
+            self:Print("Usage: /db scale <0.75-2.0>")
+        end
+    elseif cmd == "reminders" then
+        local which, val = arg:match("^(%S+)%s*(%S*)$")
+        which = (which or ""):lower()
+        local onoff = StringToBool(val)
+        if which == "coffer" and onoff ~= nil then
+            self.db.global.reminders.cofferKey = onoff
+            self:Print("Reminders: Coffer Keys " .. (onoff and "ON" or "OFF"))
+        elseif which == "bounty" and onoff ~= nil then
+            self.db.global.reminders.delversBounty = onoff
+            self:Print("Reminders: Delver's Bounty " .. (onoff and "ON" or "OFF"))
+        else
+            self:Print("Usage: /db reminders <coffer||bounty> <on||off>")
+        end
+    elseif cmd == "waypoints" then
+        local choice = (arg or ""):lower()
+        if choice == "blizzard" then
+            self.db.global.waypoints.useBlizzard = true
+            self.db.global.waypoints.useTomTom = false
+            self:Print("Waypoints: Blizzard only")
+        elseif choice == "tomtom" then
+            self.db.global.waypoints.useBlizzard = false
+            self.db.global.waypoints.useTomTom = true
+            self:Print("Waypoints: TomTom only")
+        elseif choice == "both" then
+            self.db.global.waypoints.useBlizzard = true
+            self.db.global.waypoints.useTomTom = true
+            self:Print("Waypoints: Blizzard + TomTom")
+        else
+            self:Print("Usage: /db waypoints <blizzard||tomtom||both>")
+        end
     elseif cmd == "minimap" or cmd == "mm" then
         local LDBIcon = LibStub("LibDBIcon-1.0", true)
         if not LDBIcon then
@@ -71,7 +125,12 @@ function DelveBuddy:SlashCommand(input)
             end
         end
     else
-        self:Print("Usage: /db debugLogging 0|1")
+        self:Print("Available commands:")
+        self:Print("/db debugLogging <on||off> -- Enable/disable debug logging")
+        self:Print("/db scale <0.75-2.0> -- Set tooltip scale")
+        self:Print("/db reminders <coffer||bounty> <on||off> -- Enable/disable reminders")
+        self:Print("/db minimap -- Toggle minimap icon")
+        self:Print("/db waypoints <blizzard||tomtom||both> -- Set waypoint providers")
     end
 end
 

@@ -4,10 +4,12 @@
 Enhancements:
 * Show minimap tooltips on click, rather than mouseover. This avoid unintentinoally showing them, and just feels nicer.
 * Add options to disable Coffer Key and/or Delver's Bounty reminders.
+* Added option to control tooltip scale, to make it smaller or larger.
 * Added tooltips to many of the options menu items, to better explain what they do.
+* Added slash commands to control various options.
 
 Fixes:
-* Fixed a bug that caused a weird extra menu in Options menu.
+* Fixed a bug that caused a weird extra menu in Options.
 
 Other:
 * Moved Debug Logging options under an Advanced menu.
