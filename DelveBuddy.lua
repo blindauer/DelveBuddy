@@ -18,6 +18,11 @@ function DelveBuddy:OnInitialize()
     if DelveBuddyDB.global.waypoints.useBlizzard == nil then DelveBuddyDB.global.waypoints.useBlizzard = true end
     if DelveBuddyDB.global.waypoints.useTomTom == nil then DelveBuddyDB.global.waypoints.useTomTom = false end
 
+    -- Reminders
+    DelveBuddyDB.global.reminders = DelveBuddyDB.global.reminders or {}
+    if DelveBuddyDB.global.reminders.cofferKey == nil then DelveBuddyDB.global.reminders.cofferKey = true end
+    if DelveBuddyDB.global.reminders.delversBounty == nil then DelveBuddyDB.global.reminders.delversBounty = true end
+
     -- Slash commands
     self:RegisterChatCommand("delvebuddy", "SlashCommand")
     self:RegisterChatCommand("db", "SlashCommand")
@@ -72,7 +77,8 @@ end
 
 function DelveBuddy:ShouldShowKeyWarning()
     local result =
-        self:IsInBountifulDelve()
+        self.db.global.reminders.cofferKey
+        and self:IsInBountifulDelve()
         and not self:IsDelveComplete()
         and self:GetKeyCount() == 0
 
@@ -82,7 +88,8 @@ end
 
 function DelveBuddy:ShouldShowBounty()
     local result =
-        self:IsInDelve()
+        self.db.global.reminders.delversBounty
+        and self:IsInDelve()
         and not self:IsDelveComplete()
         and self:HasDelversBountyItem()
         and not self:HasDelversBountyBuff()

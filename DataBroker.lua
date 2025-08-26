@@ -24,6 +24,49 @@ local function TryHide()
     end)
 end
 
+-- Helper to build/show all tooltips anchored to a display owner
+local function OpenAllTips(display)
+    -- Guard: if we already have tips, clear them first to avoid duplicates
+    HideAllTips()
+    -- Also force-hide any lingering default tooltip
+    if GameTooltip:IsShown() then GameTooltip:Hide() end
+
+    inMenuArea = true
+
+    -- Character summary tooltip
+    local charTip = QTip:Acquire("DelveBuddyCharTip", 10,
+        "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER", "CENTER")
+    charTip:EnableMouse(true)
+    charTip:SetScript("OnEnter", function() inCharTip = true end)
+    charTip:SetScript("OnLeave", function() inCharTip = false TryHide() end)
+    charTip:SmartAnchorTo(display, "ANCHOR_CURSOR")
+    DelveBuddy:PopulateCharacterSection(charTip)
+    DelveBuddy.charTip = charTip
+    charTip:Show()
+
+    -- Delve list tooltip
+    local delveTip = QTip:Acquire("DelveBuddyDelveTip", 2, "LEFT","LEFT")
+    delveTip:EnableMouse(true)
+    delveTip:SetScript("OnEnter", function() inDelveTip = true end)
+    delveTip:SetScript("OnLeave", function() inDelveTip = false TryHide() end)
+    delveTip:ClearAllPoints()
+    delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
+    DelveBuddy:PopulateDelveSection(delveTip)
+    DelveBuddy.delveTip = delveTip
+    delveTip:Show()
+
+    -- World Soul Memories tooltip
+    local worldTip = QTip:Acquire("DelveBuddyWorldTip", 2, "LEFT","LEFT")
+    worldTip:EnableMouse(true)
+    worldTip:SetScript("OnEnter", function() inWorldTip = true end)
+    worldTip:SetScript("OnLeave", function() inWorldTip = false TryHide() end)
+    worldTip:ClearAllPoints()
+    worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
+    DelveBuddy:PopulateWorldSoulSection(worldTip)
+    DelveBuddy.worldTip = worldTip
+    worldTip:Show()
+end
+
 -- Initialize settings in the global table
 DelveBuddy.db.global = DelveBuddy.db.global or {}
 if DelveBuddy.db.global.showIcon == nil then DelveBuddy.db.global.showIcon = true end
@@ -39,50 +82,31 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
     icon = "Interface\\AddOns\\DelveBuddy\\media\\DelveIcon",
     OnClick = function(self, button)
         if button == "RightButton" then
+            -- Show options menu
             HideAllTips()
             GameTooltip:Hide()
             ToggleDropDownMenu(1, nil, DelveBuddyMenu, self, 0, 0)
         else
-            if DelveBuddy.charTip then
+            -- Toggle show/hide of tooltips
+            if DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip then
                 HideAllTips()
+            else
+                -- Ensure any simple hover tooltip is closed to avoid overlap
+                GameTooltip:Hide()
+                OpenAllTips(self)
             end
         end
     end,
     OnEnter = function(display)
-        inMenuArea = true
+        -- Suppress hover tooltips for the LibDBIcon minimap button; those should be click-to-toggle
+        local name = display and display.GetName and display:GetName()
+        if type(name) == "string" and name:find("^LibDBIcon") then
+            -- Do nothing on hover over minimap icon
+            return
+        end
 
-        -- Character summary tooltip
-        local charTip = QTip:Acquire("DelveBuddyCharTip", 10,
-            "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER", "CENTER")
-        charTip:EnableMouse(true)
-        charTip:SetScript("OnEnter", function() inCharTip = true end)
-        charTip:SetScript("OnLeave", function() inCharTip = false TryHide() end)
-        charTip:SmartAnchorTo(display, "ANCHOR_CURSOR")
-        DelveBuddy:PopulateCharacterSection(charTip)
-        DelveBuddy.charTip = charTip
-        charTip:Show()
-
-        -- Delve list tooltip
-        local delveTip = QTip:Acquire("DelveBuddyDelveTip", 2, "LEFT","LEFT")
-        delveTip:EnableMouse(true)
-        delveTip:SetScript("OnEnter", function() inDelveTip = true end)
-        delveTip:SetScript("OnLeave", function() inDelveTip = false TryHide() end)
-        delveTip:ClearAllPoints()
-        delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
-        DelveBuddy:PopulateDelveSection(delveTip)
-        DelveBuddy.delveTip = delveTip
-        delveTip:Show()
-
-        -- World Soul Memories tooltip
-        local worldTip = QTip:Acquire("DelveBuddyWorldTip", 2, "LEFT","LEFT")
-        worldTip:EnableMouse(true)
-        worldTip:SetScript("OnEnter", function() inWorldTip = true end)
-        worldTip:SetScript("OnLeave", function() inWorldTip = false TryHide() end)
-        worldTip:ClearAllPoints()
-        worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
-        DelveBuddy:PopulateWorldSoulSection(worldTip)
-        DelveBuddy.worldTip = worldTip
-        worldTip:Show()
+        -- For LDB displays (Titan/Bazooka/etc.), keep hover-to-open behavior
+        OpenAllTips(display)
     end,
     OnLeave = function()
         inMenuArea = false
@@ -123,14 +147,26 @@ DelveBuddyMenu.initialize = function(self, level)
         info.notCheckable = true
         UIDropDownMenu_AddButton(info, level)
 
-        -- Checkbox: Debug Logging
-        info.text = "Debug Logging"
-        info.checked = DelveBuddy.db.global.debugLogging
-        info.keepShownOnClick = true
-        info.isNotRadio = true
-        info.func = function(_, _, _, checked)
-            DelveBuddy.db.global.debugLogging = checked
-        end
+        -- Menu: Reminders
+        info = UIDropDownMenu_CreateInfo()
+        info.text      = "Reminders"
+        info.hasArrow  = true
+        info.value     = "REMINDERS_MENU"
+        info.notCheckable = true
+        UIDropDownMenu_AddButton(info, level)
+
+        -- Divider
+        info = UIDropDownMenu_CreateInfo()
+        info.disabled = true
+        info.text = " "
+        UIDropDownMenu_AddButton(info, level)
+
+        -- Menu: Advanced
+        info = UIDropDownMenu_CreateInfo()
+        info.text      = "Advanced"
+        info.hasArrow  = true
+        info.value     = "ADVANCED_MENU"
+        info.notCheckable = true
         UIDropDownMenu_AddButton(info, level)
 
         -- Divider
@@ -145,6 +181,48 @@ DelveBuddyMenu.initialize = function(self, level)
         info.hasArrow  = true
         info.value     = "REMOVE_CHARACTER"
         info.notCheckable = true
+        UIDropDownMenu_AddButton(info, level)
+    elseif level == 2 and UIDROPDOWNMENU_MENU_VALUE == "REMINDERS_MENU" then
+        -- Checkbox: Coffer Keys
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = "Coffer Keys"
+        info.checked = DelveBuddy.db.global.reminders.cofferKey
+        info.keepShownOnClick = true
+        info.isNotRadio = true
+        info.func = function(_, _, _, checked)
+            DelveBuddy.db.global.reminders.cofferKey = checked
+        end
+        info.tooltipTitle = "Coffer Keys reminder"
+        info.tooltipText = "Warns you when entering a Bountiful Delve with no Restored Coffer Keys."
+        info.tooltipOnButton = true
+        UIDropDownMenu_AddButton(info, level)
+
+        -- Checkbox: Delver's Bounty
+        info = UIDropDownMenu_CreateInfo()
+        info.text = "Delver's Bounty"
+        info.checked = DelveBuddy.db.global.reminders.delversBounty
+        info.keepShownOnClick = true
+        info.isNotRadio = true
+        info.func = function(_, _, _, checked)
+            DelveBuddy.db.global.reminders.delversBounty = checked
+        end
+        info.tooltipTitle = "Delver's Bounty reminder"
+        info.tooltipText = "Reminds you to use your Delver's Bounty (if you have one) when in a Bountiful Delve."
+        info.tooltipOnButton = true
+        UIDropDownMenu_AddButton(info, level)
+    elseif level == 2 and UIDROPDOWNMENU_MENU_VALUE == "ADVANCED_MENU" then
+        -- Checkbox: Debug Logging
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = "Debug Logging"
+        info.checked = DelveBuddy.db.global.debugLogging
+        info.keepShownOnClick = true
+        info.isNotRadio = true
+        info.func = function(_, _, _, checked)
+            DelveBuddy.db.global.debugLogging = checked
+        end
+        info.tooltipTitle = "Debug Logging"
+        info.tooltipText = "Enable verbose logging to chat for troubleshooting."
+        info.tooltipOnButton = true
         UIDropDownMenu_AddButton(info, level)
     elseif level == 2 and UIDROPDOWNMENU_MENU_VALUE == "REMOVE_CHARACTER" then
         -- build fully sorted alphabetical list
@@ -193,6 +271,11 @@ DelveBuddyMenu.initialize = function(self, level)
                 setWaypointPrefs(c.useBlizzard, c.useTomTom)
                 CloseDropDownMenus()
             end
+            info.tooltipTitle = "Waypoints: " .. c.text
+            info.tooltipText = (c.text == "Blizzard" and "Use Blizzard's built-in map waypoints.")
+                                or (c.text == "TomTom" and "Use TomTom for waypoints (requires TomTom).")
+                                or "Use both Blizzard and TomTom waypoints."
+            info.tooltipOnButton = true
             UIDropDownMenu_AddButton(info, level)
         end
     end
@@ -446,13 +529,45 @@ function DelveBuddy:ColorText(text, color)
     return ("|cff%s%s|r"):format(color, tostring(text))
 end
 
+function DelveBuddy:ShowMinimapHint(owner)
+    if not owner then return end
+    -- If our big tooltips are open, don't show the hint
+    if self.charTip or self.delveTip or self.worldTip then return end
+    GameTooltip:Hide()
+    GameTooltip:SetOwner(owner, "ANCHOR_NONE")
+    GameTooltip:ClearLines()
+    GameTooltip:SetPoint("TOPRIGHT", owner, "BOTTOMRIGHT")
+    GameTooltip:AddLine("DelveBuddy")
+    GameTooltip:AddLine("|cffffff00Left-click|r to show tooltips")
+    GameTooltip:AddLine("|cffffff00Right-click|r for options")
+    GameTooltip:Show()
+end
+
 function DelveBuddy:InitMinimapIcon()
     if not LDBIcon then return end
-    -- Ensure settings table exists
-    self.db.global.minimap = self.db.global.minimap or {}
     -- Register only once
     if not self.minimapIconRegistered then
         LDBIcon:Register("DelveBuddy", self.ldb, self.db.global.minimap)
         self.minimapIconRegistered = true
+
+        -- Override LibDBIcon hover to prevent immediate tooltip on minimap; show a delayed hint instead
+        local btn = (LDBIcon and LDBIcon.GetMinimapButton and LDBIcon:GetMinimapButton("DelveBuddy")) or _G["LibDBIcon10_DelveBuddy"]
+        if btn then
+            -- Clear any existing tooltip immediately on leave
+            btn:SetScript("OnLeave", function(self)
+                GameTooltip:Hide()
+                if DelveBuddy and DelveBuddy.OnMinimapLeave then DelveBuddy:OnMinimapLeave(self) end
+            end)
+
+            btn:SetScript("OnEnter", function(self)
+                DelveBuddy:ShowMinimapHint(self)
+            end)
+        end
+
+        if btn then
+            btn:HookScript("OnMouseDown", function()
+                GameTooltip:Hide()
+            end)
+        end
     end
 end

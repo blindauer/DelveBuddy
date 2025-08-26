@@ -1,5 +1,17 @@
 = DelveBuddy Changelog =
 
+== 1.2 ==
+Enhancements:
+* Show minimap tooltips on click, rather than mouseover. This avoid unintentinoally showing them, and just feels nicer.
+* Add options to disable Coffer Key and/or Delver's Bounty reminders.
+* Added tooltips to many of the options menu items, to better explain what they do.
+
+Fixes:
+* Fixed a bug that caused a weird extra menu in Options menu.
+
+Other:
+* Moved Debug Logging options under an Advanced menu.
+
 == 1.1.1 ==
 Enhancements:
 * Show Restored Coffer Key count on delves tooltip
