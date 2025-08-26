@@ -39,7 +39,10 @@
 ![DelveBuddy Full Screenshot](screenshots/screenshot_full.jpg)
 ![TomTom Waypoint to Delve](screenshots/TomTom.jpg)
 ![Bounty Reminder](screenshots/BountyReminder.jpg)
+![Coffer Key Warning](screenshots/coffer-key-warning.jpg)
 ![Bounty Highlight](screenshots/BountyHighlight.jpg)
+![Minimap Icon](screenshots/minimap-icon.jpg)
+![Options](screenshots/minimap-options-menu.jpg)
 
 ## License
 
