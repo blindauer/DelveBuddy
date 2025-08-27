@@ -491,10 +491,11 @@ function DelveBuddy:PopulateWorldSoulSection(tip)
 
     tip:SetColumnLayout(2, "LEFT", "LEFT")
     local echoesCount = GetItemCount(246771)
-    local echoesText = ("|TInterface\\Icons\\spell_holy_pureofheart:16:16:0:0|t x %d"):format(echoesCount)
+    local numText = tostring(echoesCount)
     if echoesCount >= 5 then
-        echoesText = self:ColorText(echoesText, self.Colors.Green)
+        numText = self:ColorText(numText, self.Colors.Green)
     end
+    local echoesText = ("|TInterface\\Icons\\spell_holy_pureofheart:16:16:0:0|t x %s"):format(numText)
     tip:AddHeader("|cff80c0ffWorld Soul Memories|r", echoesText)
 
     -- name, zone
