@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 1.2.1 ==
+Fixes:
+* Now correctly draws Radiant Echoes count in green if you have 5 or more.
+
 == 1.2 ==
 Enhancements:
 * Show minimap tooltips on click, rather than mouseover. This avoid unintentinoally showing them, and just feels nicer.
