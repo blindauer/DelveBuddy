@@ -6,7 +6,8 @@ function DelveBuddy:OnInitialize()
     DelveBuddyDB.global = DelveBuddyDB.global or {}
     DelveBuddyDB.charData = DelveBuddyDB.charData or {}
     local g = DelveBuddyDB.global
-    if g.debugLogging == nil then g.debugLogging = false end    
+    if g.debugLogging == nil then g.debugLogging = false end
+    if g.tooltipScale == nil then g.tooltipScale = 1.0 end
     self.db = DelveBuddyDB
 
     -- LibDBIcon

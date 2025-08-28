@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 1.2.2 ==
+Fixes:
+* Fixed a bug that completely broke tooltips for some users due to bad tooltipScale.
+
 == 1.2.1 ==
 Fixes:
 * Now correctly draws Radiant Echoes count in green if you have 5 or more.

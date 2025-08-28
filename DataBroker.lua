@@ -84,7 +84,7 @@ local function CreateTooltipScaleDropdownEntry()
     local slider = CreateFrame("Slider", "DelveBuddyTooltipScaleSlider", entry, "OptionsSliderTemplate")
     slider:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
     slider:SetWidth(200)
-    slider:SetMinMaxValues(0.8, 2.0)
+    slider:SetMinMaxValues(0.75, 2.0)
     slider:SetObeyStepOnDrag(true)
     slider:SetValueStep(0.05)
 
@@ -117,7 +117,6 @@ end
 DelveBuddy.db.global = DelveBuddy.db.global or {}
 if DelveBuddy.db.global.showIcon == nil then DelveBuddy.db.global.showIcon = true end
 if DelveBuddy.db.global.mode == nil then DelveBuddy.db.global.mode = "A" end
-if DelveBuddy.db.global.tooltipScale == nil then DelveBuddy.db.global.tooltipScale = 1.0 end
 
 local DelveBuddyMenu = CreateFrame("Frame", "DelveBuddyMenu", nil, "UIDropDownMenuTemplate")
 DelveBuddyMenu.displayMode = "MENU"
