@@ -1,4 +1,4 @@
-## Interface: 110107
+## Interface: 110200
 ## Title: DelveBuddy
 ## Category: Delves
 ## IconTexture: Interface\Addons\DelveBuddy\media\DelveIcon.tga
