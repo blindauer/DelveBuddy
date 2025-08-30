@@ -31,8 +31,6 @@ local function OpenAllTips(display)
     -- Also force-hide any lingering default tooltip
     if GameTooltip:IsShown() then GameTooltip:Hide() end
 
-    inMenuArea = true
-
     -- Character summary tooltip
     local charTip = QTip:Acquire("DelveBuddyCharTip", 10,
         "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER", "CENTER")
@@ -150,6 +148,8 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
             -- Do nothing on hover over minimap icon
             return
         end
+
+        inMenuArea = true
 
         -- For LDB displays (Titan/Bazooka/etc.), keep hover-to-open behavior
         OpenAllTips(display)
