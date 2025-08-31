@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 1.2.3 ==
+Fixes:
+* Made tooltip show/hide more reliable and resilient.
+
 == 1.2.2 ==
 Fixes:
 * Fixed a bug that completely broke tooltips for some users due to bad tooltipScale.
