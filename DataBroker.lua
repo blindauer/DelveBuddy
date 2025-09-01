@@ -7,6 +7,24 @@ local QTip = LibStub("LibQTip-1.0")
 -- Tooltip mode: 'none' (hidden) | 'hover' (for DataBroker hover) | 'pinned' (for minimap icon click)
 local tipMode = "none"
 
+-- Window (for full-window mode)
+local windowFrame
+
+-- Forward declare so earlier closures can reference it
+local HideAllTips
+
+-- Make a LibQTip tooltip visually blend into our window
+local function MakeTipChromeTransparent(tip)
+    if not tip or not tip.SetBackdropColor then return end
+    -- Clear the tip's own background so the window's BG shows through
+    local r,g,b = 0,0,0
+    tip:SetBackdropColor(r, g, b, 0.0)
+    -- Hide the tip's border line
+    if tip.SetBackdropBorderColor then
+        tip:SetBackdropBorderColor(1,1,1,0.0)
+    end
+end
+
 -- Encompasses all tooltip frames so they show/hide together.
 local hoverOwner
 
@@ -30,6 +48,92 @@ local function EnsureHoverOwner()
     return hoverOwner
 end
 
+-- Helper to dismiss all tooltips
+local function HideAllTips()
+    tipMode = "none"
+    if windowFrame then windowFrame:Hide() end
+    if hoverOwner then hoverOwner:Hide() end
+
+    if DelveBuddy.charTip  then DelveBuddy.charTip:Hide();  QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
+    if DelveBuddy.delveTip then DelveBuddy.delveTip:Hide(); QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
+    if DelveBuddy.worldTip then DelveBuddy.worldTip:Hide(); QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip = nil end
+end
+
+-- Create a simple movable window to host our tooltips
+local function EnsureWindowFrame()
+    if windowFrame and windowFrame:IsShown() then return windowFrame end
+    if not windowFrame then
+        windowFrame = CreateFrame("Frame", "DelveBuddyWindow", UIParent, "BackdropTemplate")
+        windowFrame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", edgeFile = "Interface/Tooltips/UI-Tooltip-Border", tile = true, tileSize = 16, edgeSize = 16, insets = { left = 4, right = 4, top = 4, bottom = 4 }})
+        windowFrame:SetBackdropColor(0, 0, 0, 0.85)
+        windowFrame:SetBackdropBorderColor(1,1,1,0.30)
+        windowFrame:SetClampedToScreen(true)
+        windowFrame:SetMovable(true)
+        windowFrame:EnableMouse(true)
+        windowFrame:RegisterForDrag("LeftButton")
+        windowFrame:SetScript("OnDragStart", function(self) self:StartMoving() end)
+        windowFrame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+
+        -- Title
+        local title = windowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+        title:SetPoint("TOPLEFT", 12, -8)
+        title:SetText("DelveBuddy")
+        windowFrame.title = title
+
+        -- Close button
+        local close = CreateFrame("Button", nil, windowFrame, "UIPanelCloseButton")
+        close:SetPoint("TOPRIGHT", 2, 2)
+        close:SetScript("OnClick", function()
+            HideAllTips()
+        end)
+        windowFrame.close = close
+    end
+    if not windowFrame:IsShown() then
+        windowFrame:Show()
+    end
+    return windowFrame
+end
+
+-- Size the window around the three tips
+local function LayoutWindowFrame()
+    if not (DelveBuddy.charTip and DelveBuddy.delveTip and DelveBuddy.worldTip and windowFrame) then return end
+    local c = (DelveBuddy.charTip.frame or DelveBuddy.charTip)
+    local d = (DelveBuddy.delveTip.frame or DelveBuddy.delveTip)
+    local w = (DelveBuddy.worldTip.frame or DelveBuddy.worldTip)
+
+    local padX, padY = 12, 34 -- top padding also leaves room for titlebar
+    local gap = 8
+
+    -- Helper to get scaled width/height of a frame
+    local function scaledSize(frame)
+        if not frame or not frame.GetWidth then return 0, 0 end
+        local s = frame.GetScale and frame:GetScale() or 1
+        return (frame:GetWidth() or 0) * s, (frame:GetHeight() or 0) * s
+    end
+
+    local cW, cH = scaledSize(c)
+    local dW, dH = scaledSize(d)
+    local wW, wH = scaledSize(w)
+
+    -- Compute desired width/height using scaled sizes
+    local topWidth = (cW > 0 and cW or 300)
+    local bottomWidth = (dW > 0 and dW or 150) + gap + (wW > 0 and wW or 150)
+    local width = math.max(topWidth, bottomWidth) + padX * 2
+
+    -- Height based on scaled sizes + padding (we already trimmed extra bottom space earlier)
+    local tallestBottom = math.max((dH > 0 and dH or 100), (wH > 0 and wH or 100))
+    local height = (cH > 0 and cH or 100) + gap + tallestBottom + padY - 42
+
+    windowFrame:SetSize(width, height)
+
+    -- Center on first open (or if offscreen)
+    if not windowFrame._placed then
+        windowFrame:ClearAllPoints()
+        windowFrame:SetPoint("CENTER")
+        windowFrame._placed = true
+    end
+end
+
 local function PositionHoverOwner()
     if not (DelveBuddy.charTip and DelveBuddy.delveTip and DelveBuddy.worldTip) then return end
     local f = EnsureHoverOwner()
@@ -42,16 +146,6 @@ local function PositionHoverOwner()
     f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left - pad,  top + pad)
     f:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", right + pad, bottom - pad)
     f:Show()
-end
-
--- Helper to dismiss all tooltips
-local function HideAllTips()
-    tipMode = "none"
-    if hoverOwner then hoverOwner:Hide() end
-
-    if DelveBuddy.charTip  then DelveBuddy.charTip:Hide();  QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
-    if DelveBuddy.delveTip then DelveBuddy.delveTip:Hide(); QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
-    if DelveBuddy.worldTip then DelveBuddy.worldTip:Hide(); QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip = nil end
 end
 
 -- Helper to build/show all tooltips anchored to a display owner
@@ -67,12 +161,18 @@ local function OpenAllTips(display, mode)
     -- Character summary tooltip
     local charTip = QTip:Acquire("DelveBuddyCharTip", 10,
         "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER", "CENTER")
+    local charTipFrame = (charTip.frame or charTip)
+    if mode ~= "window" then
+        charTipFrame:SetParent(UIParent)
+    end
     charTip:EnableMouse(true)
     charTip:SetScript("OnEnter", function()
         PositionHoverOwner()
         SetGroupOwner(EnsureHoverOwner())
     end)
-    charTip:SmartAnchorTo(display)
+    if mode ~= "window" then
+        charTip:SmartAnchorTo(display)
+    end
     charTip:SetScale(DelveBuddy.db.global.tooltipScale)
     charTip:SetHitRectInsets(-2, -2, -2, -2)
     DelveBuddy:PopulateCharacterSection(charTip)
@@ -84,13 +184,19 @@ local function OpenAllTips(display, mode)
 
     -- Delve list tooltip
     local delveTip = QTip:Acquire("DelveBuddyDelveTip", 2, "LEFT","LEFT")
+    local delveTipFrame = (delveTip.frame or delveTip)
+    if mode ~= "window" then
+        delveTipFrame:SetParent(UIParent)
+    end
     delveTip:EnableMouse(true)
     delveTip:SetScript("OnEnter", function()
         PositionHoverOwner()
         SetGroupOwner(EnsureHoverOwner())
     end)
-    delveTip:ClearAllPoints()
-    delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
+    if mode ~= "window" then
+        delveTip:ClearAllPoints()
+        delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
+    end
     delveTip:SetScale(DelveBuddy.db.global.tooltipScale)
     delveTip:SetHitRectInsets(-2, -2, -2, -2)
     DelveBuddy:PopulateDelveSection(delveTip)
@@ -102,13 +208,19 @@ local function OpenAllTips(display, mode)
 
     -- World Soul Memories tooltip
     local worldTip = QTip:Acquire("DelveBuddyWorldTip", 2, "LEFT","LEFT")
+    local worldTipFrame = (worldTip.frame or worldTip)
+    if mode ~= "window" then
+        worldTipFrame:SetParent(UIParent)
+    end
     worldTip:EnableMouse(true)
     worldTip:SetScript("OnEnter", function()
         PositionHoverOwner()
         SetGroupOwner(EnsureHoverOwner())
     end)
-    worldTip:ClearAllPoints()
-    worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
+    if mode ~= "window" then
+        worldTip:ClearAllPoints()
+        worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
+    end
     worldTip:SetScale(DelveBuddy.db.global.tooltipScale)
     worldTip:SetHitRectInsets(-2, -2, -2, -2)
     DelveBuddy:PopulateWorldSoulSection(worldTip)
@@ -117,6 +229,45 @@ local function OpenAllTips(display, mode)
         if DelveBuddy.worldTip == worldTip then HideAllTips() end
     end)
     worldTip:Show()
+
+    -- If we're in window mode, reparent and lay the tips out inside a movable frame
+    if mode == "window" then
+        local f = EnsureWindowFrame()
+
+        local c = (charTip.frame or charTip)
+        local d = (delveTip.frame or delveTip)
+        local w = (worldTip.frame or worldTip)
+
+        c:SetParent(f)
+        d:SetParent(f)
+        w:SetParent(f)
+
+        -- Clear any existing anchors before re-anchoring within the window
+        c:ClearAllPoints(); if c.ClearAllPoints then (c):ClearAllPoints() end
+        d:ClearAllPoints(); if d.ClearAllPoints then (d):ClearAllPoints() end
+        w:ClearAllPoints(); if w.ClearAllPoints then (w):ClearAllPoints() end
+
+        -- Anchor: charTip on top, others below side-by-side
+        c:SetPoint("TOPLEFT", f, "TOPLEFT", 12, 2)
+        d:SetPoint("TOPRIGHT", c, "BOTTOM", -4, 0)
+        w:SetPoint("TOPLEFT", c, "BOTTOM", 4, 0)
+
+        -- Soften/clear QTip chrome
+        MakeTipChromeTransparent(c)
+        MakeTipChromeTransparent(d)
+        MakeTipChromeTransparent(w)
+
+        -- Disable autohide for a persistent window
+        charTip:SetAutoHideDelay(nil)
+        delveTip:SetAutoHideDelay(nil)
+        worldTip:SetAutoHideDelay(nil)
+
+        -- Finally size the frame to fit contents
+        LayoutWindowFrame()
+
+        -- Early return: hover owner/positioning are not used in window mode
+        return
+    end
 
     PositionHoverOwner()
 
@@ -161,6 +312,11 @@ local function CreateTooltipScaleDropdownEntry()
         if DelveBuddy.charTip then DelveBuddy.charTip:SetScale(val) end
         if DelveBuddy.delveTip then DelveBuddy.delveTip:SetScale(val) end
         if DelveBuddy.worldTip then DelveBuddy.worldTip:SetScale(val) end
+        -- Live reflow when window mode is active
+        local mode = (DelveBuddy.db and DelveBuddy.db.global and DelveBuddy.db.global.display and DelveBuddy.db.global.display.mode) or "tooltip"
+        if mode == "window" and windowFrame and windowFrame:IsShown() then
+            LayoutWindowFrame()
+        end
     end
 
     slider:SetScript("OnValueChanged", function(self, value)
@@ -189,30 +345,67 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
     text = "DelveBuddy",
     icon = "Interface\\AddOns\\DelveBuddy\\media\\DelveIcon",
     OnClick = function(self, button)
+        local mode = DelveBuddy.db.global.display.mode
+
         if button == "RightButton" then
-            HideAllTips(); GameTooltip:Hide(); ToggleDropDownMenu(1, nil, DelveBuddyMenu, self, 0, 0); return
+            if mode ~= "window" then
+                HideAllTips()
+            end
+            GameTooltip:Hide()
+            ToggleDropDownMenu(1, nil, DelveBuddyMenu, self, 0, 0)
+            return
         end
         local name = self and self.GetName and self:GetName()
         local isMinimap = (type(name) == "string" and name:find("^LibDBIcon")) or false
+
         if isMinimap then
-            if tipMode == "pinned" then
-                HideAllTips()
-            else
-                GameTooltip:Hide()
-                OpenAllTips(self, "pinned")
+            if mode == "window" then
+                if DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip then
+                    HideAllTips()
+                else
+                    GameTooltip:Hide()
+                    OpenAllTips(EnsureWindowFrame(), "window")
+                end
+            else -- tooltip mode: toggle pinned
+                if tipMode == "pinned" then
+                    HideAllTips()
+                else
+                    GameTooltip:Hide()
+                    OpenAllTips(self, "pinned")
+                end
             end
-        else
-            if DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip then
-                HideAllTips()
+        else -- LDB display area click
+            if mode == "window" then
+                if DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip then
+                    HideAllTips()
+                else
+                    GameTooltip:Hide()
+                    OpenAllTips(EnsureWindowFrame(), "window")
+                end
+            else
+                if DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip then
+                    HideAllTips()
+                end
             end
         end
     end,
     OnEnter = function(display)
         local name = display and display.GetName and display:GetName()
-        if type(name) == "string" and name:find("^LibDBIcon") then
+        local isMinimap = (type(name) == "string" and name:find("^LibDBIcon")) or false
+
+        -- Always show hint on minimap hover
+        if isMinimap then
             DelveBuddy:ShowMinimapHint(display)
             return
         end
+
+        -- In window mode, show the same hint on the broker/menu area and do not open hover tooltips
+        if DelveBuddy.db.global.display.mode == "window" then
+            DelveBuddy:ShowMinimapHint(display)
+            return
+        end
+
+        -- Tooltip mode behavior
         if tipMode == "pinned" then
             HideAllTips()
         end
@@ -255,6 +448,14 @@ DelveBuddyMenu.initialize = function(self, level)
         end
         UIDropDownMenu_AddButton(info, level)
 
+        -- Submenu: Display Mode
+        info = UIDropDownMenu_CreateInfo()
+        info.text = "Display Mode"
+        info.hasArrow = true
+        info.notCheckable = true
+        info.value = { which = "displayMode" }
+        UIDropDownMenu_AddButton(info, level)
+
         -- Menu: Waypoint optinos
         info = UIDropDownMenu_CreateInfo()
         info.text      = "Set Waypoints via"
@@ -270,7 +471,6 @@ DelveBuddyMenu.initialize = function(self, level)
         info.value     = "REMINDERS_MENU"
         info.notCheckable = true
         UIDropDownMenu_AddButton(info, level)
-
 
         -- Menu: Tooltip Scale (Slider)
         info = UIDropDownMenu_CreateInfo()
@@ -413,6 +613,22 @@ DelveBuddyMenu.initialize = function(self, level)
             info.tooltipOnButton = true
             UIDropDownMenu_AddButton(info, level)
         end
+    elseif level == 2 and type(UIDROPDOWNMENU_MENU_VALUE) == "table" and UIDROPDOWNMENU_MENU_VALUE.which == "displayMode" then
+        local mode = (DelveBuddy.db and DelveBuddy.db.global and DelveBuddy.db.global.display and DelveBuddy.db.global.display.mode) or "tooltip"
+
+        local function addModeItem(label, value)
+            local ii = UIDropDownMenu_CreateInfo()
+            ii.text = label
+            ii.checked = (mode == value)
+            ii.func = function()
+                DelveBuddy.db.global.display.mode = value
+                CloseDropDownMenus()
+            end
+            UIDropDownMenu_AddButton(ii, level)
+        end
+
+        addModeItem("Tooltip", "tooltip")
+        addModeItem("Window",  "window")
     end
 end
 

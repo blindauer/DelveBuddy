@@ -58,5 +58,6 @@
         "WeeklyRewardsFrame",
         "CloseDropDownMenus",
         "ChatEdit_SendText"
-    ]
+    ],
+    "Lua.type.weakUnionCheck": true
 }

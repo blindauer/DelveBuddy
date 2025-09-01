@@ -14,6 +14,10 @@ function DelveBuddy:OnInitialize()
     DelveBuddyDB.global.minimap = DelveBuddyDB.global.minimap or {}
     self:InitMinimapIcon()
 
+    -- Display mode
+    DelveBuddy.global.display = DelveBuddy.global.display or {}
+    DelveBuddy.global.display.mode = DelveBuddy.global.display.mode or "tooltip"
+
     -- Waypoints
     DelveBuddyDB.global.waypoints = DelveBuddyDB.global.waypoints or {}
     if DelveBuddyDB.global.waypoints.useBlizzard == nil then DelveBuddyDB.global.waypoints.useBlizzard = true end
