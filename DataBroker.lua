@@ -537,6 +537,24 @@ function DelveBuddy:PopulateDelveSection(tip)
             HideAllTips()
             self:SetWaypoint(d)
         end)
+        -- Show the active story variant when hovering a delve row
+        tip:SetLineScript(line, "OnEnter", function()
+            local story = self:GetDelveStoryVariant(d.zoneID, poiID)
+            if story and story ~= "" then
+                GameTooltip:Hide()
+                GameTooltip:SetOwner(tip, "ANCHOR_NONE")
+                GameTooltip:ClearLines()
+                GameTooltip:ClearAllPoints()
+                GameTooltip:SetPoint("TOPRIGHT", (tip.frame or tip), "TOPLEFT", -8, 0)
+                GameTooltip:AddLine(d.name or "Delve", 1, 0.82, 0)
+                GameTooltip:AddLine(story, 1, 1, 1, true)
+                GameTooltip:Show()
+            end
+        end)
+
+        tip:SetLineScript(line, "OnLeave", function()
+            GameTooltip:Hide()
+        end)
     end
 end
 

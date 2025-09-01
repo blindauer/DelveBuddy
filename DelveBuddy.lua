@@ -135,6 +135,26 @@ function DelveBuddy:SlashCommand(input)
     end
 end
 
+function DelveBuddy:GetDelveStoryVariant(zoneID, poiID)
+    local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poiID)
+
+    if info and info.tooltipWidgetSet then
+        local tooltipWidgets = C_UIWidgetManager.GetAllWidgetsBySetID(info.tooltipWidgetSet)
+        if tooltipWidgets then
+            for _, widgetInfo in ipairs(tooltipWidgets) do
+                if widgetInfo.widgetType == Enum.UIWidgetVisualizationType.TextWithState then
+                    local visInfo = C_UIWidgetManager.GetTextWithStateWidgetVisualizationInfo(widgetInfo.widgetID)
+                    if visInfo and visInfo.orderIndex == 0 then
+                        return visInfo.text
+                    end
+                end
+            end
+        end
+    end
+
+    return ""
+end
+
 function DelveBuddy:ShouldShowKeyWarning()
     local result =
         self.db.global.reminders.cofferKey

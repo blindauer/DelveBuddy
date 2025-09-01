@@ -1,6 +1,9 @@
 = DelveBuddy Changelog =
 
 == 1.2.3 ==
+Enhancements:
+* Show the current delve story variant when hovering over a delve.
+
 Fixes:
 * Made tooltip show/hide more reliable and resilient.
 
