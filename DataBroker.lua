@@ -118,6 +118,13 @@ local function OpenAllTips(display, mode)
     end)
     worldTip:Show()
 
+    if delveTip:GetBottom() < 0 or worldTip:GetBottom() < 0 then
+        delveTip:ClearAllPoints()
+        delveTip:SetPoint("BOTTOMRIGHT", (charTip.frame or charTip), "TOP", -4, 0)
+        worldTip:ClearAllPoints()
+        worldTip:SetPoint("BOTTOMLEFT", (charTip.frame or charTip), "TOP", -4, 0)
+    end    
+
     PositionHoverOwner()
 
     -- Autohide wiring
