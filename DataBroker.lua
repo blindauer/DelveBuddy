@@ -97,8 +97,8 @@ local function OpenAllTips(display, mode)
     tipMode = mode
 
     -- Character summary tooltip
-    local charTip = QTip:Acquire("DelveBuddyCharTip", 10,
-        "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER", "CENTER")
+    local charTip = QTip:Acquire("DelveBuddyCharTip", 11,
+        "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER", "CENTER", "CENTER")
     charTip:EnableMouse(true)
     charTip:SetScript("OnEnter", function()
         PositionHoverOwner()
