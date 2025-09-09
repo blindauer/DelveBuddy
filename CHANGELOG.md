@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 1.2.6 (In Progress) ==
+Fixes:
+* Show the delve and worldsoul tips _above_ the character tip when LDB display or minimap is set to the bottom of the screen.
+
 == 1.2.5 ==
 Fixes:
 * More robust gilded stash count retrieval. You should see much fewer instances where stash count is unknown.

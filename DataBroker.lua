@@ -82,6 +82,11 @@ local function OpenAllTips(display, mode)
     end)
     charTip:Show()
 
+    -- Detect if charTip was anchored above or below the display
+    local point = (select(1, charTip:GetPoint(1)))
+    -- If the tooltip's *BOTTOM* is anchored, QTip placed it ABOVE the owner.
+    local stackUp = point and point:find("BOTTOM")
+
     -- Delve list tooltip
     local delveTip = QTip:Acquire("DelveBuddyDelveTip", 2, "LEFT","LEFT")
     delveTip:EnableMouse(true)
@@ -90,7 +95,11 @@ local function OpenAllTips(display, mode)
         SetGroupOwner(EnsureHoverOwner())
     end)
     delveTip:ClearAllPoints()
-    delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
+    if stackUp then
+        delveTip:SetPoint("BOTTOMRIGHT", (charTip.frame or charTip), "TOP", -4, 0)
+    else
+        delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
+    end
     delveTip:SetScale(DelveBuddy.db.global.tooltipScale)
     delveTip:SetHitRectInsets(-2, -2, -2, -2)
     DelveBuddy:PopulateDelveSection(delveTip)
@@ -108,7 +117,11 @@ local function OpenAllTips(display, mode)
         SetGroupOwner(EnsureHoverOwner())
     end)
     worldTip:ClearAllPoints()
-    worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
+    if stackUp then
+        worldTip:SetPoint("BOTTOMLEFT", (charTip.frame or charTip), "TOP", 4, 0)
+    else
+        worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
+    end
     worldTip:SetScale(DelveBuddy.db.global.tooltipScale)
     worldTip:SetHitRectInsets(-2, -2, -2, -2)
     DelveBuddy:PopulateWorldSoulSection(worldTip)
