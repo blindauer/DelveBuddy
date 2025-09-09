@@ -57,6 +57,7 @@
         "UIParentLoadAddOn",
         "WeeklyRewardsFrame",
         "CloseDropDownMenus",
-        "ChatEdit_SendText"
+        "ChatEdit_SendText",
+        "MapUtil"
     ]
 }

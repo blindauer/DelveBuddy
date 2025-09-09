@@ -52,31 +52,31 @@ DelveBuddy.IDS = {
     },
     DelvePois = {
         [DelveBuddy.Zone.IsleOfDorn] = {
-            { ["id"] = 7787, ["x"] = 38.60, ["y"] = 74.00 }, -- Earthcrawl Mines
-            { ["id"] = 7779, ["x"] = 52.03, ["y"] = 65.77 }, -- Fungal Folly
-            { ["id"] = 7781, ["x"] = 62.19, ["y"] = 42.70 }, -- Kriegval's Rest
+            { ["id"] = 7787, ["x"] = 38.60, ["y"] = 74.00, ["widgetID"] = 6723 }, -- Earthcrawl Mines
+            { ["id"] = 7779, ["x"] = 52.03, ["y"] = 65.77, ["widgetID"] = 6728 }, -- Fungal Folly
+            { ["id"] = 7781, ["x"] = 62.19, ["y"] = 42.70, ["widgetID"] = 6719 }, -- Kriegval's Rest
         },
         [DelveBuddy.Zone.RingingDeeps] = {
-            { ["id"] = 7782, ["x"] = 42.15, ["y"] = 48.71 }, -- The Waterworks
-            { ["id"] = 7788, ["x"] = 70.20, ["y"] = 37.30 }, -- The Dread Pit
-            { ["id"] = 8181, ["x"] = 76.00, ["y"] = 96.50 }, -- Excavation Site 9
+            { ["id"] = 7782, ["x"] = 42.15, ["y"] = 48.71, ["widgetID"] = 6720 }, -- The Waterworks
+            { ["id"] = 7788, ["x"] = 70.20, ["y"] = 37.30, ["widgetID"] = 6724 }, -- The Dread Pit
+            { ["id"] = 8181, ["x"] = 76.00, ["y"] = 96.50, ["widgetID"] = 6659 }, -- Excavation Site 9
         },
         [DelveBuddy.Zone.Hallowfall] = {
-            { ["id"] = 7780, ["x"] = 71.30, ["y"] = 31.20 }, -- Mycomancer Cavern
-            { ["id"] = 7785, ["x"] = 34.32, ["y"] = 47.43 }, -- Nightfall Sanctum
-            { ["id"] = 7783, ["x"] = 50.60, ["y"] = 53.30 }, -- The Sinkhole
-            { ["id"] = 7789, ["x"] = 65.48, ["y"] = 61.74 }, -- Skittering Breach
+            { ["id"] = 7780, ["x"] = 71.30, ["y"] = 31.20, ["widgetID"] = 6729 }, -- Mycomancer Cavern
+            { ["id"] = 7785, ["x"] = 34.32, ["y"] = 47.43, ["widgetID"] = 6727 }, -- Nightfall Sanctum
+            { ["id"] = 7783, ["x"] = 50.60, ["y"] = 53.30, ["widgetID"] = 6721 }, -- The Sinkhole
+            { ["id"] = 7789, ["x"] = 65.48, ["y"] = 61.74, ["widgetID"] = 6725 }, -- Skittering Breach
         },
         [DelveBuddy.Zone.AzjKahet] = {
-            { ["id"] = 7790, ["x"] = 45.00, ["y"] = 19.00 }, -- The Spiral Weave
-            { ["id"] = 7784, ["x"] = 55.00, ["y"] = 73.92 }, -- Tak-Rethan Abyss
-            { ["id"] = 7786, ["x"] = 51.85, ["y"] = 88.30 }, -- The Underkeep
+            { ["id"] = 7790, ["x"] = 45.00, ["y"] = 19.00, ["widgetID"] = 6726 }, -- The Spiral Weave
+            { ["id"] = 7784, ["x"] = 55.00, ["y"] = 73.92, ["widgetID"] = 6722 }, -- Tak-Rethan Abyss
+            { ["id"] = 7786, ["x"] = 51.85, ["y"] = 88.30, ["widgetID"] = 6794 }, -- The Underkeep
         },
         [DelveBuddy.Zone.Undermine] = {
-            { ["id"] = 8246, ["x"] = 35.20, ["y"] = 52.80 }, -- Sidestreet Sluice
+            { ["id"] = 8246, ["x"] = 35.20, ["y"] = 52.80, ["widgetID"] = 6718 }, -- Sidestreet Sluice
         },
         [DelveBuddy.Zone.Karesh] = {
-            { ["id"] = 8273, ["x"] = 55.08, ["y"] = 48.08 }, -- Archival Assault
+            { ["id"] = 8273, ["x"] = 55.08, ["y"] = 48.08, ["widgetID"] = 7193 }, -- Archival Assault
         },
     },
     CONST = {

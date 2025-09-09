@@ -125,6 +125,13 @@ function DelveBuddy:SlashCommand(input)
                 self:Print("Minimap icon shown.")
             end
         end
+    elseif cmd == "debuginfo" or cmd == "di" then
+        self:Print("Debug Info:")
+        self:Print("Is in delve: " .. tostring(self:IsInDelve()))
+        self:Print("Is in bountiful delve: " .. tostring(self:IsInBountifulDelve()))
+        self:Print("Is delve complete: " .. tostring(self:IsDelveComplete()))
+        local cur, max = self:GetGildedStashCounts()
+        self.Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
     else
         self:Print("Available commands:")
         self:Print("/db debugLogging <on||off> -- Enable/disable debug logging")
@@ -212,6 +219,10 @@ function DelveBuddy:CollectDelveData()
 
     local IDS = DelveBuddy.IDS
 
+    -- Existing data for non-destructive fields
+    local charKey = self:GetCharacterKey()
+    local prevData = self.db.charData and self.db.charData[charKey] or nil
+
     -- Class
     data.class = select(2, UnitClass("player"))
 
@@ -233,7 +244,17 @@ function DelveBuddy:CollectDelveData()
     data.keysOwned = self:GetKeyCount()
 
     -- Gilded stashes looted
-    data.gildedStashes, _ = self:GetGildedStashCounts()
+    -- If current count is unknown, don't overwrite previous known value.
+    do
+        local cur, _max = self:GetGildedStashCounts()
+        local UNKNOWN = self.IDS.CONST.UNKNOWN_GILDED_STASH_COUNT
+        local prior = prevData and tonumber(prevData.gildedStashes) or nil
+        if cur == UNKNOWN and prior and prior ~= UNKNOWN then
+            data.gildedStashes = prior
+        else
+            data.gildedStashes = cur
+        end
+    end
 
     -- Have bounty / looted bounty
     data.hasBounty = C_Item.GetItemCount(IDS.Item.DelversBounty) > 0
@@ -253,7 +274,6 @@ function DelveBuddy:CollectDelveData()
     data.lastLogin = GetServerTime()
 
     -- Save to DB under character key
-    local charKey = self:GetCharacterKey()
     self.db.charData[charKey] = data
 
     if self.db.global.debugLogging then
@@ -263,22 +283,27 @@ function DelveBuddy:CollectDelveData()
 end
 
 function DelveBuddy:GetGildedStashCounts()
-    local UNKNOWN = self.IDS.CONST.UNKNOWN_GILDED_STASH_COUNT
-    local fallbackMax = self.IDS.CONST.MAX_WEEKLY_GILDED_STASHES
+    local UNKNOWN  = self.IDS.CONST.UNKNOWN_GILDED_STASH_COUNT
+    local fallback = self.IDS.CONST.MAX_WEEKLY_GILDED_STASHES
 
-    local w = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(self.IDS.Widget.GildedStash)
-    if not (w and w.spellInfo and w.spellInfo.tooltip) then
-        return UNKNOWN, fallbackMax
+    local cur, max = UNKNOWN, fallback
+
+    for _, poiList in pairs(self.IDS.DelvePois) do
+        for _, poi in ipairs(poiList) do
+            local widget = poi.widgetID
+               and C_UIWidgetManager.GetSpellDisplayVisualizationInfo(poi.widgetID)
+            local tooltip = widget and widget.spellInfo and widget.spellInfo.tooltip
+            if tooltip then
+                local c, m = tooltip:match("(%d+)%s*/%s*(%d+)")
+                if c then
+                    cur = tonumber(c) or UNKNOWN
+                    max = tonumber(m) or fallback
+                    return cur, max -- first match wins
+                end
+            end
+        end
     end
 
-    -- Locale-safe-ish: grab two numbers around a slash
-    local cur, max = w.spellInfo.tooltip:match("(%d+)%s*/%s*(%d+)")
-    cur = tonumber(cur)
-    max = tonumber(max) or fallbackMax
-
-    if not cur then
-        return UNKNOWN, max
-    end
     return cur, max
 end
 
@@ -316,20 +341,7 @@ function DelveBuddy:FlashDelversBounty()
 end
 
 function DelveBuddy:IsInDelve()
-    local result = false
-
-    if C_Scenario.IsInScenario() then
-        local mapID = C_Map.GetBestMapForUnit("player")
-        result = mapID and DelveBuddy.IDS.DelveMapToPoi[mapID] ~= nil
-    end
-
-    self:Log("IsInDelve: (%s) map=%s poi=%s", 
-        tostring(result),
-        tostring(mapID),
-        tostring(result and DelveBuddy.IDS.DelveMapToPoi[mapID])
-    )
-
-    return result
+    return C_PartyInfo.IsDelveInProgress()
 end
 
 function DelveBuddy:HasDelversBountyItem()
@@ -440,50 +452,7 @@ function DelveBuddy:Log(fmt, ...)
 end
 
 function DelveBuddy:IsDelveComplete()
-    if not C_Scenario.IsInScenario() then return false end
-
-    local _, currentStage, totalStages = C_Scenario.GetInfo()
-    self:Log("IsDelveComplete: currentStage=%s, totalStages=%s", tostring(currentStage), tostring(totalStages))
-
-    if currentStage >= totalStages then
-        self:Log("IsDelveComplete: At or beyond final stage — assuming complete")
-        return true
-    end
-
-    local stepName, _, numCriteria = C_Scenario.GetStepInfo()
-    self:Log("IsDelveComplete: stepName=%s, numCriteria=%s", tostring(stepName), tostring(numCriteria))
-
-    for i = 1, numCriteria do
-        local info = C_ScenarioInfo.GetCriteriaInfo(i)
-        if info then
-            self:Log("Criteria %d: id %s (quantity %d/%d), completed=%s, quantityString=%s", i,
-                tostring(info.criteriaID),
-                info.quantity or 0,
-                info.totalQuantity or 0,
-                tostring(info.completed),
-                tostring(info.quantityString))
-
-            self:Log("Criteria desc=%s type=%s flags=%s", info.description, 
-                tostring(info.criteriaType), tostring(info.flags))
-
-			if not info.isWeightedProgress and not info.isFormatted then
-				local criteriaString = string.format("%d/%d %s", info.quantity, info.totalQuantity, info.description);
-                self:Log("criteriaString=%s", criteriaString)
-			end
-
-            -- Heuristics to skip optional criteria (probably doesn't work for non-English clients)
-            local maybeOptional = (info.totalQuantity == 0)
-                or (info.description and info.description:lower():find("optional"))
-
-            if not info.completed and not maybeOptional then
-                self:Log("IsDelveComplete: Found incomplete, required criteria")
-                return false
-            end
-        end
-    end
-
-    self:Log("IsDelveComplete: All criteria complete or optional — assuming complete")
-    return true
+    return C_PartyInfo.IsDelveComplete()
 end
 
 function DelveBuddy:ClassColoredName(name, class)
@@ -584,7 +553,7 @@ function DelveBuddy:DumpPOIs(mapID)
 end
 
 function DelveBuddy:IsInBountifulDelve()
-    if not C_Scenario.IsInScenario() then return false end
+    if not self:IsInDelve() then return false end
     local mapID = C_Map.GetBestMapForUnit("player")
     local poiID = mapID and self.IDS.DelveMapToPoi[mapID]
     if not poiID then return false end
@@ -598,7 +567,7 @@ function DelveBuddy:IsInBountifulDelve()
     end
 
     local poiInfo = C_AreaPoiInfo.GetAreaPOIInfo(zoneMap, poiID)
-    local bountiful = poiInfo and poiInfo.atlasName == "delves-bountiful"
+    local bountiful = poiInfo and poiInfo.atlasName == "delves-bountiful" or false
 
     self:Log("IsInBountifulDelve: map=%s zone=%s poi=%s bountiful=%s",
         tostring(mapID),

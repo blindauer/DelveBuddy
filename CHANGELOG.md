@@ -1,5 +1,13 @@
 = DelveBuddy Changelog =
 
+== 1.2.5 ==
+Fixes:
+* More robust gilded stash count retrieval. You should see much fewer instances where stash count is unknown.
+* More robust detectino of being in a delve, and whether the delve is complete. This should fix any remaining issues where Delver's Bounty reminder doesn't work properly.
+
+Misc:
+* Added "debuginfo" slash command to help with debugging stuff.
+
 == 1.2.4 ==
 Enhancements:
 * Show the current delve story variant when hovering over a delve.

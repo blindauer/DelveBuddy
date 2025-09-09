@@ -1,7 +1,7 @@
 == DelveBuddy TODO ==
-* Bug: IsDelveComplete sometimes fails
-    * E.g.: Excavation Site 9, A Knightly Quest: when at stage 3 (the boss: "0/1 Beste Glatisant defeated", assumes complete)
-    * BUT THEN: stage 4 (0/1 Treasure Found) says not complete :(
-* Bug: in-Delve detection broken when you warp to Ethereal place (in Mycomancer, for Fungal Folly?)
-* Nit: Comes up awkwardly when minimap at bottom center of screen (user request)
+* Bug: delver's bounty reminder happens on every inventory update (should just be 1 minute)
+    * Would be good to refactor some of that stuff, too.
+* Feature: reminder for Shrieking Quartz? (if not looted/have bounty)
+* Feature: show changelog on first login after update?
+* Nit: Comes up awkwardly when minimap at bottom center of screen (user report)
     * Make option to put it in a real window?
