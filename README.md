@@ -32,7 +32,8 @@
     * `/db scale <0.75-2.0>` -- Set tooltip scale
     * `/db reminders <coffer|bounty> <on||off>` -- Enable/disable reminders
     * `/db waypoints <blizzard|tomtom|both>` -- Set waypoint providers
-    * `/db debugLogging <on|off>` — Enable/disable debug logs.
+    * `/db debugLogging <on|off>` — Enable/disable debug logs
+    * `/db debuginfo` - Print useful debugging info
 
 ## Screenshots
 ![DelveBuddy Tooltip](screenshots/ToolTip-Minimap.jpg)
