@@ -20,6 +20,7 @@ DelveBuddy.IDS = {
     },
     Item = {
         DelversBounty = 248142,
+        CofferKeyShard = 245653,
     },
     Widget = {
         GildedStash = 6659,

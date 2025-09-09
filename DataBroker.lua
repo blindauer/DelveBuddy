@@ -443,6 +443,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
         " ",
         SHARD_ICON,
         KEY_ICON,
+        SHARD_ICON,
         KEY_ICON,
         STASH_ICON,
         BOUNTY_ICON,
@@ -457,6 +458,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
         " ",
         "Earned",
         "Earned",
+        "Owned",
         "Owned",
         "Stashes",
         "Owned",
@@ -481,6 +483,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
             local icon = self:ClassIconMarkup(data.class)
             local displayName = icon .. self:ClassColoredName(name, data.class)
             local shardsEarnedText = self:FormatKeysEarned(data.shardsEarned or 0, self.IDS.CONST.MAX_WEEKLY_SHARDS)
+            local shardsOwnedText = self:FormatKeysEarned(data.shardsOwned or 0, 100)
             local keysEarnedText = self:FormatKeysEarned(data.keysEarned, self.IDS.CONST.MAX_WEEKLY_KEYS)
             local keysOwnedText = self:FormatKeysOwned(data.keysOwned)
             local stashesText = self:FormatStashes(data.gildedStashes)
@@ -495,7 +498,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
             local vault2 = self:FormatVaultCell(rewards and rewards[2])
             local vault3 = self:FormatVaultCell(rewards and rewards[3])
 
-            local line = tip:AddLine(displayName, shardsEarnedText, keysEarnedText, keysOwnedText, 
+            local line = tip:AddLine(displayName, shardsEarnedText, keysEarnedText, shardsOwnedText, keysOwnedText, 
             stashesText, bountyText, lootedText, vault1, vault2, vault3)
 
             -- Only for current character: open vault if clicking vault cells.

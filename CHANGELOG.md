@@ -1,8 +1,11 @@
 = DelveBuddy Changelog =
 
 == 1.2.6 (In Progress) ==
+Enhancements:
+* Added tracking of Coffer Key Shards owned.
+
 Fixes:
-* Show the delve and worldsoul tips _above_ the character tip when LDB display or minimap is set to the bottom of the screen.
+* Show the delve and worldsoul tips _above_ the character tip when LDB display or minimap is set to the bottom of the screen. This should prevent those tips being truncated or off-screen.
 
 == 1.2.5 ==
 Fixes:

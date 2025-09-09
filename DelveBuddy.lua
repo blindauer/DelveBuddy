@@ -233,6 +233,9 @@ function DelveBuddy:CollectDelveData()
     end
     data.shardsEarned = shardsEarned * 50
 
+    -- Shards owned
+    data.shardsOwned = self:GetShardCount()
+
     -- Keys earned (this week)
     local keysEarned = 0
     for _, questID in ipairs(IDS.Quest.KeyEarned) do
@@ -441,7 +444,7 @@ function DelveBuddy:CleanupStaleCharacters()
             data.bountyLooted = false
             -- data.vaultRewards = {} keep vaultRewards
             -- TODO some indication of when you have a reward in the vault?
-            -- keysOwned and hasBounty are preserved
+            -- keysOwned, shardsOwned, hasBounty are preserved
         end
     end
 end
@@ -463,6 +466,10 @@ end
 function DelveBuddy:GetKeyCount()
     local c = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.RestoredCofferKey)
     return c and c.quantity or 0
+end
+
+function DelveBuddy:GetShardCount()
+    return C_Item.GetItemCount(self.IDS.Item.CofferKeyShard)
 end
 
 function DelveBuddy:GetDelves()
