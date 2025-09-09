@@ -3,6 +3,10 @@
 == 1.3 (In Progress) ==
 Enhancements:
 * Added tracking of Coffer Key Shards owned.
+* Added better waypoint setting for Delves and Wordsoul Memories (thanks, 
+BelegCufea!)
+* Enhanced Vault display, color coded by tier (thanks, 
+BelegCufea!)
 
 Fixes:
 * Show the delve and worldsoul tips _above_ the character tip when LDB display or minimap is set to the bottom of the screen. This should prevent those tips being truncated or off-screen.
