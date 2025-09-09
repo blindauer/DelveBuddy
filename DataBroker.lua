@@ -654,6 +654,8 @@ DelveBuddy.Colors = {
     Green = "00ff00",
     Red   = "ff3333",
     Gray  = "aaaaaa",
+    Yellow = "ffff00",
+    Cyan = "00ffff",
 }
 
 function DelveBuddy:FormatKeysEarned(earned, max)
@@ -698,7 +700,15 @@ function DelveBuddy:FormatVaultCell(v)
     if v.progress >= v.threshold then
         local tier = v.level > 0 and v.level or "—"
         local iLvl = self.TierToVaultiLvl[v.level] or "?"
-        return self:ColorText(("Tier %s (%s)"):format(tier, iLvl), self.Colors.Green)
+        local color = self.Colors.Yellow -- tier 5-7
+        if type(tier) ~= "number" then
+            color = self.Colors.Gray     -- unknown tier
+        elseif tier <= 4 then
+            color = self.Colors.Cyan     -- tier 1-4
+        elseif tier >= 8 then
+            color = self.Colors.Green    -- tier 8+
+        end
+        return self:ColorText(("Tier %s (%s)"):format(tier, iLvl), color)
     else
         return self:ColorText(("%d/%d"):format(v.progress, v.threshold), self.Colors.Gray)
     end
