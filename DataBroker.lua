@@ -30,18 +30,50 @@ local function EnsureHoverOwner()
     return hoverOwner
 end
 
+-- Convert a frame's edges to UIParent coordinate space (accounts for effective scale)
+local function GetUIParentBounds(frame)
+    if not frame or not frame:IsShown() then return nil end
+    local l, r = frame:GetLeft(), frame:GetRight()
+    local t, b = frame:GetTop(), frame:GetBottom()
+    if not (l and r and t and b) then return nil end
+    local fs = frame:GetEffectiveScale() or 1
+    local ps = UIParent:GetEffectiveScale() or 1
+    -- Convert from the frame's pixel space to UIParent's pixel space
+    l, r, t, b = l * fs / ps, r * fs / ps, t * fs / ps, b * fs / ps
+    return l, r, t, b
+end
+
+local function UnionBounds(bounds, frame)
+    local l, r, t, b = GetUIParentBounds(frame)
+    if not (l and r and t and b) then return bounds end
+    if not bounds then return {l=l, r=r, t=t, b=b} end
+    if l < bounds.l then bounds.l = l end
+    if r > bounds.r then bounds.r = r end
+    if t > bounds.t then bounds.t = t end
+    if b < bounds.b then bounds.b = b end
+    return bounds
+end
+
 local function PositionHoverOwner()
-    if not (DelveBuddy.charTip and DelveBuddy.delveTip and DelveBuddy.worldTip) then return end
-    local f = EnsureHoverOwner()
-    local left   = math.min(DelveBuddy.charTip:GetLeft()   or 0, DelveBuddy.delveTip:GetLeft()   or 0, DelveBuddy.worldTip:GetLeft()   or 0)
-    local right  = math.max(DelveBuddy.charTip:GetRight()  or 0, DelveBuddy.delveTip:GetRight()  or 0, DelveBuddy.worldTip:GetRight()  or 0)
-    local top    = math.max(DelveBuddy.charTip:GetTop()    or 0, DelveBuddy.delveTip:GetTop()    or 0, DelveBuddy.worldTip:GetTop()    or 0)
-    local bottom = math.min(DelveBuddy.charTip:GetBottom() or 0, DelveBuddy.delveTip:GetBottom() or 0, DelveBuddy.worldTip:GetBottom() or 0)
-    local pad = 4
-    f:ClearAllPoints()
-    f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left - pad,  top + pad)
-    f:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", right + pad, bottom - pad)
-    f:Show()
+    local owner = EnsureHoverOwner()
+    if not owner then return end
+
+    -- Build a union of the visible tooltips, in UIParent space, correcting for scale
+    local b = nil
+    b = UnionBounds(b, DelveBuddy and DelveBuddy.charTip)
+    b = UnionBounds(b, DelveBuddy and DelveBuddy.delveTip)
+    b = UnionBounds(b, DelveBuddy and DelveBuddy.worldTip)
+
+    if not b then
+        owner:Hide()
+        return
+    end
+
+    local pad = 6
+    owner:ClearAllPoints()
+    owner:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", b.l - pad, b.b - pad)
+    owner:SetPoint("TOPRIGHT",  UIParent, "BOTTOMLEFT", b.r + pad, b.t + pad)
+    owner:Show()
 end
 
 -- Helper to dismiss all tooltips
@@ -174,6 +206,10 @@ local function CreateTooltipScaleDropdownEntry()
         if DelveBuddy.charTip then DelveBuddy.charTip:SetScale(val) end
         if DelveBuddy.delveTip then DelveBuddy.delveTip:SetScale(val) end
         if DelveBuddy.worldTip then DelveBuddy.worldTip:SetScale(val) end
+        -- Keep the hover owner in sync with scaled tooltips
+        if DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip then
+            PositionHoverOwner()
+        end
     end
 
     slider:SetScript("OnValueChanged", function(self, value)
