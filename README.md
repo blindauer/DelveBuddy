@@ -6,10 +6,10 @@
 
 -	Tracking
     -	**Restored Coffer Keys** (weekly earned and total owned)
-    -	**Coffer Key Shards** (weekly earned)
+    -	**Coffer Key Shards** (weekly earned and total owned)
     -	**Gilded Stashes** (weekly loots)
     -	**Delver’s Bounty** (ownership and loot status)
-    -	**Great Vault Rewards** (World Delves progress per-tier)
+    -	**Great Vault Rewards** (World Delves progress per tier)
 -	UI Enhancements
     - Shows currently active Bountiful Delves
     -	Shows currently active Worldsoul Memories (and Radiant Echoes owned)
