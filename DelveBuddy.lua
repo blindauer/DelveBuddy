@@ -485,6 +485,7 @@ function DelveBuddy:GetDelves()
                     zoneID      = zoneID,
                     x           = poi.x,
                     y           = poi.y,
+                    areaPoiID   = info.areaPoiID,
                 }
             end
         end
@@ -507,10 +508,11 @@ function DelveBuddy:GetWorldSoulMemories()
             if poi and poi.atlasName == "UI-EventPoi-WorldSoulMemory" then
                 local name = (poi.name and (poi.name:match(":%s*(.+)") or poi.name)) or "World Soul Memory"
                 memories[poiID] = {
-                    name   = name,
-                    zoneID = zoneID,
-                    x      = poi.position and poi.position.x * 100 or 0,
-                    y      = poi.position and poi.position.y * 100 or 0,
+                    name      = name,
+                    zoneID    = zoneID,
+                    x         = poi.position and poi.position.x * 100 or 0,
+                    y         = poi.position and poi.position.y * 100 or 0,
+                    areaPoiID = poi.areaPoiID,
                 }
             end
         end
@@ -601,9 +603,13 @@ function DelveBuddy:SetWaypoint(poi)
     -- Blizzard waypoint
     if self.db.global.waypoints.useBlizzard then
         if C_Map.CanSetUserWaypointOnMap(poi.zoneID) then
-            local point = UiMapPoint.CreateFromCoordinates(poi.zoneID, poi.x / 100, poi.y / 100)
-            C_Map.SetUserWaypoint(point)
-            C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+            if poi.areaPoiID then
+                C_SuperTrack.SetSuperTrackedMapPin(Enum.SuperTrackingMapPinType.AreaPOI, poi.areaPoiID)
+            else
+                local point = UiMapPoint.CreateFromCoordinates(poi.zoneID, poi.x / 100, poi.y / 100)
+                C_Map.SetUserWaypoint(point)
+                C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+            end
             self:Print(("Waypoint set to %s"):format(poi.name))
             usedAny = true
         else
