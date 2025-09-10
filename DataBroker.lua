@@ -540,7 +540,7 @@ function DelveBuddy:PopulateWorldSoulSection(tip)
     end
 
     tip:SetColumnLayout(2, "LEFT", "LEFT")
-    local echoesCount = GetItemCount(246771)
+    local echoesCount = GetItemCount(self.IDS.Item.RadiantEcho)
     local numText = tostring(echoesCount)
     if echoesCount >= 5 then
         numText = self:ColorText(numText, self.Colors.Green)
