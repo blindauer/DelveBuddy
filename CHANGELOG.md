@@ -1,6 +1,6 @@
 = DelveBuddy Changelog =
 
-== 1.3 (In Progress) ==
+== 1.3 ==
 Enhancements:
 * Added tracking of Coffer Key Shards owned.
 * Added better waypoint setting for Delves and Wordsoul Memories (thanks, BelegCufea!)
@@ -9,6 +9,7 @@ Enhancements:
 Fixes:
 * Show the Delve and Worldsoul tooltips _above_ the character tip when LDB display or minimap is set to the bottom of the screen. This should prevent those tips being truncated or off-screen.
 * Fixed a bug that caused tooltips to go all wonky if the scale was set to anything other than 100%. Whoops!
+* Reworked tooltip show/hide code (yet again), to hopefully make it more reliable and resilient.
 
 == 1.2.5 ==
 Fixes:
