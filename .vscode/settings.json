@@ -58,6 +58,8 @@
         "WeeklyRewardsFrame",
         "CloseDropDownMenus",
         "ChatEdit_SendText",
-        "MapUtil"
-    ]
+        "MapUtil",
+        "NUM_BAG_SLOTS"
+    ],
+    "Lua.type.weakUnionCheck": true
 }

@@ -10,6 +10,9 @@ local tipMode = "none"
 -- Tracks whether the mouse is currently over the LDB/menu area
 local ldbHovering = false
 
+-- Secure button for using Coffer Key Shards (created lazily, later)
+local cofferKeyShardButton
+
 -- Helper to dismiss all tooltips
 local function HideAllTips()
     tipMode = "none"
@@ -456,13 +459,31 @@ function DelveBuddy:PopulateCharacterSection(tip)
             local line = tip:AddLine(displayName, shardsEarnedText, keysEarnedText, shardsOwnedText, keysOwnedText, 
             stashesText, bountyText, lootedText, vault1, vault2, vault3)
 
-            -- Only for current character: open vault if clicking vault cells.
+            -- Only for current character
             if name == UnitName("player") then
-                for col = 9, 11 do -- Vault cells
+                -- Vault cells: open the vault
+                for col = 9, 11 do
                     tip:SetCellScript(line, col, "OnMouseUp", function()
                         HideAllTips()
                         DelveBuddy:OpenVaultUI()
                     end)
+                end
+
+                -- Column 4 (shards owned): overlay a secure button to use the Coffer Key Shard
+                if not InCombatLockdown() then
+                    local cell = tip.lines[line].cells[4]
+                    if cell then
+                        if not cofferKeyShardButton then cofferKeyShardButton = DelveBuddy:CreateCofferKeyShardButton() end
+                        cofferKeyShardButton:ClearAllPoints()
+                        cofferKeyShardButton:SetParent(cell:GetParent() or UIParent)
+                        cofferKeyShardButton:SetPoint("TOPLEFT", cell, "TOPLEFT", 1, -1)
+                        cofferKeyShardButton:SetPoint("BOTTOMRIGHT", cell, "BOTTOMRIGHT", -1, 1)
+                        cofferKeyShardButton:Show()
+                    end
+
+                    -- Add empty hover scripts so LibQTip applies its native highlight visuals.
+                    tip:SetCellScript(line, 4, "OnEnter", function() end)
+                    tip:SetCellScript(line, 4, "OnLeave", function() end)
                 end
             end
         end
@@ -696,4 +717,16 @@ function DelveBuddy:InitMinimapIcon()
             end)
         end
     end
+end
+
+function DelveBuddy:CreateCofferKeyShardButton()
+    local button = CreateFrame("Button", "SecureTooltipCofferKeyShardButton", UIParent, "SecureActionButtonTemplate")
+    button:RegisterForClicks("AnyUp", "AnyDown")
+    button:SetAttribute("type1", "macro")
+    button:SetAttribute("macrotext1", "/use item:"..tostring(DelveBuddy.IDS.Item.CofferKeyShard))
+    button:SetMouseMotionEnabled(false)
+    button:SetToplevel(true)
+    button:SetSize(1, 1)
+    button:Hide()
+    return button
 end
