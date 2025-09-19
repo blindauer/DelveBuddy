@@ -728,5 +728,25 @@ function DelveBuddy:CreateCofferKeyShardButton()
     button:SetToplevel(true)
     button:SetSize(1, 1)
     button:Hide()
+
+    -- After a click, refresh counts shortly after the item resolves
+    if not button._dbPostClickHooked then
+        button._dbPostClickHooked = true
+        button:HookScript("PostClick", function()
+            C_Timer.After(2.0, function()
+                self:RefreshShardsAndKeys()
+            end)
+        end)
+    end
+
     return button
+end
+
+function DelveBuddy:RefreshShardsAndKeys()
+    self:CollectDelveData()
+
+    if self.charTip and self.charTip:IsShown() then
+        self:PopulateCharacterSection(self.charTip)
+        self.charTip:Show()
+    end
 end

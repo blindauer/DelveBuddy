@@ -1,6 +1,6 @@
 = DelveBuddy Changelog =
 
-== 1.3.1 (In progress) ==
+== 1.3.1 ==
 Enhancements:
 * Clicking the Coffer Key Shards owned cell for the current character uses the shards (to make a coffer key)
 
