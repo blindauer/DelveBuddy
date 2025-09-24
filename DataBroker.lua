@@ -13,6 +13,9 @@ local ldbHovering = false
 -- Secure button for using Coffer Key Shards (created lazily, later)
 local cofferKeyShardButton
 
+-- Secure button for using the Nemesis Call item (created lazily, later)
+local nemesisCallButton
+
 -- Helper to dismiss all tooltips
 local function HideAllTips()
     tipMode = "none"
@@ -547,6 +550,39 @@ function DelveBuddy:PopulateDelveSection(tip)
         tip:SetLineScript(line, "OnLeave", function()
             GameTooltip:Hide()
         end)
+    end
+
+    local itemID = 248017 -- Shrieking Quartz (TWW Season 3)
+    if C_PartyInfo.IsDelveInProgress() and C_Item.GetItemCount(itemID) > 0 then
+        local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
+        local itemName = ("%s %s"):format(itemIcon, C_Item.GetItemNameByID(itemID))
+
+        tip:AddSeparator()
+        local itemLine = tip:AddLine(itemName, self:ColorText("click to summon", self.Colors.Green))
+
+        if not nemesisCallButton and not InCombatLockdown() then
+            nemesisCallButton = CreateFrame("Button", "DelveBuddySecureNemesisButton", UIParent, "SecureActionButtonTemplate")
+            nemesisCallButton:SetAttribute("type", "macro")
+            nemesisCallButton:SetAttribute("macrotext", "/use item:" .. itemID)
+            nemesisCallButton:RegisterForClicks("AnyUp", "AnyDown")
+            nemesisCallButton:SetMouseMotionEnabled(false)
+            nemesisCallButton:SetToplevel(true)
+            nemesisCallButton:SetSize(1, 1)
+        end
+
+        if nemesisCallButton then
+            local row = tip.lines[itemLine]
+            if row then
+                nemesisCallButton:ClearAllPoints()
+                nemesisCallButton:SetParent(row:GetParent() or UIParent)
+                nemesisCallButton:SetPoint("TOPLEFT", row, "TOPLEFT", 1, -1)
+                nemesisCallButton:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -1, 1)
+                nemesisCallButton:Show()
+            end
+        end
+
+        tip:SetLineScript(itemLine, "OnEnter", function() end)
+        tip:SetLineScript(itemLine, "OnLeave", function() end)
     end
 end
 
