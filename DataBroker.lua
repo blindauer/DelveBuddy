@@ -13,6 +13,9 @@ local ldbHovering = false
 -- Secure button for using Coffer Key Shards (created lazily, later)
 local cofferKeyShardButton
 
+-- Secure button for using the Delve-O-Bot 7001 toy (created lazily, later)
+local delveOBotButton
+
 -- Secure button for using the Nemesis Call item (created lazily, later)
 local nemesisCallButton
 
@@ -552,6 +555,98 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
     end
 
+    -- Delve-O-Bot 7001
+    local toyID = 230850
+    if PlayerHasToy(toyID) then
+        -- Get toy name and icon
+        local _, toyName, toyFileID = C_ToyBox.GetToyInfo(toyID)
+        if not toyFileID or toyFileID == 0 then
+            _, toyName, toyFileID = C_ToyBox.GetToyInfo(toyID)
+        end
+        if toyFileID and toyFileID > 0 then
+            local toyIcon = self:TextureIcon(toyFileID)
+            toyName = ("%s %s"):format(toyIcon, toyName)
+        end
+
+        tip:AddSeparator()
+        local toyLine = tip:AddLine(toyName, "")
+
+        if not delveOBotButton and not InCombatLockdown() then
+            delveOBotButton = CreateFrame("Button", "DelveBuddySecureToyButton", UIParent, "SecureActionButtonTemplate")
+            delveOBotButton:SetAttribute("type", "toy")
+            delveOBotButton:SetAttribute("toy", toyID)
+            delveOBotButton:RegisterForClicks("AnyUp", "AnyDown")
+            delveOBotButton:SetMouseMotionEnabled(false)
+            delveOBotButton:SetToplevel(true)
+            delveOBotButton:SetSize(1, 1)
+        end
+
+        if delveOBotButton then
+            local row = tip.lines[toyLine]
+            if row then
+                delveOBotButton:ClearAllPoints()
+                delveOBotButton:SetParent(row:GetParent() or UIParent)
+                delveOBotButton:SetPoint("TOPLEFT", row, "TOPLEFT", 1, -1)
+                delveOBotButton:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -1, 1)
+                delveOBotButton:Show()
+            end
+        end
+
+        -- Update function to be called periodically
+        local function UpdateToyCooldownText()
+            local startTime, duration = C_Item.GetItemCooldown(toyID)
+            local currentTime = GetTime()
+            local timeLeft = (startTime + duration) - currentTime
+            local cdText
+            local toyText = toyName
+
+            if duration and duration > 0 and timeLeft and timeLeft > 0 then
+                local hours = math.floor(timeLeft / 3600)
+                local minutes = math.floor((timeLeft % 3600) / 60)
+                local seconds = math.floor(timeLeft % 60)
+                
+                -- Build the formatted string conditionally
+                local timeString = ""
+                if hours > 0 then
+                    timeString = timeString .. ("%dh "):format(hours)
+                end
+                if minutes > 0 or hours > 0 then
+                    timeString = timeString .. ("%dm "):format(minutes)
+                end
+                timeString = timeString .. ("%ds"):format(seconds)
+
+                cdText = ("ready in %s"):format(timeString)
+                cdText = self:ColorText(cdText, self.Colors.Red)
+                toyText = self:ColorText(toyText, self.Colors.Gray)
+            else
+                cdText = self:ColorText("click to summon", self.Colors.Green)
+            end
+            tip:SetCell(toyLine, 1, toyText)
+            tip:SetCell(toyLine, 2, cdText)
+        end
+
+        UpdateToyCooldownText()
+
+        -- Set up the OnUpdate timer
+        local lastUpdate = 0
+        tip:SetScript("OnUpdate", function(_, elapsed)
+            lastUpdate = lastUpdate + elapsed
+            if lastUpdate >= 1 then
+                UpdateToyCooldownText()
+                lastUpdate = 0
+            end
+        end)
+        
+        -- Clear the OnUpdate script when the tip is hidden
+        tip:SetScript("OnHide", function(self)
+            self:SetScript("OnUpdate", nil)
+            delveOBotButton:Hide()
+        end)
+
+        tip:SetLineScript(toyLine, "OnEnter", function() end)
+        tip:SetLineScript(toyLine, "OnLeave", function() end)
+    end
+  
     local itemID = 248017 -- Shrieking Quartz (TWW Season 3)
     if C_PartyInfo.IsDelveInProgress() and C_Item.GetItemCount(itemID) > 0 then
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
