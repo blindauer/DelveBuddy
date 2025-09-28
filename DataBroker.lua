@@ -19,6 +19,18 @@ local delveOBotButton
 -- Secure button for using the Nemesis Call item (created lazily, later)
 local nemesisCallButton
 
+-- Detach secure buttons when combat starts
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_REGEN_DISABLED")
+f:SetScript("OnEvent", function()
+    for _, btn in ipairs({cofferKeyShardButton, delveOBotButton, nemesisCallButton}) do
+        if btn and btn.Hide and btn.ClearAllPoints then
+            btn:Hide()
+            btn:ClearAllPoints()
+        end
+    end
+end)
+
 -- Helper to dismiss all tooltips
 local function HideAllTips()
     tipMode = "none"
@@ -618,7 +630,10 @@ function DelveBuddy:PopulateDelveSection(tip)
         -- Clear the OnUpdate script when the tip is hidden
         tip:SetScript("OnHide", function(self)
             self:SetScript("OnUpdate", nil)
-            if not InCombatLockdown() and delveOBotButton then delveOBotButton:Hide() end
+            if not InCombatLockdown() and delveOBotButton then
+                delveOBotButton:Hide()
+                delveOBotButton:ClearAllPoints()
+            end
         end)
 
         tip:SetLineScript(toyLine, "OnEnter", function() end)
