@@ -1,6 +1,7 @@
 = DelveBuddy Changelog =
 
 == 1.3.2 ==
+Enhancements:
 * Added Delve-O-Bot 7001 to the Delves tooltip  (thanks, BelegCufea!)
 * Added Shrieking Quartz item to the Delves tooltip (thanks, BelegCufea!)
 
