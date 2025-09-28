@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 1.3.2 (In Progress) ==
+* Add Delve-O-Bot (thanks, BelegCufea!)
+* Add Shreiking nemesis call item
+
 == 1.3.1 ==
 Enhancements:
 * Clicking the Coffer Key Shards owned cell for the current character uses the shards (to make a coffer key)

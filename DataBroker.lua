@@ -479,15 +479,14 @@ function DelveBuddy:PopulateCharacterSection(tip)
                 if not InCombatLockdown() then
                     local cell = tip.lines[line].cells[4]
                     if cell then
-                        if not cofferKeyShardButton then cofferKeyShardButton = DelveBuddy:CreateCofferKeyShardButton() end
-                        cofferKeyShardButton:ClearAllPoints()
-                        cofferKeyShardButton:SetParent(cell:GetParent() or UIParent)
-                        cofferKeyShardButton:SetPoint("TOPLEFT", cell, "TOPLEFT", 1, -1)
-                        cofferKeyShardButton:SetPoint("BOTTOMRIGHT", cell, "BOTTOMRIGHT", -1, 1)
-                        cofferKeyShardButton:Show()
+                        cofferKeyShardButton = DelveBuddy:CreateAndAttachSecureButton(
+                            cofferKeyShardButton,
+                            function() return DelveBuddy:BuildCofferKeyShardButton() end,
+                            cell
+                        )
                     end
 
-                    -- Add empty hover scripts so LibQTip applies its native highlight visuals.
+                    -- Keep these so QTip applies highlight
                     tip:SetCellScript(line, 4, "OnEnter", function() end)
                     tip:SetCellScript(line, 4, "OnLeave", function() end)
                 end
@@ -556,40 +555,19 @@ function DelveBuddy:PopulateDelveSection(tip)
     end
 
     -- Delve-O-Bot 7001
-    local toyID = 230850
-    if PlayerHasToy(toyID) then
-        -- Get toy name and icon
-        local _, toyName, toyFileID = C_ToyBox.GetToyInfo(toyID)
-        if not toyFileID or toyFileID == 0 then
-            _, toyName, toyFileID = C_ToyBox.GetToyInfo(toyID)
-        end
-        if toyFileID and toyFileID > 0 then
-            local toyIcon = self:TextureIcon(toyFileID)
-            toyName = ("%s %s"):format(toyIcon, toyName)
-        end
-
+    local toyID = DelveBuddy.IDS.Item.DelveOBot7001
+    if not InCombatLockdown() and PlayerHasToy(toyID) then
         tip:AddSeparator()
+        local toyName = self:GetToyName(toyID)
         local toyLine = tip:AddLine(toyName, "")
 
-        if not delveOBotButton and not InCombatLockdown() then
-            delveOBotButton = CreateFrame("Button", "DelveBuddySecureToyButton", UIParent, "SecureActionButtonTemplate")
-            delveOBotButton:SetAttribute("type", "toy")
-            delveOBotButton:SetAttribute("toy", toyID)
-            delveOBotButton:RegisterForClicks("AnyUp", "AnyDown")
-            delveOBotButton:SetMouseMotionEnabled(false)
-            delveOBotButton:SetToplevel(true)
-            delveOBotButton:SetSize(1, 1)
-        end
-
-        if delveOBotButton then
-            local row = tip.lines[toyLine]
-            if row then
-                delveOBotButton:ClearAllPoints()
-                delveOBotButton:SetParent(row:GetParent() or UIParent)
-                delveOBotButton:SetPoint("TOPLEFT", row, "TOPLEFT", 1, -1)
-                delveOBotButton:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -1, 1)
-                delveOBotButton:Show()
-            end
+        local row = tip.lines[toyLine]
+        if row then
+            delveOBotButton = DelveBuddy:CreateAndAttachSecureButton(
+                delveOBotButton,
+                function() return DelveBuddy:BuildDelveOBotButton() end,
+                row
+            )
         end
 
         -- Update function to be called periodically
@@ -604,7 +582,7 @@ function DelveBuddy:PopulateDelveSection(tip)
                 local hours = math.floor(timeLeft / 3600)
                 local minutes = math.floor((timeLeft % 3600) / 60)
                 local seconds = math.floor(timeLeft % 60)
-                
+
                 -- Build the formatted string conditionally
                 local timeString = ""
                 if hours > 0 then
@@ -636,44 +614,33 @@ function DelveBuddy:PopulateDelveSection(tip)
                 lastUpdate = 0
             end
         end)
-        
+
         -- Clear the OnUpdate script when the tip is hidden
         tip:SetScript("OnHide", function(self)
             self:SetScript("OnUpdate", nil)
-            delveOBotButton:Hide()
+            if not InCombatLockdown() and delveOBotButton then delveOBotButton:Hide() end
         end)
 
         tip:SetLineScript(toyLine, "OnEnter", function() end)
         tip:SetLineScript(toyLine, "OnLeave", function() end)
     end
-  
-    local itemID = 248017 -- Shrieking Quartz (TWW Season 3)
-    if C_PartyInfo.IsDelveInProgress() and C_Item.GetItemCount(itemID) > 0 then
+
+    -- Shrieking Quartz
+    local itemID = DelveBuddy.IDS.Item.ShriekingQuartz
+    if not InCombatLockdown() and C_PartyInfo.IsDelveInProgress() and C_Item.GetItemCount(itemID) > 0 then
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
         local itemName = ("%s %s"):format(itemIcon, C_Item.GetItemNameByID(itemID))
 
         tip:AddSeparator()
         local itemLine = tip:AddLine(itemName, self:ColorText("click to summon", self.Colors.Green))
 
-        if not nemesisCallButton and not InCombatLockdown() then
-            nemesisCallButton = CreateFrame("Button", "DelveBuddySecureNemesisButton", UIParent, "SecureActionButtonTemplate")
-            nemesisCallButton:SetAttribute("type", "macro")
-            nemesisCallButton:SetAttribute("macrotext", "/use item:" .. itemID)
-            nemesisCallButton:RegisterForClicks("AnyUp", "AnyDown")
-            nemesisCallButton:SetMouseMotionEnabled(false)
-            nemesisCallButton:SetToplevel(true)
-            nemesisCallButton:SetSize(1, 1)
-        end
-
-        if nemesisCallButton then
-            local row = tip.lines[itemLine]
-            if row then
-                nemesisCallButton:ClearAllPoints()
-                nemesisCallButton:SetParent(row:GetParent() or UIParent)
-                nemesisCallButton:SetPoint("TOPLEFT", row, "TOPLEFT", 1, -1)
-                nemesisCallButton:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -1, 1)
-                nemesisCallButton:Show()
-            end
+        local row = tip.lines[itemLine]
+        if row then
+            nemesisCallButton = DelveBuddy:CreateAndAttachSecureButton(
+                nemesisCallButton,
+                function() return DelveBuddy:BuildShriekingQuartzButton() end,
+                row
+            )
         end
 
         tip:SetLineScript(itemLine, "OnEnter", function() end)
@@ -807,6 +774,16 @@ function DelveBuddy:ColorText(text, color)
     return ("|cff%s%s|r"):format(color, tostring(text))
 end
 
+function DelveBuddy:GetToyName(toyID)
+    local _, toyName, toyFileID = C_ToyBox.GetToyInfo(toyID)
+    if toyFileID and toyFileID > 0 then
+        local toyIcon = self:TextureIcon(toyFileID)
+        toyName = ("%s %s"):format(toyIcon, toyName)
+    end
+
+    return toyName
+end
+
 function DelveBuddy:ShowMinimapHint(owner)
     if not owner then return end
     -- If our big tooltips are open, don't show the hint
@@ -850,27 +827,78 @@ function DelveBuddy:InitMinimapIcon()
     end
 end
 
-function DelveBuddy:CreateCofferKeyShardButton()
-    local button = CreateFrame("Button", "SecureTooltipCofferKeyShardButton", UIParent, "SecureActionButtonTemplate")
-    button:RegisterForClicks("AnyUp", "AnyDown")
-    button:SetAttribute("type1", "macro")
-    button:SetAttribute("macrotext1", "/use item:"..tostring(DelveBuddy.IDS.Item.CofferKeyShard))
-    button:SetMouseMotionEnabled(false)
-    button:SetToplevel(true)
-    button:SetSize(1, 1)
+function DelveBuddy:CreateAndAttachSecureButton(existingBtn, createFn, target)
+    -- Never touch secure frames in combat: no create, no move, no show
+    if InCombatLockdown() then
+        return existingBtn
+    end
+
+    if not existingBtn then
+        existingBtn = createFn()
+    end
+
+    if existingBtn and target then
+        -- Do NOT parent to the tooltip or its cells; that taints Bazooka/LibQTip during combat.
+        -- Keep parent as UIParent and just anchor relatively.
+        existingBtn:ClearAllPoints()
+        existingBtn:SetPoint("TOPLEFT", target, "TOPLEFT", 1, -1)
+        existingBtn:SetPoint("BOTTOMRIGHT", target, "BOTTOMRIGHT", -1, 1)
+
+        -- Ensure it renders over the tooltip without being its child
+        if existingBtn.SetFrameStrata then existingBtn:SetFrameStrata("TOOLTIP") end
+        if target.GetFrameLevel and existingBtn.SetFrameLevel then
+            existingBtn:SetFrameLevel(target:GetFrameLevel() + 10)
+        end
+
+        existingBtn:Show()
+    end
+
+    return existingBtn
+end
+
+function DelveBuddy:BuildSecureButton(name, setupFn)
+    local b = CreateFrame("Button", name, UIParent, "SecureActionButtonTemplate")
+    b:RegisterForClicks("AnyUp", "AnyDown")
+    b:SetMouseMotionEnabled(false)
+    b:SetToplevel(true)
+    b:SetSize(1, 1)
+    if setupFn then setupFn(b) end
+    return b
+end
+
+function DelveBuddy:BuildCofferKeyShardButton()
+    local button = self:BuildSecureButton("SecureTooltipCofferKeyShardButton", function(b)
+        b:SetAttribute("type1", "macro")
+        b:SetAttribute("macrotext1", "/use item:" .. tostring(DelveBuddy.IDS.Item.CofferKeyShard))
+    end)
+
     button:Hide()
 
-    -- After a click, refresh counts shortly after the item resolves
     if not button._dbPostClickHooked then
         button._dbPostClickHooked = true
         button:HookScript("PostClick", function()
             C_Timer.After(2.0, function()
-                self:RefreshShardsAndKeys()
+                DelveBuddy:RefreshShardsAndKeys()
             end)
         end)
     end
 
     return button
+end
+
+function DelveBuddy:BuildDelveOBotButton()
+    return self:BuildSecureButton("DelveBuddySecureToyButton", function(b)
+        b:SetAttribute("type", "toy")
+        b:SetAttribute("toy", DelveBuddy.IDS.Item.DelveOBot7001)
+    end)
+end
+
+function DelveBuddy:BuildShriekingQuartzButton()
+    local itemID = DelveBuddy.IDS.Item.ShriekingQuartz
+    return self:BuildSecureButton("DelveBuddySecureNemesisButton", function(b)
+        b:SetAttribute("type", "macro")
+        b:SetAttribute("macrotext", "/use item:" .. itemID)
+    end)
 end
 
 function DelveBuddy:RefreshShardsAndKeys()

@@ -22,6 +22,8 @@ DelveBuddy.IDS = {
         DelversBounty = 248142,
         CofferKeyShard = 245653,
         RadiantEcho = 246771,
+        DelveOBot7001 = 230850,
+        ShriekingQuartz = 248017,
     },
     Widget = {
         GildedStash = 6659,
