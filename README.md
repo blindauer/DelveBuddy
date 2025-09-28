@@ -6,20 +6,21 @@
 *	Tracking
     * **Restored Coffer Keys** (weekly earned and total owned)
     * **Coffer Key Shards** (weekly earned and total owned)
-    * **Gilded Stashes** (weekly loots)
+    * **Gilded Stashes** (weekly looted)
     * **Delver’s Bounty** (owned and looted this week)
     * **Great Vault Rewards** (World Delves progress per tier)
 *	UI Enhancements
     * Shows currently active Bountiful Delves
     * Shows currently active Worldsoul Memories (and Radiant Echoes owned)
     * Click a Delve or World Soul Memory to create a waypoint to it
+    * Easy access to Delve-O-Bot and Shrieking Quartz items - one-click!
 * Reminders & Warnings
-    * Warns when entering a Bountiful Delve without a Restored Coffer Key
+    * Warning when entering a Bountiful Delve without a Restored Coffer Key
     * Reminds you to use Delver’s Bounty when inside a Bountiful Delve
 
 ## Installation
-1. Clone or download this repository into your WoW `Interface/AddOns` folder.
-2. Ensure the folder name is `DelveBuddy`.
+* For the latest stable version, download from CurseForge: https://www.curseforge.com/wow/addons/delvebuddy
+* For cutting-edge, not yet released version, clone or download this repository into your WoW `Interface/AddOns` folder.
 
 ## Usage
 * **Minimap icon:** Click the minimap icon to show/hide DelveBuddy's tooltip UI.

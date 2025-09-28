@@ -1,8 +1,8 @@
 = DelveBuddy Changelog =
 
-== 1.3.2 (In Progress) ==
-* Add Delve-O-Bot (thanks, BelegCufea!)
-* Add Shreiking nemesis call item
+== 1.3.2 ==
+* Added Delve-O-Bot 7001 to the Delves tooltip  (thanks, BelegCufea!)
+* Added Shrieking Quartz item to the Delves tooltip (thanks, BelegCufea!)
 
 == 1.3.1 ==
 Enhancements:

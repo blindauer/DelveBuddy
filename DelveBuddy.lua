@@ -127,7 +127,7 @@ function DelveBuddy:SlashCommand(input)
         end
     elseif cmd == "debuginfo" or cmd == "di" then
         self:Print("Debug Info:")
-        self:Print("Is in delve: " .. tostring(self:IsInDelve()))
+        self:Print("Is in delve: " .. tostring(self:IsDelveInProgress()))
         self:Print("Is in bountiful delve: " .. tostring(self:IsInBountifulDelve()))
         self:Print("Is delve complete: " .. tostring(self:IsDelveComplete()))
         local cur, max = self:GetGildedStashCounts()
@@ -176,7 +176,7 @@ end
 function DelveBuddy:ShouldShowBounty()
     local result =
         self.db.global.reminders.delversBounty
-        and self:IsInDelve()
+        and self:IsDelveInProgress()
         and not self:IsDelveComplete()
         and self:HasDelversBountyItem()
         and not self:HasDelversBountyBuff()
@@ -343,7 +343,7 @@ function DelveBuddy:FlashDelversBounty()
     end
 end
 
-function DelveBuddy:IsInDelve()
+function DelveBuddy:IsDelveInProgress()
     return C_PartyInfo.IsDelveInProgress()
 end
 
@@ -562,7 +562,7 @@ function DelveBuddy:DumpPOIs(mapID)
 end
 
 function DelveBuddy:IsInBountifulDelve()
-    if not self:IsInDelve() then return false end
+    if not self:IsDelveInProgress() then return false end
     local mapID = C_Map.GetBestMapForUnit("player")
     local poiID = mapID and self.IDS.DelveMapToPoi[mapID]
     if not poiID then return false end

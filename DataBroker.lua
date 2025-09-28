@@ -568,7 +568,7 @@ function DelveBuddy:PopulateDelveSection(tip)
 
     -- Delve-O-Bot 7001
     local toyID = DelveBuddy.IDS.Item.DelveOBot7001
-    if not InCombatLockdown() and PlayerHasToy(toyID) then
+    if not InCombatLockdown() and not self:IsDelveInProgress() and PlayerHasToy(toyID) then
         tip:AddSeparator()
         local toyName = self:GetToyName(toyID)
         local toyLine = tip:AddLine(toyName, "")
@@ -642,7 +642,7 @@ function DelveBuddy:PopulateDelveSection(tip)
 
     -- Shrieking Quartz
     local itemID = DelveBuddy.IDS.Item.ShriekingQuartz
-    if not InCombatLockdown() and C_PartyInfo.IsDelveInProgress() and C_Item.GetItemCount(itemID) > 0 then
+    if not InCombatLockdown() and self:IsDelveInProgress() and C_Item.GetItemCount(itemID) > 0 then
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
         local itemName = ("%s %s"):format(itemIcon, C_Item.GetItemNameByID(itemID))
 
