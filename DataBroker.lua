@@ -19,7 +19,7 @@ local delveOBotButton
 -- Secure button for using the Nemesis Call item (created lazily, later)
 local nemesisCallButton
 
--- Detach secure buttons when combat starts
+-- Detach secure buttons when combat starts, to avoid wonkiness due to callint secure code in combat.
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_REGEN_DISABLED")
 f:SetScript("OnEvent", function()
@@ -843,7 +843,6 @@ function DelveBuddy:InitMinimapIcon()
 end
 
 function DelveBuddy:CreateAndAttachSecureButton(existingBtn, createFn, target)
-    -- Never touch secure frames in combat: no create, no move, no show
     if InCombatLockdown() then
         return existingBtn
     end
