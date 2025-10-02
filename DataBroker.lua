@@ -569,7 +569,7 @@ function DelveBuddy:PopulateDelveSection(tip)
     -- Delve-O-Bot 7001
     local toyID = DelveBuddy.IDS.Item.DelveOBot7001
     if not InCombatLockdown() and not self:IsDelveInProgress() and PlayerHasToy(toyID) then
-        tip:AddSeparator()
+        tip:AddSeparator(1,1,1,1,.45)
         local toyName = self:GetToyName(toyID)
         local toyLine = tip:AddLine(toyName, "")
 
@@ -636,8 +636,18 @@ function DelveBuddy:PopulateDelveSection(tip)
             end
         end)
 
-        tip:SetLineScript(toyLine, "OnEnter", function() end)
-        tip:SetLineScript(toyLine, "OnLeave", function() end)
+        tip:SetLineScript(toyLine, "OnEnter", function()
+            GameTooltip:Hide()
+            GameTooltip:SetOwner(tip, "ANCHOR_NONE")
+            GameTooltip:ClearLines()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:SetPoint("TOPRIGHT", (tip.frame or tip), "TOPLEFT", -8, 0)
+            GameTooltip:SetToyByItemID(toyID)
+            GameTooltip:Show()
+        end)
+        tip:SetLineScript(toyLine, "OnLeave", function()
+            GameTooltip:Hide()
+        end)
     end
 
     -- Shrieking Quartz
@@ -646,7 +656,7 @@ function DelveBuddy:PopulateDelveSection(tip)
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
         local itemName = ("%s %s"):format(itemIcon, C_Item.GetItemNameByID(itemID))
 
-        tip:AddSeparator()
+        tip:AddSeparator(1,1,1,1,.45)
         local itemLine = tip:AddLine(itemName, self:ColorText("click to summon", self.Colors.Green))
 
         local row = tip.lines[itemLine]
@@ -658,8 +668,18 @@ function DelveBuddy:PopulateDelveSection(tip)
             )
         end
 
-        tip:SetLineScript(itemLine, "OnEnter", function() end)
-        tip:SetLineScript(itemLine, "OnLeave", function() end)
+        tip:SetLineScript(itemLine, "OnEnter", function()
+            GameTooltip:Hide()
+            GameTooltip:SetOwner(tip, "ANCHOR_NONE")
+            GameTooltip:ClearLines()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:SetPoint("TOPRIGHT", (tip.frame or tip), "TOPLEFT", -8, 0)
+            GameTooltip:SetItemByID(itemID)
+            GameTooltip:Show()
+        end)
+        tip:SetLineScript(itemLine, "OnLeave", function()
+            GameTooltip:Hide()
+        end)
     end
 end
 
