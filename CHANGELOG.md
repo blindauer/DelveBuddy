@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 1.3.3 (in progress) ==
+Other:
+* Updated interface version for 11.2.5
+
 == 1.3.2 ==
 Enhancements:
 * Added Delve-O-Bot 7001 to the Delves tooltip  (thanks, BelegCufea!)
