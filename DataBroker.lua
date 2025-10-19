@@ -19,11 +19,14 @@ local delveOBotButton
 -- Secure button for using the Nemesis Call item (created lazily, later)
 local nemesisCallButton
 
+-- Secure button for using Delver's Bounty (created lazily, later)
+local delversBountyButton
+
 -- Detach secure buttons when combat starts, to avoid wonkiness due to callint secure code in combat.
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_REGEN_DISABLED")
 f:SetScript("OnEvent", function()
-    for _, btn in ipairs({cofferKeyShardButton, delveOBotButton, nemesisCallButton}) do
+    for _, btn in ipairs({cofferKeyShardButton, delveOBotButton, nemesisCallButton, delversBountyButton}) do
         if btn and btn.Hide and btn.ClearAllPoints then
             btn:Hide()
             btn:ClearAllPoints()
@@ -650,9 +653,50 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
     end
 
+    -- Delver's Bounty (only in a Bountiful Delve and if player has one)
+    if not InCombatLockdown() and self:IsInBountifulDelve() and self:HasDelversBountyItem() then
+        local itemID = DelveBuddy.IDS.Item.DelversBounty
+        local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
+        local itemName = C_Item.GetItemNameByID(itemID)
+        local lineText = ("%s %s"):format(itemIcon, itemName)
+
+        tip:AddSeparator(1,1,1,1,.45)
+        local itemLine = tip:AddLine(lineText, self:ColorText("click to use", self.Colors.Green))
+
+        local row = tip.lines[itemLine]
+        if row then
+            delversBountyButton = DelveBuddy:CreateAndAttachSecureButton(
+                delversBountyButton,
+                function() return DelveBuddy:BuildDelversBountyButton() end,
+                row
+            )
+        end
+
+        tip:SetLineScript(itemLine, "OnEnter", function()
+            GameTooltip:Hide()
+            GameTooltip:SetOwner(tip, "ANCHOR_NONE")
+            GameTooltip:ClearLines()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:SetPoint("TOPRIGHT", (tip.frame or tip), "TOPLEFT", -8, 0)
+            GameTooltip:SetItemByID(itemID)
+            GameTooltip:Show()
+        end)
+        tip:SetLineScript(itemLine, "OnLeave", function()
+            GameTooltip:Hide()
+        end)
+
+        -- Ensure the button is cleared when the tip hides
+        tip:HookScript("OnHide", function(self)
+            if not InCombatLockdown() and delversBountyButton then
+                delversBountyButton:Hide()
+                delversBountyButton:ClearAllPoints()
+            end
+        end)
+    end
+
     -- Shrieking Quartz
-    local itemID = DelveBuddy.IDS.Item.ShriekingQuartz
-    if not InCombatLockdown() and self:IsDelveInProgress() and C_Item.GetItemCount(itemID) > 0 then
+    if not InCombatLockdown() and self:IsDelveInProgress() and self:HasShriekingQuartzItem() then
+        local itemID = DelveBuddy.IDS.Item.ShriekingQuartz
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
         local itemName = ("%s %s"):format(itemIcon, C_Item.GetItemNameByID(itemID))
 
@@ -932,6 +976,14 @@ function DelveBuddy:BuildShriekingQuartzButton()
     return self:BuildSecureButton("DelveBuddySecureNemesisButton", function(b)
         b:SetAttribute("type", "macro")
         b:SetAttribute("macrotext", "/use item:" .. itemID)
+    end)
+end
+
+function DelveBuddy:BuildDelversBountyButton()
+    local itemID = DelveBuddy.IDS.Item.DelversBounty
+    return self:BuildSecureButton("DelveBuddySecureDelversBountyButton", function(b)
+        b:SetAttribute("type", "macro")
+        b:SetAttribute("macrotext", "/use item:" .. tostring(itemID))
     end)
 end
 

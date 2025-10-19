@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 1.3.4 ==
+Enhancements:
+* Added Delver's Bounty to the Delves tooltip (when you have one, and are in a bountiful delve)
+
 == 1.3.3 ==
 Enhancements:
 * Added tooltips to Delve-O-Bot, Shrieking Quartz (thanks, BelegCufea!)

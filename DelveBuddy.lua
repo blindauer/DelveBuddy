@@ -356,6 +356,16 @@ function DelveBuddy:HasDelversBountyItem()
     return result
 end
 
+function DelveBuddy:HasShriekingQuartzItem()
+    local result = false
+
+    result = C_Item.GetItemCount(DelveBuddy.IDS.Item.ShriekingQuartz, false) > 0
+
+    self:Log("HasShriekingQuartzItem: (%s)", tostring(result))
+    return result
+end
+
+
 function DelveBuddy:HasDelversBountyBuff()
     local result = false
 
