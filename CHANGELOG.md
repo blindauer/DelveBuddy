@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 1.3.5 ==
+Enhancements:
+* Don't show delves or collect data for timerunning characters
+
 == 1.3.4 ==
 Enhancements:
 * Added Delver's Bounty to the Delves tooltip (when you have one, and are in a bountiful delve)

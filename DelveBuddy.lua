@@ -131,7 +131,8 @@ function DelveBuddy:SlashCommand(input)
         self:Print("Is in bountiful delve: " .. tostring(self:IsInBountifulDelve()))
         self:Print("Is delve complete: " .. tostring(self:IsDelveComplete()))
         local cur, max = self:GetGildedStashCounts()
-        self.Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
+        self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
+        self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
     else
         self:Print("Available commands:")
         self:Print("/db debugLogging <on||off> -- Enable/disable debug logging")
@@ -212,6 +213,12 @@ function DelveBuddy:CollectDelveData()
     -- Skip collecting for low-level characters (<80).
     if UnitLevel("player") < 80 then
         self:Log("Player level %d < 80, skipping data collect", UnitLevel("player"))
+        return
+    end
+
+    -- Skip collecting for Timerunning characters.
+    if self:IsPlayerTimerunning() then
+        self:Log("Player is timerunner, skipping data collection")
         return
     end
 
@@ -483,6 +490,9 @@ function DelveBuddy:GetShardCount()
 end
 
 function DelveBuddy:GetDelves()
+    -- Timerunners can't do delves.
+    if self:IsPlayerTimerunning() then return {} end
+
     local delves = {}
 
     local delvePois = self.IDS.DelvePois
@@ -596,6 +606,10 @@ function DelveBuddy:IsInBountifulDelve()
     )
 
     return bountiful
+end
+
+function DelveBuddy:IsPlayerTimerunning()
+    return C_ChatInfo.IsTimerunningPlayer(UnitGUID("player"))
 end
 
 function DelveBuddy:GetZoneName(uiMapID)
