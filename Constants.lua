@@ -88,6 +88,7 @@ DelveBuddy.IDS = {
         MAX_WEEKLY_GILDED_STASHES = 3,
         MAX_WEEKLY_SHARDS = 200,
         MAX_WEEKLY_KEYS = 4,
+        MIN_BOUNTIFUL_DELVE_LEVEL = 80,
     },
 }
 

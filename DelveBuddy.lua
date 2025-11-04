@@ -211,8 +211,10 @@ function DelveBuddy:CollectDelveData()
     self:Log("CollectDelveData")
 
     -- Skip collecting for low-level characters (<80).
-    if UnitLevel("player") < 80 then
-        self:Log("Player level %d < 80, skipping data collect", UnitLevel("player"))
+    local playerLevel = UnitLevel("player")
+    local minLevel = self.IDS.CONST.MIN_BOUNTIFUL_DELVE_LEVEL
+    if playerLevel < minLevel then
+        self:Log("Player level %d < %d, skipping data collect", playerLevel, minLevel)
         return
     end
 
@@ -609,7 +611,17 @@ function DelveBuddy:IsInBountifulDelve()
 end
 
 function DelveBuddy:IsPlayerTimerunning()
-    return C_ChatInfo.IsTimerunningPlayer(UnitGUID("player"))
+    if C_ChatInfo.IsTimerunningPlayer(UnitGUID("player")) then
+        return true
+    end
+
+    -- Sometimes the above check erroneously returns false. Fallback to season check.
+    local sid = PlayerGetTimerunningSeasonID()
+    if sid and sid ~= 0 then
+        return true
+    end
+
+    return false
 end
 
 function DelveBuddy:GetZoneName(uiMapID)

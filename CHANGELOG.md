@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 1.3.6 ==
+Fixes:
+* Fix timerunning character detection
+
 == 1.3.5 ==
 Enhancements:
 * Don't show delves or collect data for timerunning characters
