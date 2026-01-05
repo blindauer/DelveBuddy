@@ -133,6 +133,20 @@ function DelveBuddy:SlashCommand(input)
         local cur, max = self:GetGildedStashCounts()
         self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
         self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
+        self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
+    elseif cmd == "dumppois" or cmd == "dp" then
+        local mapID = tonumber(arg) or C_Map.GetBestMapForUnit("player")
+        if mapID then
+            self:DumpPOIs(mapID)
+        else
+            self:Print("Usage: /db dumppois <mapID> -- if omitted, use player's current map ID")
+        end
+    elseif cmd == "printiteminfo" or cmd == "pii" then
+        if arg and arg ~= "" then
+            self:PrintItemInfoByName(arg)
+        else
+            self:Print("Usage: /db printiteminfo <partial item name>")
+        end
     else
         self:Print("Available commands:")
         self:Print("/db debugLogging <on||off> -- Enable/disable debug logging")
@@ -269,7 +283,7 @@ function DelveBuddy:CollectDelveData()
     end
 
     -- Have bounty / looted bounty
-    data.hasBounty = C_Item.GetItemCount(IDS.Item.DelversBounty) > 0
+    data.hasBounty = C_Item.GetItemCount(IDS.Item.BountyItem) > 0
     data.bountyLooted = C_QuestLog.IsQuestFlaggedCompleted(IDS.Quest.BountyLooted) or false
 
     -- Vault rewards
@@ -320,7 +334,7 @@ function DelveBuddy:GetGildedStashCounts()
 end
 
 function DelveBuddy:FlashDelversBounty()
-    local itemName = C_Item.GetItemInfo(DelveBuddy.IDS.Item.DelversBounty)
+    local itemName = C_Item.GetItemInfo(DelveBuddy.IDS.Item.BountyItem)
     if not itemName then return end
 
     for i = 1, 12 do
@@ -359,18 +373,18 @@ end
 function DelveBuddy:HasDelversBountyItem()
     local result = false
 
-    result = C_Item.GetItemCount(DelveBuddy.IDS.Item.DelversBounty, false) > 0
+    result = C_Item.GetItemCount(DelveBuddy.IDS.Item.BountyItem, false) > 0
 
     self:Log("HasDelversBountyItem: (%s)", tostring(result))
     return result
 end
 
-function DelveBuddy:HasShriekingQuartzItem()
+function DelveBuddy:HasNemesisLureItem()
     local result = false
 
-    result = C_Item.GetItemCount(DelveBuddy.IDS.Item.ShriekingQuartz, false) > 0
+    result = C_Item.GetItemCount(DelveBuddy.IDS.Item.NemesisLure, false) > 0
 
-    self:Log("HasShriekingQuartzItem: (%s)", tostring(result))
+    self:Log("HasNemesisLureItem: (%s)", tostring(result))
     return result
 end
 
@@ -378,7 +392,7 @@ end
 function DelveBuddy:HasDelversBountyBuff()
     local result = false
 
-    local buffIDs = self.IDS.Spell.DelversBounty
+    local buffIDs = self.IDS.Spell.BountyBuff
     local i = 1
     while true do
         local aura = C_UnitAuras.GetBuffDataByIndex("player", i)
@@ -488,7 +502,12 @@ function DelveBuddy:GetKeyCount()
 end
 
 function DelveBuddy:GetShardCount()
-    return C_Item.GetItemCount(self.IDS.Item.CofferKeyShard)
+    -- This is the TWW way
+    -- return C_Item.GetItemCount(self.IDS.Item.CofferKeyShard)
+
+    -- This is the Midnight way
+    local c = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.CofferKeyShard)
+    return c and c.quantity or 0
 end
 
 function DelveBuddy:GetDelves()
@@ -548,39 +567,6 @@ function DelveBuddy:GetWorldSoulMemories()
     end
 
     return memories
-end
-
--- Only for discovering new delves.
-function DelveBuddy:DumpPOIs(mapID)
-    if not mapID then
-        self:Log("DelveBuddy: No mapID provided.")
-        return
-    end
-    local mapInfo = C_Map.GetMapInfo(mapID)
-    self:Log(("DelveBuddy: Dumping POIs for map %d (%s)"):format(mapID, mapInfo and mapInfo.name or "unknown"))
-
-    local poiIDs = C_AreaPoiInfo.GetDelvesForMap(mapID) or {}
-    if #poiIDs == 0 then
-        self:Log("DelveBuddy: No POIs found on map", mapID)
-        return
-    end
-
-    for _, poiID in ipairs(poiIDs) do
-        local info = C_AreaPoiInfo.GetAreaPOIInfo(mapID, poiID)
-        if info then
-            self:Log((
-                "POI %d: name=%q, atlas=%q, texIdx=%d, x=%.2f, y=%.2f, widgetSet=%s"
-            ):format(
-                poiID,
-                info.name or "",
-                info.atlasName or "",
-                info.textureIndex or 0,
-                (info.x or 0) * 100,
-                (info.y or 0) * 100,
-                tostring(info.iconWidgetSet)
-            ))
-        end
-    end
 end
 
 function DelveBuddy:IsInBountifulDelve()
@@ -679,5 +665,66 @@ function DelveBuddy:SetWaypoint(poi)
 
     if not usedAny then
         self:Print("No waypoint providers active.")
+    end
+end
+
+-- Debug-only functions.
+-- Below are just for debugging, or accessible via slash commands.
+-- Using Print instead of Log to output uncondintionally (regardless of Debug Logging being enabled).
+
+-- Only for discovering new delves.
+function DelveBuddy:DumpPOIs(mapID)
+    if not mapID then
+        self:Print("DelveBuddy: No mapID provided.")
+        return
+    end
+    local mapInfo = C_Map.GetMapInfo(mapID)
+    self:Print(("DelveBuddy: Dumping POIs for map %d (%s)"):format(mapID, mapInfo and mapInfo.name or "unknown"))
+
+    local poiIDs = C_AreaPoiInfo.GetDelvesForMap(mapID) or {}
+    if #poiIDs == 0 then
+        self:Print("DelveBuddy: No POIs found on map", mapID)
+        return
+    end
+
+    for _, poiID in ipairs(poiIDs) do
+        local info = C_AreaPoiInfo.GetAreaPOIInfo(mapID, poiID)
+        if info then
+            self:Print((
+                "POI %d: name=%q, atlas=%q, texIdx=%d, x=%.2f, y=%.2f, widgetSet=%s"
+            ):format(
+                poiID,
+                info.name or "",
+                info.atlasName or "",
+                info.textureIndex or 0,
+                (info.x or 0) * 100,
+                (info.y or 0) * 100,
+                tostring(info.iconWidgetSet)
+            ))
+        end
+    end
+end
+
+-- Only for finding item IDs of items (to find IDs of new bounty items, e.g.)
+function DelveBuddy:PrintItemInfoByName(partialName)
+    if not partialName or partialName == "" then
+        return
+    end
+
+    partialName = partialName:lower()
+
+    for bag = 0, 4 do
+        local slots = C_Container.GetContainerNumSlots(bag)
+        for slot = 1, slots do
+            local link = C_Container.GetContainerItemLink(bag, slot)
+            if link then
+                local itemName = GetItemInfo(link)
+                if itemName and itemName:lower():find(partialName, 1, true) then
+                    local itemID = link:match("item:(%d+)")
+                    print("ItemID:", itemID, "Name:", itemName)
+                    print(link:gsub("|", "||"))
+                end
+            end
+        end
     end
 end

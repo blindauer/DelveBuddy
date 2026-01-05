@@ -655,7 +655,7 @@ function DelveBuddy:PopulateDelveSection(tip)
 
     -- Delver's Bounty (only in a Bountiful Delve and if player has one)
     if not InCombatLockdown() and self:IsInBountifulDelve() and self:HasDelversBountyItem() then
-        local itemID = DelveBuddy.IDS.Item.DelversBounty
+        local itemID = DelveBuddy.IDS.Item.BountyItem
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
         local itemName = C_Item.GetItemNameByID(itemID)
         local lineText = ("%s %s"):format(itemIcon, itemName)
@@ -694,9 +694,9 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
     end
 
-    -- Shrieking Quartz
-    if not InCombatLockdown() and self:IsDelveInProgress() and self:HasShriekingQuartzItem() then
-        local itemID = DelveBuddy.IDS.Item.ShriekingQuartz
+    -- Nemesis Lure
+    if not InCombatLockdown() and self:IsDelveInProgress() and self:HasNemesisLureItem() then
+        local itemID = DelveBuddy.IDS.Item.NemesisLure
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
         local itemName = ("%s %s"):format(itemIcon, C_Item.GetItemNameByID(itemID))
 
@@ -707,7 +707,7 @@ function DelveBuddy:PopulateDelveSection(tip)
         if row then
             nemesisCallButton = DelveBuddy:CreateAndAttachSecureButton(
                 nemesisCallButton,
-                function() return DelveBuddy:BuildShriekingQuartzButton() end,
+                function() return DelveBuddy:BuildNemesisLureButton() end,
                 row
             )
         end
@@ -815,19 +815,24 @@ function DelveBuddy:FormatVaultCell(v)
     if not v then return "—" end
 
     if v.progress >= v.threshold then
-        local tier = v.level > 0 and v.level or "—"
+        local tier = v.level >= 0 and v.level or "—"
         local iLvl = self.TierToVaultiLvl[v.level] or "?"
-        local color = self.Colors.Yellow -- tier 5-7
-        if type(tier) ~= "number" then
-            color = self.Colors.Gray     -- unknown tier
-        elseif tier <= 4 then
-            color = self.Colors.Cyan     -- tier 1-4
-        elseif tier >= 8 then
-            color = self.Colors.Green    -- tier 8+
-        end
+        local color = self:ColorForTier(tier)
         return self:ColorText(("Tier %s (%s)"):format(tier, iLvl), color)
     else
         return self:ColorText(("%d/%d"):format(v.progress, v.threshold), self.Colors.Gray)
+    end
+end
+
+function DelveBuddy:ColorForTier(tier)
+    if type(tier) ~= "number" then
+        return self.Colors.Gray     -- unknown tier
+    elseif tier <= 4 then
+        return self.Colors.Cyan     -- tier 0-4
+    elseif tier <= 8 then
+        return self.Colors.Yellow   -- tier 5-7
+    else
+        return self.Colors.Green    -- tier 8+
     end
 end
 
@@ -971,8 +976,8 @@ function DelveBuddy:BuildDelveOBotButton()
     end)
 end
 
-function DelveBuddy:BuildShriekingQuartzButton()
-    local itemID = DelveBuddy.IDS.Item.ShriekingQuartz
+function DelveBuddy:BuildNemesisLureButton()
+    local itemID = DelveBuddy.IDS.Item.NemesisLure
     return self:BuildSecureButton("DelveBuddySecureNemesisButton", function(b)
         b:SetAttribute("type", "macro")
         b:SetAttribute("macrotext", "/use item:" .. itemID)
@@ -980,7 +985,7 @@ function DelveBuddy:BuildShriekingQuartzButton()
 end
 
 function DelveBuddy:BuildDelversBountyButton()
-    local itemID = DelveBuddy.IDS.Item.DelversBounty
+    local itemID = DelveBuddy.IDS.Item.BountyItem
     return self:BuildSecureButton("DelveBuddySecureDelversBountyButton", function(b)
         b:SetAttribute("type", "macro")
         b:SetAttribute("macrotext", "/use item:" .. tostring(itemID))

@@ -59,7 +59,9 @@
         "CloseDropDownMenus",
         "ChatEdit_SendText",
         "MapUtil",
-        "NUM_BAG_SLOTS"
+        "NUM_BAG_SLOTS",
+        "xx",
+        "ActionButtonUtil"
     ],
     "Lua.type.weakUnionCheck": true
 }
