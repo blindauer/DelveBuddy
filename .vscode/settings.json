@@ -61,7 +61,8 @@
         "MapUtil",
         "NUM_BAG_SLOTS",
         "xx",
-        "ActionButtonUtil"
+        "ActionButtonUtil",
+        "AnimateTexCoords"
     ],
     "Lua.type.weakUnionCheck": true
 }

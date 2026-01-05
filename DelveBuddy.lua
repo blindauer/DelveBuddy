@@ -1,4 +1,6 @@
+
 local DelveBuddy = LibStub("AceAddon-3.0"):NewAddon("DelveBuddy", "AceConsole-3.0", "AceEvent-3.0", "AceBucket-3.0")
+local LBG = LibStub("LibButtonGlow-1.0", true)
 
 function DelveBuddy:OnInitialize()
     -- Initialize DB
@@ -354,9 +356,9 @@ function DelveBuddy:FlashDelversBounty()
                 if actionType == "item" then
                     local itemLink = GetActionText(btn.action) or C_Item.GetItemInfo(id)
                     if itemLink == itemName then
-                        ActionButton_ShowOverlayGlow(btn)
+                        LBG.ShowOverlayGlow(btn)
                         C_Timer.After(10, function()
-                            ActionButton_HideOverlayGlow(btn)
+                            LBG.HideOverlayGlow(btn)
                         end)
                         return
                     end
