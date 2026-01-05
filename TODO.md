@@ -9,6 +9,7 @@
   * Showing of GV rewards (except iLvl busted)
   * Bounty Looted appears to work (same quest ID?)
   * Bounty item detected, show in tooltip, warning displayed
+  * Flash Bounty on action bar
 * Definitely busted
   * Great Vault iLvls
   * Woldsoul memories - are those a thing at all in Midnight??
@@ -16,7 +17,6 @@
     * You do get the old shard item from that (not currencey)
     * Double-clicking the old shard item does give you a key (it does show under TWW S3)
     * Maybe this'll all change post-beta?
-  * Bounty item not flashing
   * New Shreiking Quartz item not working
   * Should abstract bounty and nemesis items from in-game names (in code, anyway)
   * Fix LibQTip LUA error 
