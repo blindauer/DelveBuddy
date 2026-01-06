@@ -316,19 +316,14 @@ function DelveBuddy:GetGildedStashCounts()
 
     local cur, max = UNKNOWN, fallback
 
-    for _, poiList in pairs(self.IDS.DelvePois) do
-        for _, poi in ipairs(poiList) do
-            local widget = poi.widgetID
-               and C_UIWidgetManager.GetSpellDisplayVisualizationInfo(poi.widgetID)
-            local tooltip = widget and widget.spellInfo and widget.spellInfo.tooltip
-            if tooltip then
-                local c, m = tooltip:match("(%d+)%s*/%s*(%d+)")
-                if c then
-                    cur = tonumber(c) or UNKNOWN
-                    max = tonumber(m) or fallback
-                    return cur, max -- first match wins
-                end
-            end
+    local widget = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(6659)
+    local tooltip = widget and widget.spellInfo and widget.spellInfo.tooltip
+    if tooltip then
+        local c, m = tooltip:match("(%d+)%s*/%s*(%d+)")
+        if c then
+            cur = tonumber(c) or UNKNOWN
+            max = tonumber(m) or fallback
+            return cur, max -- first match wins
         end
     end
 
@@ -518,25 +513,21 @@ function DelveBuddy:GetDelves()
 
     local delves = {}
 
-    local delvePois = self.IDS.DelvePois
-    for zoneID, poiList in pairs(delvePois) do
-        for _, poi in ipairs(poiList) do
-            local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poi.id)
-            if info then
-                self:Log("Found poi %s in zone %s", tostring(poi.id), tostring(zoneID))
-                self:Log("name= %s", info.atlasName)
-            end
-
-            if info and info.atlasName == "delves-bountiful" then
-                local widgets = C_UIWidgetManager.GetAllWidgetsBySetID(info.iconWidgetSet)
-
-                delves[poi.id] = {
-                    name        = info.name,
-                    zoneID      = zoneID,
-                    x           = poi.x,
-                    y           = poi.y,
-                    areaPoiID   = info.areaPoiID,
-                }
+    for _, zoneID in pairs(self.Zone) do
+        local poiIDs = C_AreaPoiInfo.GetDelvesForMap(zoneID)
+        if poiIDs and #poiIDs > 0 then
+            for _, poiID in ipairs(poiIDs) do
+                local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poiID)
+                local px, py = info.position:GetXY()
+                if info and info.atlasName == "delves-bountiful" then
+                    delves[poiID] = {
+                        name        = info.name,
+                        zoneID      = zoneID,
+                        areaPoiID   = info.areaPoiID,
+                        x           = px * 100,
+                        y           = py * 100,
+                    }
+                end
             end
         end
     end
@@ -573,25 +564,66 @@ end
 
 function DelveBuddy:IsInBountifulDelve()
     if not self:IsDelveInProgress() then return false end
-    local mapID = C_Map.GetBestMapForUnit("player")
-    local poiID = mapID and self.IDS.DelveMapToPoi[mapID]
-    if not poiID then return false end
 
-    -- Ascend to zone map (mapType 3) to query POI
-    local zoneMap = mapID
-    local info = C_Map.GetMapInfo(zoneMap)
-    while info and info.parentMapID and info.mapType ~= 3 do
-        zoneMap = info.parentMapID
-        info = C_Map.GetMapInfo(zoneMap)
+    -- Instance name appears to match the delve name.
+    local instanceName = GetInstanceInfo()
+    if not instanceName or instanceName == "" then
+        self:Log("IsInBountifulDelve: no instance name")
+        return false
     end
 
-    local poiInfo = C_AreaPoiInfo.GetAreaPOIInfo(zoneMap, poiID)
-    local bountiful = poiInfo and poiInfo.atlasName == "delves-bountiful" or false
+    local mapID = C_Map.GetBestMapForUnit("player")
+    if not mapID then
+        self:Log("IsInBountifulDelve: no mapID")
+        return false
+    end
 
-    self:Log("IsInBountifulDelve: map=%s zone=%s poi=%s bountiful=%s",
+    -- Walk up the map chain; stop at the first map that has delve POIs.
+    local zoneMap = mapID
+    local poiIDs
+    for _ = 1, 12 do
+        poiIDs = C_AreaPoiInfo.GetDelvesForMap(zoneMap)
+        if poiIDs and #poiIDs > 0 then
+            break
+        end
+        local mi = C_Map.GetMapInfo(zoneMap)
+        if not mi or not mi.parentMapID or mi.parentMapID == 0 then
+            break
+        end
+        zoneMap = mi.parentMapID
+    end
+
+    if not poiIDs or #poiIDs == 0 then
+        self:Log("IsInBountifulDelve: no POIs found in map chain. map=%s inst=%q",
+            tostring(mapID), tostring(instanceName))
+        return false
+    end
+
+    -- Try exact name match first.
+    local matchedPoiID
+    for _, poiID in ipairs(poiIDs) do
+        local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneMap, poiID)
+        if info and info.name == instanceName then
+            matchedPoiID = poiID
+            break
+        end
+    end
+
+    if not matchedPoiID then
+        self:Log("IsInBountifulDelve: could not match instance name to any POI. map=%s zone=%s inst=%q",
+            tostring(mapID), tostring(zoneMap), tostring(instanceName))
+        return false
+    end
+
+    local matchedInfo = C_AreaPoiInfo.GetAreaPOIInfo(zoneMap, matchedPoiID)
+    local bountiful = matchedInfo.atlasName == "delves-bountiful"
+
+    self:Log("IsInBountifulDelve: map=%s zone=%s poi=%s inst=%q poiName=%q bountiful=%s",
         tostring(mapID),
         tostring(zoneMap),
-        tostring(poiID),
+        tostring(matchedPoiID),
+        tostring(instanceName),
+        tostring(matchedInfo and matchedInfo.name or ""),
         tostring(bountiful)
     )
 
@@ -652,6 +684,7 @@ function DelveBuddy:SetWaypoint(poi)
     if self.db.global.waypoints.useTomTom then
         local tt = _G.TomTom
         if tt and tt.AddWaypoint then
+            self:Log(("TomTom waypoint debug: zone=%s x=%.4f y=%.4f name=%s"):format(tostring(poi.zoneID), (poi.x or -1)/100, (poi.y or -1)/100, tostring(poi.name)))
             tt:AddWaypoint(poi.zoneID, poi.x / 100, poi.y / 100, {
                 title = poi.name,
                 persistent = false,
@@ -692,16 +725,18 @@ function DelveBuddy:DumpPOIs(mapID)
     for _, poiID in ipairs(poiIDs) do
         local info = C_AreaPoiInfo.GetAreaPOIInfo(mapID, poiID)
         if info then
+            local px, py = info.position:GetXY()
             self:Print((
-                "POI %d: name=%q, atlas=%q, texIdx=%d, x=%.2f, y=%.2f, widgetSet=%s"
+                "POI %d: name=%q, atlas=%q, texIdx=%s, pos=%.2f, %.2f, iconWidgetSet=%s, tooltipWidgetSet=%s"
             ):format(
                 poiID,
                 info.name or "",
                 info.atlasName or "",
-                info.textureIndex or 0,
-                (info.x or 0) * 100,
-                (info.y or 0) * 100,
-                tostring(info.iconWidgetSet)
+                tostring(info.textureIndex),
+                tonumber(px or 0) * 100,
+                tonumber(py or 0) * 100,
+                tostring(info.iconWidgetSet),
+                tostring(info.tooltipWidgetSet)
             ))
         end
     end
