@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.0.0 == (In Progress)
+* TONS of changes for Midnight, other improvements
+* TODO fill me out more...
+
 == 1.3.6 ==
 Fixes:
 * Fix timerunning character detection
