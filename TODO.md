@@ -2,30 +2,22 @@
 
 === Midnight ===
 * On a L90 char right now, it shows *all* bountiful delves... TWW, and Midnight. Should probably only show the most relevant? Auto-detect?
-* Definitely busted
+* Maybe busted
   * Woldsoul memories - are those a thing at all in Midnight??
-  * Doing TWW events (Awakening the Machine, e.g.), shows 50 shards earned (but not owned)
-    * You do get the old shard item from that (not currencey)
-    * Double-clicking the old shard item does give you a key (it does show under TWW S3)
-    * Maybe this'll all change post-beta?
-  * New Shreiking Quartz item not working
+  * New Nemesis Lure item not working?
   * Fix LibQTip LUA error 
     * `HookScript is not allowed on LibQTip tooltips`
     * ([Titan/libs/Ace/LibQTip-1.0-49/LibQTip-1.0.lua]:706: in function 'HookScript'
     * [DelveBuddy/DataBroker.lua]:690: in function 'PopulateDelveSection')
-* Maybe busted
-  * Bountiful delves show in list even when no longer bountiful? (once completed, i.e.)
-    * OH, because delves still bountiful after completion - maybe b/c beta?
-√ Add all new Delves
-* Fix items/currencies/quests
-  √ Coffer Key Shards (?)
-  - Make no longer clickable - no longer items
-  √ Coffer Keys (?)
-  √ Delver's Bounty
-  √ Nemesis lure
-  * Keys/shards earned
-  * Stashes looted
-√ Show new Delves
+* Need to re-test stuff for first Midnight delve season
+  - Coffer Key Shards
+  - Make shards no longer clickable? No longer items...
+  - Coffer Keys (?)
+  - Delver's Bounty (new?)
+  - Nemesis lure (new?)
+  - Keys/shards earned
+  - Stashes looted
+* Show new Delves
 * Only show delves for L90 chars?
 * Don't show TWW delves?
 
