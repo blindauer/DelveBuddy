@@ -829,7 +829,7 @@ function DelveBuddy:ColorForTier(tier)
         return self.Colors.Gray     -- unknown tier
     elseif tier <= 4 then
         return self.Colors.Cyan     -- tier 0-4
-    elseif tier <= 8 then
+    elseif tier <= 7 then
         return self.Colors.Yellow   -- tier 5-7
     else
         return self.Colors.Green    -- tier 8+
