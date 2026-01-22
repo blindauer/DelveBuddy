@@ -294,7 +294,7 @@ function DelveBuddy:CollectDelveData()
     end
 
     -- Have bounty / looted bounty
-    data.hasBounty = C_Item.GetItemCount(IDS.Item.BountyItem) > 0
+    data.hasBounty = C_Item.GetItemCount(self:GetDelversBountyItemId()) > 0
     data.bountyLooted = C_QuestLog.IsQuestFlaggedCompleted(IDS.Quest.BountyLooted) or false
 
     -- Vault rewards
@@ -341,7 +341,7 @@ function DelveBuddy:GetGildedStashCounts()
 end
 
 function DelveBuddy:FlashDelversBounty()
-    local itemName = C_Item.GetItemInfo(DelveBuddy.IDS.Item.BountyItem)
+    local itemName = C_Item.GetItemInfo(self:GetDelversBountyItemId())
     if not itemName then return end
 
     for i = 1, 12 do
@@ -378,11 +378,19 @@ function DelveBuddy:IsDelveInProgress()
 end
 
 function DelveBuddy:HasDelversBountyItem()
-    return C_Item.GetItemCount(DelveBuddy.IDS.Item.BountyItem, false) > 0
+    return C_Item.GetItemCount(self:GetDelversBountyItemId(), false) > 0
 end
 
 function DelveBuddy:HasNemesisLureItem()
     return C_Item.GetItemCount(self:GetNemesisLureItemId(), false) > 0
+end
+
+function DelveBuddy:GetDelversBountyItemId()
+    if self:IsMidnight() then
+        return DelveBuddy.IDS.Item.BountyItem_Midnight
+    end
+
+    return DelveBuddy.IDS.Item.BountyItem_TWW
 end
 
 function DelveBuddy:GetNemesisLureItemId()

@@ -655,7 +655,7 @@ function DelveBuddy:PopulateDelveSection(tip)
 
     -- Delver's Bounty (only in a Bountiful Delve and if player has one)
     if not InCombatLockdown() and self:IsInBountifulDelve() and self:HasDelversBountyItem() then
-        local itemID = DelveBuddy.IDS.Item.BountyItem
+        local itemID = self:GetDelversBountyItemId()
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
         local itemName = C_Item.GetItemNameByID(itemID)
         local lineText = ("%s %s"):format(itemIcon, itemName)
@@ -985,7 +985,7 @@ function DelveBuddy:BuildNemesisLureButton()
 end
 
 function DelveBuddy:BuildDelversBountyButton()
-    local itemID = DelveBuddy.IDS.Item.BountyItem
+    local itemID = self:GetDelversBountyItemId()
     return self:BuildSecureButton("DelveBuddySecureDelversBountyButton", function(b)
         b:SetAttribute("type", "macro")
         b:SetAttribute("macrotext", "/use item:" .. tostring(itemID))

@@ -28,7 +28,8 @@ DelveBuddy.IDS = {
         BountyLooted = 86371,
     },
     Item = {
-        BountyItem = 252415, -- TWW was 248142
+        BountyItem_Midnight = 252415,
+        BountyItem_TWW = 248142,
         CofferKeyShard = 245653, -- TWW only (in Midnight it's a currency)
         RadiantEcho = 246771,
         DelveOBot7001 = 230850,
