@@ -410,6 +410,9 @@ function DelveBuddy:GetDelversBountyBuffIds()
 end
 
 function DelveBuddy:HasDelversBountyBuff()
+    -- Can't get buffs (they're secret) in combat.
+    if InCombatLockdown() then return false end
+
     local result = false
 
     local buffIDs = self:GetDelversBountyBuffIds()
