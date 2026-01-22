@@ -136,6 +136,10 @@ function DelveBuddy:SlashCommand(input)
         self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
         self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
         self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
+    elseif cmd == "rewards" or cmd == "rw" then
+        self:EnsureWeeklyRewardsReady(function()
+            self:DumpVaultRewards()
+        end)
     elseif cmd == "dumppois" or cmd == "dp" then
         local mapID = tonumber(arg) or C_Map.GetBestMapForUnit("player")
         if mapID then
@@ -156,6 +160,7 @@ function DelveBuddy:SlashCommand(input)
         self:Print("/db reminders <coffer||bounty> <on||off> -- Enable/disable reminders")
         self:Print("/db minimap -- Toggle minimap icon")
         self:Print("/db waypoints <blizzard||tomtom||both> -- Set waypoint providers")
+        self:Print("/db rewards -- Dump Great Vault (World) tier IDs and example reward item levels")
     end
 end
 
@@ -660,6 +665,36 @@ function DelveBuddy:OpenVaultUI()
     WeeklyRewardsFrame:Show()
 end
 
+function DelveBuddy:EnsureWeeklyRewardsReady(callback)
+    -- Goal: make Great Vault example reward links/ilvls resolve WITHOUT popping the UI.
+    -- The data request seems tied to "UI interaction" (WeeklyRewards_OnShow calls it).
+    -- We emulate that via C_WeeklyRewards.OnUIInteract() and wait for WEEKLY_REWARDS_UPDATE.
+    if not callback then return end
+
+    -- If the data is already generated/available, we can often proceed immediately.
+    -- (This avoids unnecessary event wiring/spam.)
+    if C_WeeklyRewards.HasGeneratedRewards() then
+        C_Timer.After(0, callback)
+        return
+    end
+
+    -- Initiate an interaction to fetch/generate weekly rewards data.
+    C_WeeklyRewards.OnUIInteract()
+
+    local fired = false
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("WEEKLY_REWARDS_UPDATE")
+    f:RegisterEvent("WEEKLY_REWARDS_ITEM_CHANGED")
+    f:SetScript("OnEvent", function()
+        if fired then return end
+        fired = true
+        f:UnregisterAllEvents()
+        f:SetScript("OnEvent", nil)
+
+        callback()
+    end)
+end
+
 function DelveBuddy:SetWaypoint(poi)
     local usedAny = false
 
@@ -700,6 +735,90 @@ function DelveBuddy:SetWaypoint(poi)
 
     if not usedAny then
         self:Print("No waypoint providers active.")
+    end
+end
+
+function DelveBuddy:DumpVaultRewards()
+    local IDS = self.IDS
+
+    local activities = C_WeeklyRewards.GetActivities(IDS.Activity.World) or {}
+    if #activities == 0 then
+        self:Print("No Weekly Rewards activities returned (World)")
+        return
+    end
+
+    self:Print("Vault Rewards (World):")
+
+    local requestedAnyItemData = false
+    local hadAnyNil = false
+    self._vaultRewardsRetrying = self._vaultRewardsRetrying or false
+
+    local function getIlvlFromLink(link)
+        if not link then return nil end
+        local ilvl = C_Item.GetDetailedItemLevelInfo(link)
+        if type(ilvl) == "number" and ilvl > 0 then
+            return ilvl
+        end
+
+        local _, _, _, ilvl = C_Item.GetItemInfo(link)
+        if not ilvl then
+            -- If item data isn't cached yet, request it so a subsequent /db rewards will succeed.
+            local itemID = link:match("item:(%d+)")
+            if itemID then
+                C_Item.RequestLoadItemDataByID(tonumber(itemID))
+                requestedAnyItemData = true
+            end
+        end
+        return ilvl
+    end
+
+    local function getExampleIlvl(tierID)
+        local link1, link2 = C_WeeklyRewards.GetExampleRewardItemHyperlinks(tierID)
+        local il1 = getIlvlFromLink(link1)
+        local il2 = getIlvlFromLink(link2)
+        if il1 == nil or il2 == nil then
+            hadAnyNil = true
+        end
+        return il1, il2
+    end
+
+    local lines = {}
+    for _, a in ipairs(activities) do
+        local tier = a.level
+        local tierID = a.id
+
+        local ilvl1, ilvl2 = getExampleIlvl(tierID)
+
+        -- Fallback to your existing mapping for comparison.
+        local mapped = self.TierToVaultiLvl and self.TierToVaultiLvl[tier] or nil
+
+        table.insert(lines, ("Tier %s: %d/%d (id=%s) %s/%s mapped=%s")
+            :format(
+                tostring(tier),
+                tonumber(a.progress or 0) or 0,
+                tonumber(a.threshold or 0) or 0,
+                tostring(tierID),
+                tostring(ilvl1),
+                tostring(ilvl2),
+                tostring(mapped)
+            ))
+    end
+
+    -- If item data wasn't cached yet, schedule one automatic retry so the user doesn't have to run /db rewards twice.
+    -- Defer printing tier lines until we have ilvls, to avoid noisy nil/nil output.
+    if requestedAnyItemData and hadAnyNil and not self._vaultRewardsRetrying then
+        self._vaultRewardsRetrying = true
+        self:Print("(Vault reward item data not cached yet; retrying shortly...)")
+        C_Timer.After(0.75, function()
+            self:DumpVaultRewards()
+        end)
+        return
+    end
+
+    -- We either had all data, or we're on the retry pass.
+    self._vaultRewardsRetrying = false
+    for _, line in ipairs(lines) do
+        self:Print(line)
     end
 end
 
@@ -755,7 +874,8 @@ function DelveBuddy:PrintItemInfoByName(partialName)
         for slot = 1, slots do
             local link = C_Container.GetContainerItemLink(bag, slot)
             if link then
-                local itemName = GetItemInfo(link)
+                local itemInfoFn = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+                local itemName = itemInfoFn(link)
                 if itemName and itemName:lower():find(partialName, 1, true) then
                     local itemID = link:match("item:(%d+)")
                     print("ItemID:", itemID, "Name:", itemName)

@@ -62,7 +62,8 @@
         "NUM_BAG_SLOTS",
         "xx",
         "ActionButtonUtil",
-        "AnimateTexCoords"
+        "AnimateTexCoords",
+        "WeeklyRewards_ShowUI"
     ],
     "Lua.type.weakUnionCheck": true
 }

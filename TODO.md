@@ -3,6 +3,7 @@
 === Midnight ===
 * TODO put up beta build?
 * Notes
+  * On a L90 char right now, it shows *all* bountiful delves... TWW, and Midnight. Should probably only show the most relevant? Auto-detect?
   * It looks like L80 delves on Beta are closed (you physically can't enter them), though they show as bountiful
 * Appears to work
   * Restored Coffer Key count
