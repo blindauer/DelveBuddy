@@ -139,6 +139,9 @@ function DelveBuddy:SlashCommand(input)
         self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
         self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
         self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
+        self:Print("Has Delver's Bounty item: " .. tostring(self:HasDelversBountyItem()))
+        self:Print("Has Delver's Bounty buff: " .. tostring(self:HasDelversBountyBuff()))
+        self:Print("Has Nemesis Lure item: " .. tostring(self:HasNemesisLureItem()))
     elseif cmd == "rewards" or cmd == "rw" then
         self:DumpVaultRewards()
     elseif cmd == "dumppois" or cmd == "dp" then
@@ -375,28 +378,33 @@ function DelveBuddy:IsDelveInProgress()
 end
 
 function DelveBuddy:HasDelversBountyItem()
-    local result = false
-
-    result = C_Item.GetItemCount(DelveBuddy.IDS.Item.BountyItem, false) > 0
-
-    self:Log("HasDelversBountyItem: (%s)", tostring(result))
-    return result
+    return C_Item.GetItemCount(DelveBuddy.IDS.Item.BountyItem, false) > 0
 end
 
 function DelveBuddy:HasNemesisLureItem()
-    local result = false
-
-    result = C_Item.GetItemCount(DelveBuddy.IDS.Item.NemesisLure, false) > 0
-
-    self:Log("HasNemesisLureItem: (%s)", tostring(result))
-    return result
+    return C_Item.GetItemCount(self:GetNemesisLureItemId(), false) > 0
 end
 
+function DelveBuddy:GetNemesisLureItemId()
+    if self:IsMidnight() then
+        return DelveBuddy.IDS.Item.NemesisLure_Midnight
+    end
+
+    return DelveBuddy.IDS.Item.NemesisLure_TWW
+end
+
+function DelveBuddy:GetDelversBountyBuffIds()
+    if self:IsMidnight() then
+        return self.IDS.Spell.BountyBuff_Midnight
+    end
+
+    return self.IDS.Spell.BountyBuff_TWW
+end
 
 function DelveBuddy:HasDelversBountyBuff()
     local result = false
 
-    local buffIDs = self.IDS.Spell.BountyBuff
+    local buffIDs = self:GetDelversBountyBuffIds()
     local i = 1
     while true do
         local aura = C_UnitAuras.GetBuffDataByIndex("player", i)
@@ -410,7 +418,6 @@ function DelveBuddy:HasDelversBountyBuff()
         i = i + 1
     end
 
-    self:Log("HasDelversBountyBuff: (%s)", tostring(result))
     return result
 end
 
@@ -506,12 +513,13 @@ function DelveBuddy:GetKeyCount()
 end
 
 function DelveBuddy:GetShardCount()
-    -- This is the TWW way
-    -- return C_Item.GetItemCount(self.IDS.Item.CofferKeyShard)
+    if self:IsMidnight() then
+        local c = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.CofferKeyShard)
+        return c and c.quantity or 0
+    end
 
-    -- This is the Midnight way
-    local c = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.CofferKeyShard)
-    return c and c.quantity or 0
+    -- This is the TWW way
+    return C_Item.GetItemCount(self.IDS.Item.CofferKeyShard)
 end
 
 function DelveBuddy:GetDelves()
@@ -732,6 +740,13 @@ function DelveBuddy:RewardTierToiLvl(tierID)
     end
 
     return C_Item.GetDetailedItemLevelInfo(link)
+end
+
+-- Midnight does a bunch of stuff different. For example, coffer key shards are a currency, not an item.
+-- This function allows us to abstract those differences. For testing on PTR), flip this to true. 
+-- Once launched, we can flip it to true, or maybe remove it entirely.
+function DelveBuddy:IsMidnight()
+    return false
 end
 
 -- Debug-only functions.

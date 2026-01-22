@@ -696,7 +696,7 @@ function DelveBuddy:PopulateDelveSection(tip)
 
     -- Nemesis Lure
     if not InCombatLockdown() and self:IsDelveInProgress() and self:HasNemesisLureItem() then
-        local itemID = DelveBuddy.IDS.Item.NemesisLure
+        local itemID = self:GetNemesisLureItemId()
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
         local itemName = ("%s %s"):format(itemIcon, C_Item.GetItemNameByID(itemID))
 
@@ -977,7 +977,7 @@ function DelveBuddy:BuildDelveOBotButton()
 end
 
 function DelveBuddy:BuildNemesisLureButton()
-    local itemID = DelveBuddy.IDS.Item.NemesisLure
+    local itemID = self:GetNemesisLureItemId()
     return self:BuildSecureButton("DelveBuddySecureNemesisButton", function(b)
         b:SetAttribute("type", "macro")
         b:SetAttribute("macrotext", "/use item:" .. itemID)

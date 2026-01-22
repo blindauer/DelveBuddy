@@ -32,7 +32,8 @@ DelveBuddy.IDS = {
         CofferKeyShard = 245653, -- TWW only (in Midnight it's a currency)
         RadiantEcho = 246771,
         DelveOBot7001 = 230850,
-        NemesisLure = 253342, -- TWW was 248017
+        NemesisLure_Midnight = 253342,
+        NemesisLure_TWW = 248017,
     },
     Widget = {
         GildedStash = 6659,
@@ -41,7 +42,8 @@ DelveBuddy.IDS = {
         World = 6
     },
     Spell = {
-        BountyBuff = { 1254631, }, -- TWW was { 453004, 473218 },
+        BountyBuff_TWW = { 453004, 473218 },
+        BountyBuff_Midnight = { 1254631, },
     },
     CONST = {
         UNKNOWN_GILDED_STASH_COUNT = -1,
