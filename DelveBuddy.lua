@@ -419,6 +419,7 @@ function DelveBuddy:HasDelversBountyBuff()
     local i = 1
     while true do
         local aura = C_UnitAuras.GetBuffDataByIndex("player", i)
+        self:Log("aura %d: %s", i, aura and tostring(aura.spellId) or "nil")
         if not aura then break end
         for _, id in ipairs(buffIDs) do
             if aura.spellId == id then

@@ -1,6 +1,5 @@
 == DelveBuddy TODO ==
 
-* Re-test shreiking quartz
 * Test wacky stuff in combat?
 * Put in failsafe code for if doing stuff in delves when in combat?
 * Update changelog for Midnight stuff
@@ -28,9 +27,8 @@
 * Don't show TWW delves?
 
 * Feature: detect if companion has no role, show warning
-* Only show nemesis item if don't have bounty item or buff?
+* Enhancement: only show nemesis item if don't have bounty item or buff
 * Bug: delver's bounty reminder happens on every inventory update (should just be 1 minute)
     * Would be good to refactor some of that stuff, too.
-* Enhancement: Only show Shrieking Quartz if not used/have bounty?)
 * Feature: reminder for Shrieking Quartz?
 * Feature: show changelog on first login after update?

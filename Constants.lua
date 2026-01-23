@@ -43,7 +43,7 @@ DelveBuddy.IDS = {
         World = 6
     },
     Spell = {
-        BountyBuff_TWW = { 453004, 473218 },
+        BountyBuff_TWW = { 1246363, },
         BountyBuff_Midnight = { 1254631, },
     },
     CONST = {
