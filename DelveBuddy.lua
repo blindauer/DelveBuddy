@@ -499,7 +499,6 @@ function DelveBuddy:CleanupStaleCharacters()
             data.gildedStashes = 0
             data.bountyLooted = false
             -- data.vaultRewards = {} keep vaultRewards
-            -- TODO some indication of when you have a reward in the vault?
             -- keysOwned, shardsOwned, hasBounty are preserved
         end
     end
@@ -745,9 +744,10 @@ function DelveBuddy:EnsureWeeklyRewardsReady()
 end
 
 function DelveBuddy:RewardTierToiLvl(tierID)
+    if type(tierID) ~= "number" then return nil end
     local link = C_WeeklyRewards.GetExampleRewardItemHyperlinks(tierID)
     if not link then
-        self:Log("RewardTierToiLvl: no example reward links for tierID %s", tostring(tier))
+        self:Log("RewardTierToiLvl: no example reward links for tierID %s", tostring(tierID))
         return nil
     end
 
