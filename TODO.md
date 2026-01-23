@@ -2,8 +2,6 @@
 
 * Test wacky stuff in combat?
 * Put in failsafe code for if doing stuff in delves when in combat?
-* Update changelog for Midnight stuff
-* Update Readme?
 
 === Midnight ===
 * On a L90 char right now, it shows *all* bountiful delves... TWW, and Midnight. Should probably only show the most relevant? Auto-detect?

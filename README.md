@@ -1,6 +1,6 @@
 # DelveBuddy
 
-**DelveBuddy** is a World of Warcraft addon that helps you track weekly Delve activities and rewards across all your characters. It integrates with Data Broker displays (Titan Panel, ChocolateBar, Bazooka, etc.) and provides a minimap icon for quick access. Updated for patch 11.2 and Season 3.
+**DelveBuddy** is a World of Warcraft addon that helps you track weekly Delve activities and rewards across all your characters. It integrates with Data Broker displays (Titan Panel, ChocolateBar, Bazooka, etc.) and provides a minimap icon for quick access. Updated for Midnight pre-patch 12.0.0.
 
 ## Features
 *	Tracking
@@ -29,7 +29,7 @@
 * **Slash Commands:**
     * `/db minimap` — Show/hide the minimap icon.
     * `/db scale <0.75-2.0>` -- Set tooltip scale
-    * `/db reminders <coffer|bounty> <on||off>` -- Enable/disable reminders
+    * `/db reminders <coffer|bounty> <on|off>` -- Enable/disable reminders
     * `/db waypoints <blizzard|tomtom|both>` -- Set waypoint providers
     * `/db debugLogging <on|off>` — Enable/disable debug logs
     * `/db debuginfo` - Print useful debugging info

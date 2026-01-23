@@ -1,8 +1,11 @@
 = DelveBuddy Changelog =
 
-== 2.0.0 == (In Progress)
-* TONS of changes for Midnight, other improvements
-* TODO fill me out more...
+== 2.0.0 ==
+Enhancements:
+* Updated for Midnight pre-patch 12.0.0 (with TWW Season 3 delves).
+
+Misc:
+* Rebuilt delve detection, reward classification, and other areas of the addon to be more data-driven. Everything looks and acts exactly as before, but with these changes it will be much easier to update when Midnight Delve Season 1 starts in March. 
 
 == 1.3.6 ==
 Fixes:
