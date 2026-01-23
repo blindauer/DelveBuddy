@@ -1,7 +1,7 @@
 = DelveBuddy Changelog =
 
 == 2.0.1 ==
-Fixes
+Fixes:
 * Fixed issue which caused DelveBuddy to not display if you had vault rewards earned using an older version of DelveBuddy. You will temporarily see "?" as the Vault reward iLvl for characters which haven't been logged in recently. Logging those characters will fix the issue, and correct iLvls will be displayed again.
 
 == 2.0.0 ==
