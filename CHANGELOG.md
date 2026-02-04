@@ -1,5 +1,16 @@
 = DelveBuddy Changelog =
 
+== 2.0.2 ==
+Enhancements:
+* Show a warning if your companion doesn't have a role set.
+
+Fixes:
+* Fixed a bug that caused some delves to display in the wrong zone
+* Fixed a bug that caused vault reward iLvls to not be displayed correctly
+
+Misc:
+* Changed how bountiful delves are detected, which should ease finding new delves in future seasons
+
 == 2.0.1 ==
 Fixes:
 * Fixed issue which caused DelveBuddy to not display if you had vault rewards earned using an older version of DelveBuddy. You will temporarily see "?" as the Vault reward iLvl for characters which haven't been logged in recently. Logging those characters will fix the issue, and correct iLvls will be displayed again.

@@ -816,7 +816,10 @@ function DelveBuddy:FormatVaultCell(v)
 
     if v.progress >= v.threshold then
         local tier = v.level >= 0 and v.level or "—"
-        local iLvl = self:RewardTierToiLvl(v.id) or "?"
+        local iLvl = "?"
+        if type(v.ilvl) == "number" and v.ilvl > 0 then
+            iLvl = v.ilvl
+        end
         local color = self:ColorForTier(tier)
         return self:ColorText(("Tier %s (%s)"):format(tier, iLvl), color)
     else

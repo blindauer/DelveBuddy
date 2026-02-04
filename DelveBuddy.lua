@@ -142,6 +142,10 @@ function DelveBuddy:SlashCommand(input)
         self:Print("Has Delver's Bounty item: " .. tostring(self:HasDelversBountyItem()))
         self:Print("Has Delver's Bounty buff: " .. tostring(self:HasDelversBountyBuff()))
         self:Print("Has Nemesis Lure item: " .. tostring(self:HasNemesisLureItem()))
+        local roleSet, curiosSet, detail = self:GetActiveCompanionConfigFlags()
+        self:Print("Companion role set: " .. tostring(roleSet))
+        self:Print("Companion curios set: " .. tostring(curiosSet))
+        self:Print("Companion config: " .. detail)
     elseif cmd == "rewards" or cmd == "rw" then
         self:DumpVaultRewards()
     elseif cmd == "dumppois" or cmd == "dp" then
@@ -188,6 +192,18 @@ function DelveBuddy:GetDelveStoryVariant(zoneID, poiID)
     return ""
 end
 
+function DelveBuddy:ShouldShowCompanionRoleWarning()
+    -- No option to disable this for now, because there's really no reason not to have it set, 
+    -- it's pretty dire if you don't.
+    local result =
+        self:IsDelveInProgress()
+        and not self:IsDelveComplete()
+        and not self:CompanionRoleSet()
+
+    self:Log("ShouldShowCompanionRoleWarning: %s", tostring(result))
+    return result
+end
+
 function DelveBuddy:ShouldShowKeyWarning()
     local result =
         self.db.global.reminders.cofferKey
@@ -224,7 +240,9 @@ end
 function DelveBuddy:OnBountyCheck()
     self:Log("OnBountyCheck")
     C_Timer.After(1, function()
-        if self:ShouldShowKeyWarning() then
+        if self:ShouldShowCompanionRoleWarning() then
+            self:ShowCompanionRoleWarning()
+        elseif self:ShouldShowKeyWarning() then
             self:ShowKeyWarning()
         elseif self:ShouldShowBounty() then
             self:StartBountyFlashing()
@@ -305,6 +323,7 @@ function DelveBuddy:CollectDelveData()
             threshold = a.threshold,
             level = a.level,
             id = a.id,
+            ilvl = self:RewardTierToiLvl(a.id) or 0,
         })
     end
 
@@ -454,8 +473,12 @@ function DelveBuddy:StartBountyFlashing()
     end)
 end
 
+function DelveBuddy:ShowCompanionRoleWarning()
+    self:DisplayRaidWarning("|cffff4444Your companion's role is not set! This will severely hamper your delve performance.|r", true)
+end
+
 function DelveBuddy:ShowKeyWarning()
-    self:DisplayRaidWarning("|cffff4444DelveBuddy: In a bountiful delve, with no Restored Coffer Keys!|r", true)
+    self:DisplayRaidWarning("|cffff4444In a bountiful delve, with no Restored Coffer Keys!|r", true)
 end
 
 function DelveBuddy:ShowBountyNotice()
@@ -463,13 +486,14 @@ function DelveBuddy:ShowBountyNotice()
 end
 
 function DelveBuddy:DisplayRaidWarning(msg, playSound)
+    local fullMsg = "DelveBuddy: " .. msg
     if RaidNotice_AddMessage and RaidWarningFrame and ChatTypeInfo and ChatTypeInfo["RAID_WARNING"] then
-        RaidNotice_AddMessage(RaidWarningFrame, msg, ChatTypeInfo["RAID_WARNING"])
+        RaidNotice_AddMessage(RaidWarningFrame, fullMsg, ChatTypeInfo["RAID_WARNING"])
     elseif UIErrorsFrame then
-        UIErrorsFrame:AddMessage(msg, 1, 0.1, 0.1, 53, 5)
-    else
-        self:Print(msg)
+        UIErrorsFrame:AddMessage(fullMsg, 1, 0.1, 0.1, 53, 5)
     end
+
+    self:Print(msg)
 
     if playSound and PlaySound then
         PlaySound(SOUNDKIT.RAID_WARNING, "Master")
@@ -537,32 +561,110 @@ function DelveBuddy:GetDelves()
     -- Timerunners can't do delves.
     if self:IsPlayerTimerunning() then return {} end
 
+    local master = self:GetAllDelvePOIs()
     local delves = {}
 
-    for _, zoneID in pairs(self.Zone) do
-        local poiIDs = C_AreaPoiInfo.GetDelvesForMap(zoneID)
-        if poiIDs and #poiIDs > 0 then
-            for _, poiID in ipairs(poiIDs) do
-                local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poiID)
-                local px, py = info.position:GetXY()
-                if info and info.atlasName == "delves-bountiful" then
-                    delves[poiID] = {
-                        name        = info.name,
-                        zoneID      = zoneID,
-                        areaPoiID   = info.areaPoiID,
-                        x           = px * 100,
-                        y           = py * 100,
-                    }
+    for areaPoiID, cached in pairs(master) do
+        local info = cached and cached.zoneID and C_AreaPoiInfo.GetAreaPOIInfo(cached.zoneID, areaPoiID)
+
+        if info and info.atlasName == "delves-bountiful" then
+            local px, py
+            if info.position and info.position.GetXY then
+                px, py = info.position:GetXY()
+            end
+
+            delves[areaPoiID] = {
+                name      = info.name,
+                zoneID    = cached.zoneID,
+                areaPoiID = info.areaPoiID,
+                x         = (tonumber(px) or 0) * 100,
+                y         = (tonumber(py) or 0) * 100,
+            }
+        end
+    end
+
+    return delves
+end
+
+-- Scan starting at fallback world map and collect ALL delve POIs (bountiful or not).
+-- Cache for the session. Prefer primary-map POIs; otherwise keep first-seen fallback.
+function DelveBuddy:GetAllDelvePOIs()
+    if self._allDelvePOIsCache then
+        return self._allDelvePOIsCache
+    end
+
+    local function countKeys(t)
+        local n = 0
+        for _ in pairs(t) do n = n + 1 end
+        return n
+    end
+
+    local root = C_Map.GetFallbackWorldMapID()
+    local mapIDs = { root }
+    local children = C_Map.GetMapChildrenInfo(root, nil, true) or {}
+    for _, mi in ipairs(children) do
+        if mi and type(mi.mapID) == "number" then
+            table.insert(mapIDs, mi.mapID)
+        end
+    end
+
+    -- Keyed by areaPoiID (preferred) else by the id returned from GetDelvesForMap.
+    local pois = {}
+    local scannedMaps, scannedPoiCalls = 0, 0
+
+    for _, mapID in ipairs(mapIDs) do
+        scannedMaps = scannedMaps + 1
+        local ids = C_AreaPoiInfo.GetDelvesForMap(mapID)
+
+        if ids and #ids > 0 then
+            for _, id in ipairs(ids) do
+                scannedPoiCalls = scannedPoiCalls + 1
+
+                local info = C_AreaPoiInfo.GetAreaPOIInfo(mapID, id)
+                if info then
+                    local areaPoiID = (type(info.areaPoiID) == "number" and info.areaPoiID) or id
+                    local isPrimary = (info.isPrimaryMapForPOI == true)
+
+                    local px, py
+                    if info.position and info.position.GetXY then
+                        px, py = info.position:GetXY()
+                    end
+
+                    local existing = pois[areaPoiID]
+
+                    -- Save everything as fallback; overwrite only when we find a primary-map entry.
+                    -- Thjs ensures we don't get any missing delves (e.g., Sidestreet Sluice oddly seems not to have
+                    -- a primayr map ID.)
+                    if (not existing) or (isPrimary and not existing._isPrimary) then
+                        pois[areaPoiID] = {
+                            areaPoiID = areaPoiID,
+                            name      = info.name,
+                            zoneID    = mapID,
+                            x         = (tonumber(px) or 0) * 100,
+                            y         = (tonumber(py) or 0) * 100,
+                            _isPrimary = isPrimary,
+                        }
+                    end
                 end
             end
         end
     end
 
-    -- Spammy
-    -- self:Print("Dumping Delves")
-    -- DevTools_Dump(Delves)
+    for _, p in pairs(pois) do p._isPrimary = nil end
 
-    return delves
+    self._allDelvePOIsCache = pois
+    self._allDelvePOIsCacheStats = {
+        root = root,
+        maps = scannedMaps,
+        poiCalls = scannedPoiCalls,
+        delves = countKeys(pois),
+    }
+
+    self:Log("GetAllDelvePOIs: scanned %d maps, %d POI calls, found %d delves",
+        scannedMaps, scannedPoiCalls, countKeys(pois)
+    )
+
+    return pois
 end
 
 function DelveBuddy:GetWorldSoulMemories()
@@ -754,6 +856,60 @@ function DelveBuddy:RewardTierToiLvl(tierID)
     return C_Item.GetDetailedItemLevelInfo(link)
 end
 
+function DelveBuddy:CompanionRoleSet()
+    local roleSet, _, _ = self:GetActiveCompanionConfigFlags()
+    return roleSet
+end
+
+function DelveBuddy:GetActiveCompanionConfigFlags()
+    local roleSet = false
+    local curiosSet = false
+    local detail = ""
+
+    -- Resolve the companion trait tree and config (needed to inspect node ranks).
+    local treeID = C_DelvesUI.GetTraitTreeForCompanion(nil) or 0
+    local configID = 0
+    if treeID ~= 0 then
+        configID = C_Traits.GetConfigIDByTreeID(treeID)
+    end
+
+    -- Helper: get purchased ranks for a node
+    local function getNodeRanksPurchased(nodeID)
+        if type(nodeID) ~= "number" or nodeID == 0 then return 0 end
+        if configID == 0 then return 0 end
+        local ni = C_Traits.GetNodeInfo(configID, nodeID)
+        if type(ni) ~= "table" then return 0 end
+        return tonumber(ni.ranksPurchased or ni.currentRank or ni.activeRank or 0) or 0
+    end
+
+    -- ROLE: role is set iff the role node has purchased ranks.
+    local roleNodeID = C_DelvesUI.GetRoleNodeForCompanion(nil) or 0
+    local rolePurchased = getNodeRanksPurchased(roleNodeID)
+    roleSet = rolePurchased > 0
+
+    -- CURIOS: curios are set iff any curio node has purchased ranks.
+    local combatPurchased, utilityPurchased = 0, 0
+    if C_DelvesUI.GetCurioNodeForCompanion and Enum and Enum.CurioType then
+        for name, curioType in pairs(Enum.CurioType) do
+            local nodeID = C_DelvesUI.GetCurioNodeForCompanion(curioType, nil) or 0
+            local purchased = getNodeRanksPurchased(nodeID)
+            if tostring(name):lower() == "combat" then
+                combatPurchased = purchased
+            elseif tostring(name):lower() == "utility" then
+                utilityPurchased = purchased
+            end
+            if purchased > 0 then
+                curiosSet = true
+            end
+        end
+    end
+
+    detail = ("treeID=%s configID=%s rolePurchased=%s combatPurchased=%s utilityPurchased=%s")
+        :format(tostring(treeID), tostring(configID), tostring(rolePurchased), tostring(combatPurchased), tostring(utilityPurchased))
+
+    return roleSet, curiosSet, detail
+end
+
 -- Midnight does a bunch of stuff different. For example, coffer key shards are a currency, not an item.
 -- This function allows us to abstract those differences. For testing on PTR), flip this to true. 
 -- Once launched, we can flip it to true, or maybe remove it entirely.
@@ -902,4 +1058,16 @@ function DelveBuddy:DumpVaultRewards()
     for _, line in ipairs(lines) do
         self:Print(line)
     end
+end
+
+-- Tiny function for measuring execution time of functions.
+function DelveBuddy:MeasureMs(label, fn)
+    local t0 = debugprofilestop and debugprofilestop() or (GetTimePreciseSec() * 1000)
+    local a, b, c, d = fn()
+    local t1 = debugprofilestop and debugprofilestop() or (GetTimePreciseSec() * 1000)
+    local dt = t1 - t0
+    if label then
+        self:Print(("%s: %.1fms"):format(label, dt))
+    end
+    return dt, a, b, c, d
 end
