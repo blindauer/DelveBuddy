@@ -323,7 +323,7 @@ function DelveBuddy:CollectDelveData()
             threshold = a.threshold,
             level = a.level,
             id = a.id,
-            ilvl = self:RewardTierToiLvl(a.id) or 0,
+            ilvl = self:RewardTierToiLvl(a.level) or 0,
         })
     end
 
@@ -846,14 +846,32 @@ function DelveBuddy:EnsureWeeklyRewardsReady()
 end
 
 function DelveBuddy:RewardTierToiLvl(tierID)
+    self:Print("RewardTierToiLvl: tierID =", tostring(tierID))
     if type(tierID) ~= "number" then return nil end
-    local link = C_WeeklyRewards.GetExampleRewardItemHyperlinks(tierID)
-    if not link then
-        self:Log("RewardTierToiLvl: no example reward links for tierID %s", tostring(tierID))
-        return nil
-    end
 
-    return C_Item.GetDetailedItemLevelInfo(link)
+    -- This is apparently not reliable - I get incorrect results sometimes. Fall back to hardcoding.
+    -- local link = C_WeeklyRewards.GetExampleRewardItemHyperlinks(tierID)
+    -- if not link then
+    --     self:Log("RewardTierToiLvl: no example reward links for tierID %s", tostring(tierID))
+    --     return nil
+    -- end
+    -- return C_Item.GetDetailedItemLevelInfo(link)
+
+    TierToiLvl = {
+        108, -- T1
+        111,
+        115,
+        118,
+        121,
+        128,
+        131,
+        134, -- T8
+        134,
+        134,
+        134,
+    }
+    self:Print("RewardTierToiLvl: tier =", tostring(TierToiLvl[tierID]))
+    return TierToiLvl[tierID] or nil
 end
 
 function DelveBuddy:CompanionRoleSet()
