@@ -846,7 +846,7 @@ function DelveBuddy:EnsureWeeklyRewardsReady()
 end
 
 function DelveBuddy:RewardTierToiLvl(tierID)
-    self:Print("RewardTierToiLvl: tierID =", tostring(tierID))
+    self:Log("RewardTierToiLvl: tierID=%s", tostring(tierID))
     if type(tierID) ~= "number" then return nil end
 
     -- This is apparently not reliable - I get incorrect results sometimes. Fall back to hardcoding.
@@ -870,7 +870,7 @@ function DelveBuddy:RewardTierToiLvl(tierID)
         134,
         134,
     }
-    self:Print("RewardTierToiLvl: tier =", tostring(TierToiLvl[tierID]))
+    self:Log("RewardTierToiLvl: tier=%s", tostring(TierToiLvl[tierID]))
     return TierToiLvl[tierID] or nil
 end
 

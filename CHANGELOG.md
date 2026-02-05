@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.0.3 ==
+Fixes:
+* Removed accidental logging code on login (whoopsie!)
+
 == 2.0.2 ==
 Enhancements:
 * Show a warning if your companion doesn't have a role set.
