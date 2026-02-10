@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.0.5 ==
+Fixes:
+* Re-added missing Vault 3 column
+
 == 2.0.4 ==
 Enhancements:
 * Added "iLvl" column to show current average equipped item level, so you know who needs to do more delves. :)

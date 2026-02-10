@@ -70,7 +70,7 @@ local function OpenAllTips(display, mode)
     tipMode = mode
 
     -- Character summary tooltip
-    local charTip = QTip:Acquire("DelveBuddyCharTip", 11,
+    local charTip = QTip:Acquire("DelveBuddyCharTip", 12,
         "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER", "CENTER", "CENTER")
     charTip:EnableMouse(true)
     charTip:SmartAnchorTo(display)
