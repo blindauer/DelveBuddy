@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.0.4 ==
+Enhancements:
+* Added "iLvl" column to show current average equipped item level, so you know who needs to do more delves. :)
+
 == 2.0.3 ==
 Fixes:
 * Removed accidental logging code on login (whoopsie!)

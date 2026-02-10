@@ -9,13 +9,15 @@
     * **Gilded Stashes** (weekly looted)
     * **Delver’s Bounty** (owned and looted this week)
     * **Great Vault Rewards** (World Delves progress per tier)
+    * **Current Gear Item Level** (so you know who needs to do more delves)
 *	UI Enhancements
     * Shows currently active Bountiful Delves
     * Shows currently active Worldsoul Memories (and Radiant Echoes owned)
     * Click a Delve or World Soul Memory to create a waypoint to it
-    * Easy access to Delve-O-Bot and Shrieking Quartz items - one-click!
+    * Easy access to Delve-O-Bot, Delver's Bounty, and Shrieking Quartz items - one-click!
 * Reminders & Warnings
     * Warning when entering a Bountiful Delve without a Restored Coffer Key
+    * Warning when entering a Delve if your companion doesn't have an assigned role
     * Reminds you to use Delver’s Bounty when inside a Bountiful Delve
 
 ## Installation

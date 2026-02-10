@@ -146,6 +146,7 @@ function DelveBuddy:SlashCommand(input)
         self:Print("Companion role set: " .. tostring(roleSet))
         self:Print("Companion curios set: " .. tostring(curiosSet))
         self:Print("Companion config: " .. detail)
+        self:Print("Player iLevel: " .. tostring(self:GetPlayerItemLevel()))
     elseif cmd == "rewards" or cmd == "rw" then
         self:DumpVaultRewards()
     elseif cmd == "dumppois" or cmd == "dp" then
@@ -277,6 +278,9 @@ function DelveBuddy:CollectDelveData()
 
     -- Class
     data.class = select(2, UnitClass("player"))
+
+    -- iLvl
+    data.itemLevel = self:GetPlayerItemLevel()
 
     -- Shards earned (this week)
     local shardsEarned = 0
@@ -770,6 +774,12 @@ function DelveBuddy:IsPlayerTimerunning()
     end
 
     return false
+end
+
+function DelveBuddy:GetPlayerItemLevel()
+    local avg, equipped = GetAverageItemLevel()
+    self:Log("GetPlayerItemLevel: avg=%s equipped=%s", tostring(avg), tostring(equipped))
+    return math.floor(equipped or 0)
 end
 
 function DelveBuddy:GetZoneName(uiMapID)

@@ -24,6 +24,7 @@
 * Only show delves for L90 chars?
 * Don't show TWW delves?
 
+* Enhancement: allow enabling/disabling of specific columns?
 * Bug: Should do warning checks periodically (and not on bag update)
 * Enhancement: only show nemesis item if don't have bounty item or buff
 * Bug: delver's bounty reminder happens on every inventory update (should just be 1 minute)
