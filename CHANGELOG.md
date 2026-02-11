@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.0.6 ==
+Misc:
+* Updated TOC for 12.0.1
+
 == 2.0.5 ==
 Fixes:
 * Re-added missing Vault 3 column
