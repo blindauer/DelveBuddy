@@ -140,6 +140,8 @@ function DelveBuddy:SlashCommand(input)
         local cur, max = self:GetGildedStashCounts()
         self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
         self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
+        local name, type = GetInstanceInfo()
+        self:Print("Instance name=" .. name .. " type=" .. type)
         self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
         self:Print("Has Delver's Bounty item: " .. tostring(self:HasDelversBountyItem()))
         self:Print("Has Delver's Bounty buff: " .. tostring(self:HasDelversBountyBuff()))
@@ -242,7 +244,7 @@ end
 
 function DelveBuddy:OnBountyCheck()
     self:Log("OnBountyCheck")
-    C_Timer.After(1, function()
+    C_Timer.After(2, function()
         if self:ShouldShowCompanionRoleWarning() then
             self:ShowCompanionRoleWarning()
         elseif self:ShouldShowKeyWarning() then
@@ -399,7 +401,15 @@ function DelveBuddy:FlashDelversBounty()
 end
 
 function DelveBuddy:IsDelveInProgress()
-    return C_PartyInfo.IsDelveInProgress()
+    local  result = C_PartyInfo.IsDelveInProgress()
+
+    -- I've seen cases where IsDelveInProgress returns true when the player is clearly NOT in
+    -- a delve (e.g., when zoning out of the Warlock class hall into the Dalaran Underbelly).
+    -- To guard against this false positive, make sure the player has a mapID.
+    local mapID = C_Map.GetBestMapForUnit("player")
+    if mapID == nil then return false end
+
+    return result
 end
 
 function DelveBuddy:HasDelversBountyItem()
