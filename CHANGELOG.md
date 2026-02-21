@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.0.8 ==
+Fixes:
+* Fixed a bug which caused the companion role warning to sometimes come up when not in a delve.
+
 == 2.0.7 ==
 Fixes:
 * Made iLvl updating happen more consistently
