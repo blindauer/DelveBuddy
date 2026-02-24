@@ -140,8 +140,8 @@ function DelveBuddy:SlashCommand(input)
         local cur, max = self:GetGildedStashCounts()
         self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
         self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
-        local name, type = GetInstanceInfo()
-        self:Print("Instance name=" .. name .. " type=" .. type)
+        local instanceName, instanceType = GetInstanceInfo()
+        self:Print("Instance name=" .. instanceName .. " type=" .. instanceType)
         self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
         self:Print("Has Delver's Bounty item: " .. tostring(self:HasDelversBountyItem()))
         self:Print("Has Delver's Bounty buff: " .. tostring(self:HasDelversBountyBuff()))
@@ -151,6 +151,7 @@ function DelveBuddy:SlashCommand(input)
         self:Print("Companion curios set: " .. tostring(curiosSet))
         self:Print("Companion config: " .. detail)
         self:Print("Player iLevel: " .. tostring(self:GetPlayerItemLevel()))
+        self:Print("Has available vault rewards: " .. tostring(self:HasAvailableVaultRewards()))
     elseif cmd == "rewards" or cmd == "rw" then
         self:DumpVaultRewards()
     elseif cmd == "dumppois" or cmd == "dp" then
@@ -345,6 +346,10 @@ function DelveBuddy:CollectDelveData()
         -- Too spammy
         -- DevTools_Dump(data)
     end
+end
+
+function DelveBuddy:HasAvailableVaultRewards()
+    return C_WeeklyRewards and C_WeeklyRewards.HasAvailableRewards and C_WeeklyRewards.HasAvailableRewards() or false
 end
 
 function DelveBuddy:GetGildedStashCounts()

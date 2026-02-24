@@ -417,6 +417,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
     local BOUNTY_ICON = "|TInterface\\Icons\\Icon_treasuremap:16:16:0:0|t"
     local STASH_ICON = "|TInterface\\Icons\\Inv_cape_special_treasure_c_01:16:16:0:0|t"
     local VAULT_ICON = "|TInterface\\Icons\\Delves-scenario-treasure-upgrade:16:16:0:0|t"
+    local vaultRewardsAvailable = self:HasAvailableVaultRewards()
 
     -- Row 1: Icons (blank where you don't want one)
     tip:AddHeader(
@@ -486,8 +487,33 @@ function DelveBuddy:PopulateCharacterSection(tip)
 
             -- Only for current character
             if name == UnitName("player") then
+                if vaultRewardsAvailable then
+                    tip:SetCell(line, 10, ("%s %s"):format(vault1, self:ColorText("!", "ffd100")))
+                end
+
+                local function showVaultReadyTooltip()
+                    if not vaultRewardsAvailable then return end
+                    GameTooltip:Hide()
+                    GameTooltip:SetOwner(tip, "ANCHOR_NONE")
+                    GameTooltip:ClearLines()
+                    GameTooltip:ClearAllPoints()
+                    GameTooltip:SetPoint("TOPLEFT", (tip.frame or tip), "TOPRIGHT", 8, 0)
+                    GameTooltip:AddLine("Great Vault Rewards Available", 1, 0.82, 0)
+                    GameTooltip:AddLine("You have unclaimed Great Vault rewards.", 1, 1, 1, true)
+                    GameTooltip:AddLine("This week's Vault progress is still shown in the columns below.", 0.8, 0.8, 0.8, true)
+                    GameTooltip:Show()
+                end
+
+                local function hideVaultReadyTooltip()
+                    GameTooltip:Hide()
+                end
+
                 -- Vault cells: open the vault
                 for col = 10, 12 do
+                    if vaultRewardsAvailable then
+                        tip:SetCellScript(line, col, "OnEnter", showVaultReadyTooltip)
+                        tip:SetCellScript(line, col, "OnLeave", hideVaultReadyTooltip)
+                    end
                     tip:SetCellScript(line, col, "OnMouseUp", function()
                         HideAllTips()
                         DelveBuddy:OpenVaultUI()

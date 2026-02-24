@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.0.9 ==
+Enhancements:
+* Show an indicator in the current character's Vault 1 cell when you have an unclaimed Great Vault reward.
+
 == 2.0.8 ==
 Fixes:
 * Fixed a bug which caused the companion role warning to sometimes come up when not in a delve.
