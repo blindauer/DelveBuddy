@@ -163,7 +163,7 @@ local function SortCharacterKeys(keys)
 end
 
 local CHARACTER_SORT_COLUMNS = {
-    [1] = { field = "name", label = "Name" },
+    [1] = { field = "name", label = "Name", tooltip = "Sort by character name" },
     [2] = { field = "ilevel", label = "iLvl" },
     [3] = { field = "shards_earned", label = "Earned" },
     [4] = { field = "keys_earned", label = "Earned" },
@@ -238,6 +238,19 @@ local function AddCharacterSortHeaderHandlers(tip, line)
     for col, cfg in pairs(CHARACTER_SORT_COLUMNS) do
         tip:SetCellScript(line, col, "OnMouseUp", function()
             QueueCharacterSortToggle(cfg.field)
+        end)
+        tip:SetCellScript(line, col, "OnEnter", function()
+            GameTooltip:Hide()
+            GameTooltip:SetOwner(tip, "ANCHOR_NONE")
+            GameTooltip:ClearLines()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:SetPoint("TOPLEFT", (tip.frame or tip), "TOPRIGHT", 8, 0)
+            GameTooltip:AddLine(cfg.tooltip or ("Sort by " .. (cfg.label or "column")), 1, 0.82, 0)
+            GameTooltip:AddLine("Click to sort ascending. Click again to reverse.", 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        tip:SetCellScript(line, col, "OnLeave", function()
+            GameTooltip:Hide()
         end)
     end
 end
@@ -650,6 +663,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
         labels[11],
         labels[12]
     )
+    tip:SetCell(labelLine, 1, labels[1], nil, "CENTER")
     AddCharacterSortHeaderHandlers(tip, iconHeaderLine)
     AddCharacterSortHeaderHandlers(tip, labelLine)
 
