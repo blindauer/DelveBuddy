@@ -43,6 +43,205 @@ local function HideAllTips()
     if DelveBuddy.worldTip then DelveBuddy.worldTip:Hide(); QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip = nil end
 end
 
+local function GetCharacterSortSettings()
+    local g = DelveBuddy.db and DelveBuddy.db.global or {}
+    g.characterSort = g.characterSort or {}
+
+    local validFields = {
+        name = true,
+        ilevel = true,
+        shards_earned = true,
+        keys_earned = true,
+        shards_owned = true,
+        coffer_keys_owned = true,
+        stashes = true,
+        bounty_owned = true,
+        bounty_looted = true,
+        vault_1 = true,
+        vault_2 = true,
+        vault_3 = true,
+    }
+
+    local field = g.characterSort.field
+    if not validFields[field] then
+        field = "name"
+        g.characterSort.field = field
+    end
+
+    local direction = g.characterSort.direction
+    if direction ~= "asc" and direction ~= "desc" then
+        direction = "asc"
+        g.characterSort.direction = direction
+    end
+
+    return g.characterSort
+end
+
+local function ApplyCharacterSortSetting(field, direction)
+    local sort = GetCharacterSortSettings()
+    if field then sort.field = field end
+    if direction then sort.direction = direction end
+
+    if DelveBuddy.charTip and DelveBuddy.charTip:IsShown() then
+        DelveBuddy:PopulateCharacterSection(DelveBuddy.charTip)
+        DelveBuddy.charTip:Show()
+    end
+end
+
+local function GetCharacterSortValue(charKey, data, field)
+    if field == "ilevel" then
+        return tonumber(data and data.itemLevel) or 0
+    elseif field == "shards_earned" then
+        return tonumber(data and data.shardsEarned) or 0
+    elseif field == "keys_earned" then
+        return tonumber(data and data.keysEarned) or 0
+    elseif field == "shards_owned" then
+        return tonumber(data and data.shardsOwned) or 0
+    elseif field == "coffer_keys_owned" then
+        return tonumber(data and data.keysOwned) or 0
+    elseif field == "stashes" then
+        local unknown = DelveBuddy.IDS.CONST.UNKNOWN_GILDED_STASH_COUNT
+        local v = tonumber(data.gildedStashes)
+        if v == nil or (unknown ~= nil and v == unknown) then
+            return -1
+        end
+        return v
+    elseif field == "bounty_owned" then
+        return data.hasBounty and 1 or 0
+    elseif field == "bounty_looted" then
+        return data.bountyLooted and 1 or 0
+    elseif field == "vault_1" or field == "vault_2" or field == "vault_3" then
+        local idx = tonumber(field:match("vault_(%d+)"))
+        local v = data.vaultRewards[idx]
+        if not v then return -1 end
+
+        local progress = tonumber(v.progress) or 0
+        local threshold = tonumber(v.threshold) or 0
+        local level = tonumber(v.level) or -1
+        local ilvl = tonumber(v.ilvl) or 0
+        local complete = (threshold > 0 and progress >= threshold) and 1 or 0
+
+        if complete == 1 then
+            return 100000000 + (math.max(level, 0) * 10000) + ilvl
+        end
+
+        local progressPct = 0
+        if threshold > 0 then
+            progressPct = math.floor((progress / threshold) * 1000 + 0.5)
+        end
+        return (progressPct * 10000) + math.max(progress, 0)
+    end
+
+    return (charKey or ""):lower()
+end
+
+local function SortCharacterKeys(keys)
+    local sort = GetCharacterSortSettings()
+    local field = sort.field
+    local asc = (sort.direction ~= "desc")
+
+    table.sort(keys, function(a, b)
+        local dataA = DelveBuddy.db.charData[a]
+        local dataB = DelveBuddy.db.charData[b]
+        local va = GetCharacterSortValue(a, dataA, field)
+        local vb = GetCharacterSortValue(b, dataB, field)
+
+        if va ~= vb then
+            if asc then
+                return va < vb
+            end
+            return va > vb
+        end
+
+        local na = (a or ""):lower()
+        local nb = (b or ""):lower()
+        if na ~= nb then
+            return na < nb
+        end
+        return (a or "") < (b or "")
+    end)
+end
+
+local CHARACTER_SORT_COLUMNS = {
+    [1] = { field = "name", label = "Name" },
+    [2] = { field = "ilevel", label = "iLvl" },
+    [3] = { field = "shards_earned", label = "Earned" },
+    [4] = { field = "keys_earned", label = "Earned" },
+    [5] = { field = "shards_owned", label = "Owned" },
+    [6] = { field = "coffer_keys_owned", label = "Owned" },
+    [7] = { field = "stashes", label = "Stashes" },
+    [8] = { field = "bounty_owned", label = "Owned" },
+    [9] = { field = "bounty_looted", label = "Looted" },
+    [10] = { field = "vault_1", label = "Vault 1" },
+    [11] = { field = "vault_2", label = "Vault 2" },
+    [12] = { field = "vault_3", label = "Vault 3" },
+}
+
+local function GetCharacterHeaderLabels()
+    local sort = GetCharacterSortSettings()
+    local arrow = (sort.direction == "desc") and " v" or " ^"
+    local labels = {
+        "Name",
+        "iLvl",
+        "Earned",
+        "Earned",
+        "Owned",
+        "Owned",
+        "Stashes",
+        "Owned",
+        "Looted",
+        "Vault 1",
+        "Vault 2",
+        "Vault 3",
+    }
+
+    for col, cfg in pairs(CHARACTER_SORT_COLUMNS) do
+        labels[col] = cfg.label
+        if cfg.field == sort.field then
+            labels[col] = cfg.label .. arrow
+        end
+    end
+
+    return labels
+end
+
+local function ToggleCharacterSortByField(field)
+    local sort = GetCharacterSortSettings()
+    if sort.field == field then
+        ApplyCharacterSortSetting(nil, (sort.direction == "desc") and "asc" or "desc")
+    else
+        ApplyCharacterSortSetting(field, "asc")
+    end
+end
+
+local function QueueCharacterSortToggle(field)
+    if not field then return end
+
+    -- Avoid rebuilding the tooltip during the active click event; that can re-enter
+    -- LibQTip cell handlers and cause rapid recursive redraw/toggle behavior.
+    if DelveBuddy._characterSortToggleQueued then
+        DelveBuddy._characterSortToggleField = field
+        return
+    end
+
+    DelveBuddy._characterSortToggleQueued = true
+    DelveBuddy._characterSortToggleField = field
+    C_Timer.After(0, function()
+        local queuedField = DelveBuddy._characterSortToggleField
+        DelveBuddy._characterSortToggleQueued = false
+        DelveBuddy._characterSortToggleField = nil
+        ToggleCharacterSortByField(queuedField)
+    end)
+end
+
+local function AddCharacterSortHeaderHandlers(tip, line)
+    for col, cfg in pairs(CHARACTER_SORT_COLUMNS) do
+        tip:SetCellScript(line, col, "OnMouseUp", function()
+            QueueCharacterSortToggle(cfg.field)
+        end)
+    end
+end
+
 -- Returns true if the mouse is over a shown tip
 local function _over(t)
     return t and t.IsShown and t:IsShown() and t.IsMouseOver and t:IsMouseOver()
@@ -420,7 +619,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
     local vaultRewardsAvailable = self:HasAvailableVaultRewards()
 
     -- Row 1: Icons (blank where you don't want one)
-    tip:AddHeader(
+    local iconHeaderLine = tip:AddHeader(
         " ",
         ILVL_ICON,
         SHARD_ICON,
@@ -436,26 +635,29 @@ function DelveBuddy:PopulateCharacterSection(tip)
     )
 
     -- Row 2: Text labels
+    local labels = GetCharacterHeaderLabels()
     local labelLine = tip:AddLine(
-        " ",
-        "iLvl",
-        "Earned",
-        "Earned",
-        "Owned",
-        "Owned",
-        "Stashes",
-        "Owned",
-        "Looted",
-        "Vault 1",
-        "Vault 2",
-        "Vault 3"
+        labels[1],
+        labels[2],
+        labels[3],
+        labels[4],
+        labels[5],
+        labels[6],
+        labels[7],
+        labels[8],
+        labels[9],
+        labels[10],
+        labels[11],
+        labels[12]
     )
+    AddCharacterSortHeaderHandlers(tip, iconHeaderLine)
+    AddCharacterSortHeaderHandlers(tip, labelLine)
 
     local charKeyList, current = {}, self:GetCharacterKey()
     for key in pairs(self.db.charData) do
         if key ~= current then table.insert(charKeyList, key) end
     end
-    table.sort(charKeyList)
+    SortCharacterKeys(charKeyList)
     table.insert(charKeyList, 1, current)
     for _, charKey in ipairs(charKeyList) do
         local data = self.db.charData[charKey]

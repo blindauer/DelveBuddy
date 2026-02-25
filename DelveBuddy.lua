@@ -10,6 +10,9 @@ function DelveBuddy:OnInitialize()
     local g = DelveBuddyDB.global
     if g.debugLogging == nil then g.debugLogging = false end
     if g.tooltipScale == nil then g.tooltipScale = 1.0 end
+    g.characterSort = g.characterSort or {}
+    if g.characterSort.field == nil then g.characterSort.field = "name" end
+    if g.characterSort.direction == nil then g.characterSort.direction = "asc" end
     self.db = DelveBuddyDB
 
     -- LibDBIcon
