@@ -848,6 +848,9 @@ end
 function DelveBuddy:GetWorldSoulMemories()
     local memories = {}
 
+    -- Worldsoul memories appear not to be a thing in Midnight.
+    if self:IsMidnight() then return memories end
+
     for _, zoneID in pairs(self.Zone) do
         local pois = C_AreaPoiInfo.GetEventsForMap(zoneID) or {}
         for _, poiID in ipairs(pois) do

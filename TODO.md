@@ -4,7 +4,7 @@
 * Put in failsafe code for if doing stuff in delves when in combat?
 
 === Midnight ===
-* On a L90 char right now, it shows *all* bountiful delves... TWW, and Midnight. Should probably only show the most relevant? Auto-detect?
+* New nemesis lure: beacon of hope
 * Maybe busted
   * Woldsoul memories - are those a thing at all in Midnight??
   * New Nemesis Lure item not working?
@@ -20,9 +20,11 @@
   - Nemesis lure (new?)
   - Keys/shards earned
   - Stashes looted
-* Show new Delves
-* Only show delves for L90 chars?
-* Don't show TWW delves?
+* Don't show worldsoul memories, because not relevant to Midnight S1. - DONE
+* Don't show delve-o-bot, because not relevant to Midnight S1. - DONE
+* Show new Delves - DONE
+* Only show delves for L90 chars? - DONE
+* Don't show TWW delves? - DONE
 
 * Enhancement: allow enabling/disabling of specific columns?
 * Bug: Should do warning checks periodically (and not on bag update)

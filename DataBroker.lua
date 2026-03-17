@@ -815,9 +815,9 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
     end
 
-    -- Delve-O-Bot 7001
+    -- Delve-O-Bot 7001 (non-Midnight only)
     local toyID = DelveBuddy.IDS.Item.DelveOBot7001
-    if not InCombatLockdown() and not self:IsDelveInProgress() and PlayerHasToy(toyID) then
+    if not InCombatLockdown() and not self:IsDelveInProgress() and not self:IsMidnight() and PlayerHasToy(toyID) then
         tip:AddSeparator(1,1,1,1,.45)
         local toyName = self:GetToyName(toyID)
         local toyLine = tip:AddLine(toyName, "")
