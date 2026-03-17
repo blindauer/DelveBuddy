@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.0.10 ==
+Enhancements:
+* Added sorting: click the column header to sort. Click again to reverse sort.
+
 == 2.0.9 ==
 Enhancements:
 * Show an indicator in the current character's Vault 1 cell when you have an unclaimed Great Vault reward.
