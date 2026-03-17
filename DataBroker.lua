@@ -96,7 +96,7 @@ local function GetCharacterSortValue(charKey, data, field)
     elseif field == "keys_earned" then
         return tonumber(data and data.keysEarned) or 0
     elseif field == "shards_owned" then
-        return tonumber(data and data.shardsOwned) or 0
+        return tonumber(data and data.shardsOwned) or DelveBuddy.IDS.CONST.UNKNOWN_SHARD_COUNT
     elseif field == "coffer_keys_owned" then
         return tonumber(data and data.keysOwned) or 0
     elseif field == "stashes" then
@@ -683,7 +683,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
             local displayName = icon .. self:ClassColoredName(name, data.class)
             local itemLevel = self:FormatItemLevel(data.itemLevel or 0)
             local shardsEarnedText = self:FormatKeysEarned(data.shardsEarned or 0, self.IDS.CONST.MAX_WEEKLY_SHARDS)
-            local shardsOwnedText = self:FormatKeysEarned(data.shardsOwned or 0, 100)
+            local shardsOwnedText = self:FormatShardCount(data.shardsOwned)
             local keysEarnedText = self:FormatKeysEarned(data.keysEarned, self.IDS.CONST.MAX_WEEKLY_KEYS)
             local keysOwnedText = self:FormatKeysOwned(data.keysOwned)
             local stashesText = self:FormatStashes(data.gildedStashes)
@@ -1060,6 +1060,15 @@ function DelveBuddy:FormatKeysOwned(owned)
     end
 
     return ownedPart
+end
+
+function DelveBuddy:FormatShardCount(count)
+    local UNKNOWN = self.IDS.CONST.UNKNOWN_SHARD_COUNT
+    if count == UNKNOWN then
+        return self:ColorText("?", self.Colors.Gray)
+    end
+
+    return self:FormatKeysEarned(count or 0, 100)
 end
 
 function DelveBuddy:FormatStashes(cur)

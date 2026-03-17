@@ -47,7 +47,9 @@ DelveBuddy.IDS = {
         BountyBuff_Midnight = { 1254631, },
     },
     CONST = {
+        CHAR_DATA_SCHEMA_VERSION = 1,
         UNKNOWN_GILDED_STASH_COUNT = -1,
+        UNKNOWN_SHARD_COUNT = -1,
         MAX_WEEKLY_GILDED_STASHES = 3,
         MAX_WEEKLY_SHARDS = 200,
         MAX_WEEKLY_KEYS = 4,

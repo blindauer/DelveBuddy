@@ -2,6 +2,11 @@
 
 == 2.0.10 ==
 Enhancements:
+* Changes for Midnight Season 1:
+  * Now properly detects Coffer Key Shards owned
+  * Now properly detects (hopefully) the new Delver's Bounty item and buff
+  * Now properly detects (hopefully) the nemesis lure item
+  * Set shard counts to "?" until those characters are logged in.
 * Added sorting: click the column header to sort. Click again to reverse sort.
 
 == 2.0.9 ==

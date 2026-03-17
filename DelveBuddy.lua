@@ -45,6 +45,9 @@ function DelveBuddy:OnInitialize()
     -- Hack to ensure weekly reward iLvls are ready when we need them later.
     self:EnsureWeeklyRewardsReady()
 
+    -- Migrate persisted character snapshots to the current schema.
+    self:MigrateCharacterData()
+
     -- Clean up after weekly reset, if appropriate
     self:CleanupStaleCharacters()
 end
@@ -57,6 +60,33 @@ function DelveBuddy:OnEnable()
     }, 1, "OnBountyCheck")
 
     self:CollectDelveData()
+end
+
+function DelveBuddy:MigrateCharacterData()
+    local targetVersion = self.IDS.CONST.CHAR_DATA_SCHEMA_VERSION
+
+    for charKey, data in pairs(self.db.charData) do
+        if type(data) == "table" then
+            local currentVersion = tonumber(data.schemaVersion) or 0
+            if currentVersion < targetVersion then
+                self:Log("Migrating character data for %s from schema %d to %d", charKey, currentVersion, targetVersion)
+                self:MigrateCharacterDataRecord(data, currentVersion, targetVersion)
+            end
+        end
+    end
+end
+
+function DelveBuddy:MigrateCharacterDataRecord(data, fromVersion, toVersion)
+    local UNKNOWN = self.IDS.CONST.UNKNOWN_SHARD_COUNT
+
+    for version = fromVersion, toVersion - 1 do
+        if version == 0 then
+            -- Old versions tracked shard ownership as an item. Invalidate until recollected.
+            data.shardsOwned = UNKNOWN
+        end
+    end
+
+    data.schemaVersion = toVersion
 end
 
 -- Helper: parse on/off/true/false/1/0
@@ -349,6 +379,9 @@ function DelveBuddy:CollectDelveData()
 
     -- Last login (used for data reset on reset day)
     data.lastLogin = GetServerTime()
+
+    -- Schema version (used for data migrations)
+    data.schemaVersion = self.IDS.CONST.CHAR_DATA_SCHEMA_VERSION
 
     -- Save to DB under character key
     self.db.charData[charKey] = data
