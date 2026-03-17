@@ -736,8 +736,8 @@ function DelveBuddy:PopulateCharacterSection(tip)
                     end)
                 end
 
-                -- Column 5 (shards owned): overlay a secure button to use the Coffer Key Shard
-                if not InCombatLockdown() then
+                -- Column 5 (shards owned): overlay a secure button to use the Coffer Key Shard (not for Midnight)
+                if not self:IsMidnight() and not InCombatLockdown() then
                     local cell = tip.lines[line].cells[5]
                     if cell then
                         cofferKeyShardButton = DelveBuddy:CreateAndAttachSecureButton(

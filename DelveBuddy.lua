@@ -78,15 +78,30 @@ end
 
 function DelveBuddy:MigrateCharacterDataRecord(data, fromVersion, toVersion)
     local UNKNOWN = self.IDS.CONST.UNKNOWN_SHARD_COUNT
+    local seasonStart = self:GetMidnightSeason1StartTimestamp()
 
     for version = fromVersion, toVersion - 1 do
         if version == 0 then
             -- Old versions tracked shard ownership as an item. Invalidate until recollected.
             data.shardsOwned = UNKNOWN
+        elseif version == 1 then
+            -- Blizzard removed leftover keys at Season 1 start.
+            if not data.lastLogin or data.lastLogin < seasonStart then
+                data.keysOwned = 0
+            end
         end
     end
 
     data.schemaVersion = toVersion
+end
+
+function DelveBuddy:GetMidnightSeason1StartTimestamp()
+    local region = GetCurrentRegion and GetCurrentRegion() or nil
+    if region == 3 then
+        return self.IDS.CONST.MIDNIGHT_S1_START_EU
+    end
+
+    return self.IDS.CONST.MIDNIGHT_S1_START_US
 end
 
 -- Helper: parse on/off/true/false/1/0

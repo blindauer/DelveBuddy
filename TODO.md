@@ -20,6 +20,8 @@
   - Nemesis lure (new?)
   - Keys/shards earned
   - Stashes looted
+* Zero out Coffer Key count when logging in after S1 started (if last login was before) - DONE
+* Disable Coffer Key Shard cell click in Midnight (b/c shards no longer an item). - DONE
 * Don't show worldsoul memories, because not relevant to Midnight S1. - DONE
 * Don't show delve-o-bot, because not relevant to Midnight S1. - DONE
 * Show new Delves - DONE

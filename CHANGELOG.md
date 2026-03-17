@@ -1,12 +1,22 @@
 = DelveBuddy Changelog =
 
+== 2.1 ===
+Enhancements:
+* Tons of changes and fixes Midnight Season 1:
+  * Properly detects Coffer Key Shards owned
+  * Reset Coffer Key counts for characters not logged in since before S1 start
+  * Set Coffer Key Shard counts to "?" for characters not logged in since before S1 start
+  * Properly detect (hopefully) the new Delver's Bounty item and buff
+  * Properly detect (hopefully) the nemesis lure item
+  * Make Coffer Key Shard cell non-clickable (it's a currency now, not an item)
+  * Disable Delve-O-Bot 7001 (it's not relevant in Midnight)
+  * Disable World Soul Memories (they appear not to be relevant in Midnight)
+
+Fixes:
+* Only color logged in character's iLvl (otherwise it's wrong for other characters)
+
 == 2.0.10 ==
 Enhancements:
-* Changes for Midnight Season 1:
-  * Now properly detects Coffer Key Shards owned
-  * Now properly detects (hopefully) the new Delver's Bounty item and buff
-  * Now properly detects (hopefully) the nemesis lure item
-  * Set shard counts to "?" until those characters are logged in.
 * Added sorting: click the column header to sort. Click again to reverse sort.
 
 == 2.0.9 ==

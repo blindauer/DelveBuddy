@@ -47,7 +47,9 @@ DelveBuddy.IDS = {
         BountyBuff_Midnight = { 1254631, },
     },
     CONST = {
-        CHAR_DATA_SCHEMA_VERSION = 1,
+        CHAR_DATA_SCHEMA_VERSION = 2,
+        MIDNIGHT_S1_START_US = 1773759600, -- March 17, 2026 08:00 PDT
+        MIDNIGHT_S1_START_EU = 1773813600, -- March 18, 2026 06:00 UTC
         UNKNOWN_GILDED_STASH_COUNT = -1,
         UNKNOWN_SHARD_COUNT = -1,
         MAX_WEEKLY_GILDED_STASHES = 3,
