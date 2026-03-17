@@ -681,7 +681,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
             name = name:match("^[^-]+") or name
             local icon = self:ClassIconMarkup(data.class)
             local displayName = icon .. self:ClassColoredName(name, data.class)
-            local itemLevel = self:FormatItemLevel(data.itemLevel or 0)
+            local itemLevel = self:FormatItemLevel(data.itemLevel or 0, charKey == current)
             local shardsEarnedText = self:FormatKeysEarned(data.shardsEarned or 0, self.IDS.CONST.MAX_WEEKLY_SHARDS)
             local shardsOwnedText = self:FormatShardCount(data.shardsOwned)
             local keysEarnedText = self:FormatKeysEarned(data.keysEarned, self.IDS.CONST.MAX_WEEKLY_KEYS)
@@ -1017,11 +1017,12 @@ DelveBuddy.Colors = {
     Green = "00ff00",
     Red   = "ff3333",
     Gray  = "aaaaaa",
+    White = "ffffff",
     Yellow = "ffff00",
     Cyan = "00ffff",
 }
 
-function DelveBuddy:FormatItemLevel(itemLevel)
+function DelveBuddy:FormatItemLevel(itemLevel, useBlizzardColor)
     itemLevel = tonumber(itemLevel)
 
     -- If unknown or missing, show a gray "?"
@@ -1031,11 +1032,14 @@ function DelveBuddy:FormatItemLevel(itemLevel)
 
     -- Caller guarantees this came from Blizzard already truncated to an int
     local text = tostring(itemLevel)
+    if not useBlizzardColor then
+        return self:ColorText(text, self.Colors.White)
+    end
 
     -- GetItemLevelColor returns r,g,b in [0,1]
     local r, g, b = GetItemLevelColor(itemLevel)
     if not r then
-        return self:ColorText(text, self.Colors.Gray)
+        return self:ColorText(text, self.Colors.White)
     end
 
     local hex = string.format("%02x%02x%02x", math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
