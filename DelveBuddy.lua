@@ -664,6 +664,73 @@ function DelveBuddy:GetAllDelvePOIs()
         return n
     end
 
+    local function getMapDepth(mapID)
+        local depth = 0
+        local seen = {}
+        while type(mapID) == "number" and mapID ~= 0 and not seen[mapID] do
+            seen[mapID] = true
+            depth = depth + 1
+
+            local mi = C_Map.GetMapInfo(mapID)
+            if not mi or not mi.parentMapID or mi.parentMapID == 0 then
+                break
+            end
+
+            mapID = mi.parentMapID
+        end
+
+        return depth
+    end
+
+    local function mapsShareChain(a, b)
+        if a == b then return true end
+        if type(a) ~= "number" or type(b) ~= "number" then return false end
+
+        local seen = {}
+        local mapID = a
+        while mapID and mapID ~= 0 and not seen[mapID] do
+            seen[mapID] = true
+            local mi = C_Map.GetMapInfo(mapID)
+            mapID = mi and mi.parentMapID or 0
+        end
+
+        mapID = b
+        while mapID and mapID ~= 0 do
+            if seen[mapID] then
+                return true
+            end
+            local mi = C_Map.GetMapInfo(mapID)
+            mapID = mi and mi.parentMapID or 0
+        end
+
+        return false
+    end
+
+    local function shouldReplaceCandidate(existing, candidate)
+        if candidate._isPrimary ~= existing._isPrimary then
+            return candidate._isPrimary
+        end
+
+        local zoneMaps = {}
+        for _, zoneID in pairs(self.Zone or {}) do
+            zoneMaps[zoneID] = true
+        end
+
+        local existingIsZone = zoneMaps[existing.zoneID] == true
+        local candidateIsZone = zoneMaps[candidate.zoneID] == true
+        if candidateIsZone ~= existingIsZone then
+            return candidateIsZone
+        end
+
+        local existingDepth = getMapDepth(existing.zoneID)
+        local candidateDepth = getMapDepth(candidate.zoneID)
+        if candidateDepth ~= existingDepth then
+            return candidateDepth > existingDepth
+        end
+
+        return false
+    end
+
     local root = C_Map.GetFallbackWorldMapID()
     local mapIDs = { root }
     local children = C_Map.GetMapChildrenInfo(root, nil, true) or {}
@@ -673,8 +740,7 @@ function DelveBuddy:GetAllDelvePOIs()
         end
     end
 
-    -- Keyed by areaPoiID (preferred) else by the id returned from GetDelvesForMap.
-    local pois = {}
+    local candidates = {}
     local scannedMaps, scannedPoiCalls = 0, 0
 
     for _, mapID in ipairs(mapIDs) do
@@ -695,24 +761,64 @@ function DelveBuddy:GetAllDelvePOIs()
                         px, py = info.position:GetXY()
                     end
 
-                    local existing = pois[areaPoiID]
-
-                    -- Save everything as fallback; overwrite only when we find a primary-map entry.
-                    -- Thjs ensures we don't get any missing delves (e.g., Sidestreet Sluice oddly seems not to have
-                    -- a primayr map ID.)
-                    if (not existing) or (isPrimary and not existing._isPrimary) then
-                        pois[areaPoiID] = {
-                            areaPoiID = areaPoiID,
-                            name      = info.name,
-                            zoneID    = mapID,
-                            x         = (tonumber(px) or 0) * 100,
-                            y         = (tonumber(py) or 0) * 100,
-                            _isPrimary = isPrimary,
-                        }
-                    end
+                    table.insert(candidates, {
+                        areaPoiID = areaPoiID,
+                        name      = info.name,
+                        zoneID    = mapID,
+                        x         = (tonumber(px) or 0) * 100,
+                        y         = (tonumber(py) or 0) * 100,
+                        _isPrimary = isPrimary,
+                    })
                 end
             end
         end
+    end
+
+    -- Collapse duplicate POIs exposed on both parent and child maps for the same delve.
+    local deduped = {}
+    for _, candidate in ipairs(candidates) do
+        local matchedIndex
+
+        for i, existing in ipairs(deduped) do
+            if candidate.name and candidate.name ~= "" and candidate.name == existing.name
+                and mapsShareChain(existing.zoneID, candidate.zoneID) then
+                matchedIndex = i
+                break
+            end
+        end
+
+        if not matchedIndex then
+            table.insert(deduped, candidate)
+        else
+            local existing = deduped[matchedIndex]
+            if shouldReplaceCandidate(existing, candidate) then
+                self:Log("GetAllDelvePOIs: deduped %q, replacing zone=%s poi=%s primary=%s with zone=%s poi=%s primary=%s",
+                    tostring(candidate.name),
+                    tostring(existing.zoneID),
+                    tostring(existing.areaPoiID),
+                    tostring(existing._isPrimary),
+                    tostring(candidate.zoneID),
+                    tostring(candidate.areaPoiID),
+                    tostring(candidate._isPrimary)
+                )
+                deduped[matchedIndex] = candidate
+            else
+                self:Log("GetAllDelvePOIs: deduped %q, discarding zone=%s poi=%s primary=%s in favor of zone=%s poi=%s primary=%s",
+                    tostring(candidate.name),
+                    tostring(candidate.zoneID),
+                    tostring(candidate.areaPoiID),
+                    tostring(candidate._isPrimary),
+                    tostring(existing.zoneID),
+                    tostring(existing.areaPoiID),
+                    tostring(existing._isPrimary)
+                )
+            end
+        end
+    end
+
+    local pois = {}
+    for _, p in ipairs(deduped) do
+        pois[p.areaPoiID] = p
     end
 
     for _, p in pairs(pois) do p._isPrimary = nil end
