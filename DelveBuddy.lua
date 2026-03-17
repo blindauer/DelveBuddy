@@ -157,6 +157,13 @@ function DelveBuddy:SlashCommand(input)
         self:Print("Has available vault rewards: " .. tostring(self:HasAvailableVaultRewards()))
     elseif cmd == "rewards" or cmd == "rw" then
         self:DumpVaultRewards()
+    elseif cmd == "ilvl" then
+        local itemLevel = tonumber(arg)
+        if itemLevel then
+            self:PrintItemLevelColor(itemLevel)
+        else
+            self:Print("Usage: /db ilvl <num>")
+        end
     elseif cmd == "dumppois" or cmd == "dp" then
         local mapID = tonumber(arg) or C_Map.GetBestMapForUnit("player")
         if mapID then
@@ -178,6 +185,7 @@ function DelveBuddy:SlashCommand(input)
         self:Print("/db minimap -- Toggle minimap icon")
         self:Print("/db waypoints <blizzard||tomtom||both> -- Set waypoint providers")
         self:Print("/db rewards -- Dump Great Vault (World) tier IDs and example reward item levels")
+        self:Print("/db ilvl <num> -- Print GetItemLevelColor() result for an item level")
     end
 end
 
@@ -962,7 +970,7 @@ end
 -- This function allows us to abstract those differences. For testing on PTR), flip this to true. 
 -- Once launched, we can flip it to true, or maybe remove it entirely.
 function DelveBuddy:IsMidnight()
-    return false
+    return true
 end
 
 -- Debug-only functions.
@@ -1106,6 +1114,23 @@ function DelveBuddy:DumpVaultRewards()
     for _, line in ipairs(lines) do
         self:Print(line)
     end
+end
+
+function DelveBuddy:PrintItemLevelColor(itemLevel)
+    local r, g, b = GetItemLevelColor(itemLevel)
+    if not r then
+        self:Print(("GetItemLevelColor(%s) -> nil"):format(tostring(itemLevel)))
+        return
+    end
+
+    local r255 = math.floor(r * 255 + 0.5)
+    local g255 = math.floor(g * 255 + 0.5)
+    local b255 = math.floor(b * 255 + 0.5)
+    local hex = ("%02x%02x%02x"):format(r255, g255, b255)
+    local sample = ("|cff%s%d|r"):format(hex, itemLevel)
+
+    self:Print(("GetItemLevelColor(%d) -> r=%.3f g=%.3f b=%.3f hex=#%s sample=%s")
+        :format(itemLevel, r, g, b, hex, sample))
 end
 
 -- Tiny function for measuring execution time of functions.
