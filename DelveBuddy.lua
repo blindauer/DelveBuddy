@@ -651,6 +651,84 @@ function DelveBuddy:GetDelves()
     return delves
 end
 
+local mapDepthCache = {}
+local mapAncestorCache = {}
+
+local function GetMapAncestors(mapID)
+    if type(mapID) ~= "number" or mapID == 0 then
+        return {}
+    end
+
+    local cached = mapAncestorCache[mapID]
+    if cached then
+        return cached
+    end
+
+    local ancestors = {}
+    local seen = {}
+    local currentMapID = mapID
+
+    while currentMapID and currentMapID ~= 0 and not seen[currentMapID] do
+        seen[currentMapID] = true
+        ancestors[currentMapID] = true
+
+        local mi = C_Map.GetMapInfo(currentMapID)
+        currentMapID = mi and mi.parentMapID or 0
+    end
+
+    mapAncestorCache[mapID] = ancestors
+    mapDepthCache[mapID] = 0
+    for _ in pairs(ancestors) do
+        mapDepthCache[mapID] = mapDepthCache[mapID] + 1
+    end
+
+    return ancestors
+end
+
+local function GetMapDepth(mapID)
+    if mapDepthCache[mapID] == nil then
+        GetMapAncestors(mapID)
+    end
+
+    return mapDepthCache[mapID] or 0
+end
+
+local function MapsShareChain(a, b)
+    if a == b then return true end
+    if type(a) ~= "number" or type(b) ~= "number" then return false end
+
+    local aAncestors = GetMapAncestors(a)
+    local bAncestors = GetMapAncestors(b)
+
+    for mapID in pairs(aAncestors) do
+        if bAncestors[mapID] then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function BuildDelvePoiCandidate(mapID, poiID)
+    local info = C_AreaPoiInfo.GetAreaPOIInfo(mapID, poiID)
+    if not info then
+        return nil
+    end
+
+    local px, py
+    if info.position and info.position.GetXY then
+        px, py = info.position:GetXY()
+    end
+
+    return {
+        areaPoiID = (type(info.areaPoiID) == "number" and info.areaPoiID) or poiID,
+        name      = info.name,
+        zoneID    = mapID,
+        x         = (tonumber(px) or 0) * 100,
+        y         = (tonumber(py) or 0) * 100,
+    }
+end
+
 -- Scan starting at fallback world map and collect ALL delve POIs (bountiful or not).
 -- Cache for the session. Prefer primary-map POIs; otherwise keep first-seen fallback.
 function DelveBuddy:GetAllDelvePOIs()
@@ -658,72 +736,20 @@ function DelveBuddy:GetAllDelvePOIs()
         return self._allDelvePOIsCache
     end
 
-    local function countKeys(t)
-        local n = 0
-        for _ in pairs(t) do n = n + 1 end
-        return n
-    end
-
-    local function getMapDepth(mapID)
-        local depth = 0
-        local seen = {}
-        while type(mapID) == "number" and mapID ~= 0 and not seen[mapID] do
-            seen[mapID] = true
-            depth = depth + 1
-
-            local mi = C_Map.GetMapInfo(mapID)
-            if not mi or not mi.parentMapID or mi.parentMapID == 0 then
-                break
-            end
-
-            mapID = mi.parentMapID
-        end
-
-        return depth
-    end
-
-    local function mapsShareChain(a, b)
-        if a == b then return true end
-        if type(a) ~= "number" or type(b) ~= "number" then return false end
-
-        local seen = {}
-        local mapID = a
-        while mapID and mapID ~= 0 and not seen[mapID] do
-            seen[mapID] = true
-            local mi = C_Map.GetMapInfo(mapID)
-            mapID = mi and mi.parentMapID or 0
-        end
-
-        mapID = b
-        while mapID and mapID ~= 0 do
-            if seen[mapID] then
-                return true
-            end
-            local mi = C_Map.GetMapInfo(mapID)
-            mapID = mi and mi.parentMapID or 0
-        end
-
-        return false
+    local zoneMaps = {}
+    for _, zoneID in pairs(self.Zone or {}) do
+        zoneMaps[zoneID] = true
     end
 
     local function shouldReplaceCandidate(existing, candidate)
-        if candidate._isPrimary ~= existing._isPrimary then
-            return candidate._isPrimary
-        end
-
-        local zoneMaps = {}
-        for _, zoneID in pairs(self.Zone or {}) do
-            zoneMaps[zoneID] = true
-        end
-
         local existingIsZone = zoneMaps[existing.zoneID] == true
         local candidateIsZone = zoneMaps[candidate.zoneID] == true
         if candidateIsZone ~= existingIsZone then
             return candidateIsZone
         end
 
-        local existingDepth = getMapDepth(existing.zoneID)
-        local candidateDepth = getMapDepth(candidate.zoneID)
+        local existingDepth = GetMapDepth(existing.zoneID)
+        local candidateDepth = GetMapDepth(candidate.zoneID)
         if candidateDepth ~= existingDepth then
             return candidateDepth > existingDepth
         end
@@ -751,24 +777,9 @@ function DelveBuddy:GetAllDelvePOIs()
             for _, id in ipairs(ids) do
                 scannedPoiCalls = scannedPoiCalls + 1
 
-                local info = C_AreaPoiInfo.GetAreaPOIInfo(mapID, id)
-                if info then
-                    local areaPoiID = (type(info.areaPoiID) == "number" and info.areaPoiID) or id
-                    local isPrimary = (info.isPrimaryMapForPOI == true)
-
-                    local px, py
-                    if info.position and info.position.GetXY then
-                        px, py = info.position:GetXY()
-                    end
-
-                    table.insert(candidates, {
-                        areaPoiID = areaPoiID,
-                        name      = info.name,
-                        zoneID    = mapID,
-                        x         = (tonumber(px) or 0) * 100,
-                        y         = (tonumber(py) or 0) * 100,
-                        _isPrimary = isPrimary,
-                    })
+                local candidate = BuildDelvePoiCandidate(mapID, id)
+                if candidate then
+                    table.insert(candidates, candidate)
                 end
             end
         end
@@ -781,7 +792,7 @@ function DelveBuddy:GetAllDelvePOIs()
 
         for i, existing in ipairs(deduped) do
             if candidate.name and candidate.name ~= "" and candidate.name == existing.name
-                and mapsShareChain(existing.zoneID, candidate.zoneID) then
+                and MapsShareChain(existing.zoneID, candidate.zoneID) then
                 matchedIndex = i
                 break
             end
@@ -792,47 +803,43 @@ function DelveBuddy:GetAllDelvePOIs()
         else
             local existing = deduped[matchedIndex]
             if shouldReplaceCandidate(existing, candidate) then
-                self:Log("GetAllDelvePOIs: deduped %q, replacing zone=%s poi=%s primary=%s with zone=%s poi=%s primary=%s",
+                self:Log("GetAllDelvePOIs: deduped %q, replacing zone=%s poi=%s with zone=%s poi=%s",
                     tostring(candidate.name),
                     tostring(existing.zoneID),
                     tostring(existing.areaPoiID),
-                    tostring(existing._isPrimary),
                     tostring(candidate.zoneID),
-                    tostring(candidate.areaPoiID),
-                    tostring(candidate._isPrimary)
+                    tostring(candidate.areaPoiID)
                 )
                 deduped[matchedIndex] = candidate
             else
-                self:Log("GetAllDelvePOIs: deduped %q, discarding zone=%s poi=%s primary=%s in favor of zone=%s poi=%s primary=%s",
+                self:Log("GetAllDelvePOIs: deduped %q, discarding zone=%s poi=%s in favor of zone=%s poi=%s",
                     tostring(candidate.name),
                     tostring(candidate.zoneID),
                     tostring(candidate.areaPoiID),
-                    tostring(candidate._isPrimary),
                     tostring(existing.zoneID),
-                    tostring(existing.areaPoiID),
-                    tostring(existing._isPrimary)
+                    tostring(existing.areaPoiID)
                 )
             end
         end
     end
 
     local pois = {}
+    local delveCount = 0
     for _, p in ipairs(deduped) do
         pois[p.areaPoiID] = p
+        delveCount = delveCount + 1
     end
-
-    for _, p in pairs(pois) do p._isPrimary = nil end
 
     self._allDelvePOIsCache = pois
     self._allDelvePOIsCacheStats = {
         root = root,
         maps = scannedMaps,
         poiCalls = scannedPoiCalls,
-        delves = countKeys(pois),
+        delves = delveCount,
     }
 
     self:Log("GetAllDelvePOIs: scanned %d maps, %d POI calls, found %d delves",
-        scannedMaps, scannedPoiCalls, countKeys(pois)
+        scannedMaps, scannedPoiCalls, self._allDelvePOIsCacheStats.delves
     )
 
     return pois
