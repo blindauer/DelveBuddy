@@ -1060,17 +1060,17 @@ function DelveBuddy:RewardTierToiLvl(tierID)
     -- return C_Item.GetDetailedItemLevelInfo(link)
 
     TierToiLvl = {
-        108, -- T1
-        111,
-        115,
-        118,
-        121,
-        128,
-        131,
-        134, -- T8
-        134,
-        134,
-        134,
+        233, -- T1
+        237,
+        240,
+        243,
+        246,
+        253,
+        256,
+        259, -- T8
+        259,
+        259,
+        259,
     }
     self:Log("RewardTierToiLvl: tier=%s", tostring(TierToiLvl[tierID]))
     return TierToiLvl[tierID] or nil
