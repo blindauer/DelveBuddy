@@ -3,7 +3,7 @@
 == 2.1.1 ===
 Fixes:
 * Fix item levels on vault rewards cells
-* Use the correct bounty name everywhere
+* Use the correct bounty name
 
 == 2.1 ===
 Enhancements:
