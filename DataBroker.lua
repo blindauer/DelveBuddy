@@ -19,7 +19,7 @@ local delveOBotButton
 -- Secure button for using the Nemesis Call item (created lazily, later)
 local nemesisCallButton
 
--- Secure button for using Delver's Bounty (created lazily, later)
+-- Secure button for using the bounty item (created lazily, later)
 local delversBountyButton
 
 -- Detach secure buttons when combat starts, to avoid wonkiness due to callint secure code in combat.
@@ -526,17 +526,18 @@ DelveBuddyMenu.initialize = function(self, level)
         info.tooltipOnButton = true
         UIDropDownMenu_AddButton(info, level)
 
-        -- Checkbox: Delver's Bounty
+        -- Checkbox: bounty item reminder
         info = UIDropDownMenu_CreateInfo()
-        info.text = "Delver's Bounty"
+        local bountyName = DelveBuddy:GetDelversBountyItemName()
+        info.text = bountyName
         info.checked = DelveBuddy.db.global.reminders.delversBounty
         info.keepShownOnClick = true
         info.isNotRadio = true
         info.func = function(_, _, _, checked)
             DelveBuddy.db.global.reminders.delversBounty = checked
         end
-        info.tooltipTitle = "Delver's Bounty reminder"
-        info.tooltipText = "Reminds you to use your Delver's Bounty (if you have one) when in a Bountiful Delve."
+        info.tooltipTitle = bountyName .. " reminder"
+        info.tooltipText = "Reminds you to use your " .. bountyName .. " (if you have one) when in a Bountiful Delve."
         info.tooltipOnButton = true
         UIDropDownMenu_AddButton(info, level)
     elseif level == 2 and UIDROPDOWNMENU_MENU_VALUE == "TOOLTIP_SCALE" then
@@ -899,11 +900,11 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
     end
 
-    -- Delver's Bounty (only in a Bountiful Delve and if player has one)
+    -- Bounty item (only in a Bountiful Delve and if player has one)
     if not InCombatLockdown() and self:IsInBountifulDelve() and self:HasDelversBountyItem() then
         local itemID = self:GetDelversBountyItemId()
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
-        local itemName = C_Item.GetItemNameByID(itemID)
+        local itemName = self:GetDelversBountyItemName()
         local lineText = ("%s %s"):format(itemIcon, itemName)
 
         tip:AddSeparator(1,1,1,1,.45)

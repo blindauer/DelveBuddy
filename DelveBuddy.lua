@@ -145,7 +145,7 @@ function DelveBuddy:SlashCommand(input)
             self:Print("Reminders: Coffer Keys " .. (onoff and "ON" or "OFF"))
         elseif which == "bounty" and onoff ~= nil then
             self.db.global.reminders.delversBounty = onoff
-            self:Print("Reminders: Delver's Bounty " .. (onoff and "ON" or "OFF"))
+            self:Print("Reminders: " .. self:GetDelversBountyItemName() .. " " .. (onoff and "ON" or "OFF"))
         else
             self:Print("Usage: /db reminders <coffer||bounty> <on||off>")
         end
@@ -191,8 +191,8 @@ function DelveBuddy:SlashCommand(input)
         local instanceName, instanceType = GetInstanceInfo()
         self:Print("Instance name=" .. instanceName .. " type=" .. instanceType)
         self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
-        self:Print("Has Delver's Bounty item: " .. tostring(self:HasDelversBountyItem()))
-        self:Print("Has Delver's Bounty buff: " .. tostring(self:HasDelversBountyBuff()))
+        self:Print("Has " .. self:GetDelversBountyItemName() .. " item: " .. tostring(self:HasDelversBountyItem()))
+        self:Print("Has " .. self:GetDelversBountyItemName() .. " buff: " .. tostring(self:HasDelversBountyBuff()))
         self:Print("Has Nemesis Lure item: " .. tostring(self:HasNemesisLureItem()))
         local roleSet, curiosSet, detail = self:GetActiveCompanionConfigFlags()
         self:Print("Companion role set: " .. tostring(roleSet))
@@ -432,7 +432,7 @@ function DelveBuddy:GetGildedStashCounts()
 end
 
 function DelveBuddy:FlashDelversBounty()
-    local itemName = C_Item.GetItemInfo(self:GetDelversBountyItemId())
+    local itemName = self:GetDelversBountyItemName()
     if not itemName then return end
 
     for i = 1, 12 do
@@ -490,6 +490,10 @@ function DelveBuddy:GetDelversBountyItemId()
     end
 
     return DelveBuddy.IDS.Item.BountyItem_TWW
+end
+
+function DelveBuddy:GetDelversBountyItemName()
+    return C_Item.GetItemNameByID(self:GetDelversBountyItemId()) or "Trovehunter's Bounty"
 end
 
 function DelveBuddy:GetNemesisLureItemId()
@@ -562,7 +566,7 @@ function DelveBuddy:ShowKeyWarning()
 end
 
 function DelveBuddy:ShowBountyNotice()
-    self:DisplayRaidWarning("|cffffd700Delver's Bounty available!|r", false)
+    self:DisplayRaidWarning("|cffffd700" .. self:GetDelversBountyItemName() .. " available!|r", false)
 end
 
 function DelveBuddy:DisplayRaidWarning(msg, playSound)

@@ -1,5 +1,10 @@
 = DelveBuddy Changelog =
 
+== 2.1.1 ===
+Fixes:
+* Fix item levels on vault rewards cells
+* Use the correct bounty name everywhere
+
 == 2.1 ===
 Enhancements:
 * Tons of changes and fixes Midnight Season 1:
