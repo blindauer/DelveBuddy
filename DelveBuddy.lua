@@ -89,6 +89,9 @@ function DelveBuddy:MigrateCharacterDataRecord(data, fromVersion, toVersion)
             if not data.lastLogin or data.lastLogin < seasonStart then
                 data.keysOwned = 0
             end
+        elseif version == 2 then
+            data.keysEarned = nil
+            data.shardsEarnedMax = nil
         end
     end
 
@@ -185,6 +188,9 @@ function DelveBuddy:SlashCommand(input)
         self:Print("Is in delve: " .. tostring(self:IsDelveInProgress()))
         self:Print("Is in bountiful delve: " .. tostring(self:IsInBountifulDelve()))
         self:Print("Is delve complete: " .. tostring(self:IsDelveComplete()))
+        local owned = self:GetShardCount()
+        local earned, weeklyMax = self:GetShardsEarnedThisWeek()
+        self:Print("Shards: " .. tostring(owned) .. " | weekly " .. tostring(earned) .. "/" .. tostring(weeklyMax))
         local cur, max = self:GetGildedStashCounts()
         self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
         self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
@@ -344,21 +350,17 @@ function DelveBuddy:CollectDelveData()
     data.itemLevel = self:GetPlayerItemLevel()
 
     -- Shards earned (this week)
-    local shardsEarned = 0
-    for _, questID in ipairs(IDS.Quest.ShardsEarned) do
-        shardsEarned = shardsEarned + (C_QuestLog.IsQuestFlaggedCompleted(questID) and 1 or 0)
+    do
+        local priorEarned = prevData and tonumber(prevData.shardsEarned) or 0
+        local priorMax = prevData and tonumber(prevData.shardsEarnedMax) or 0
+        local earned, max = self:GetShardsEarnedThisWeek()
+
+        data.shardsEarned = earned or priorEarned or 0
+        data.shardsEarnedMax = max or priorMax or 0
     end
-    data.shardsEarned = shardsEarned * 50
 
     -- Shards owned
     data.shardsOwned = self:GetShardCount()
-
-    -- Keys earned (this week)
-    local keysEarned = 0
-    for _, questID in ipairs(IDS.Quest.KeyEarned) do
-        keysEarned = keysEarned + (C_QuestLog.IsQuestFlaggedCompleted(questID) and 1 or 0)
-    end
-    data.keysEarned = keysEarned
 
     -- Keys owned
     data.keysOwned = self:GetKeyCount()
@@ -603,7 +605,7 @@ function DelveBuddy:CleanupStaleCharacters()
         if type(data) == "table" and self:HasWeeklyResetOccurred(data.lastLogin) then
             self:Log("Resetting weekly data for", charKey)
             data.shardsEarned = 0
-            data.keysEarned = 0
+            data.shardsEarnedMax = 0
             data.gildedStashes = 0
             data.bountyLooted = false
             -- data.vaultRewards = {} keep vaultRewards
@@ -639,6 +641,11 @@ function DelveBuddy:GetShardCount()
 
     -- This is the TWW way
     return C_Item.GetItemCount(self.IDS.Item.CofferKeyShard)
+end
+
+function DelveBuddy:GetShardsEarnedThisWeek()
+    local c = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.CofferKeyShard)
+    return (c and c.quantityEarnedThisWeek) or 0, (c and c.maxWeeklyQuantity) or 0
 end
 
 function DelveBuddy:GetDelves()

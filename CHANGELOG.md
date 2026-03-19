@@ -1,9 +1,15 @@
 = DelveBuddy Changelog =
 
+== 2.1.2 ==
+Enhancements:
+* Updated UI to better reflect how shards and keys are earned in Midnight Season 1
+  * Removed "Keys Earned" column, as there's no cap on keys
+  * Changed "Shard Earned" column to show count of shards earned this week, and weekly maximum
+
 == 2.1.1 ===
 Fixes:
 * Fix item levels on vault rewards cells
-* Use the correct bounty name
+* Use the correct bounty item name
 
 == 2.1 ===
 Enhancements:

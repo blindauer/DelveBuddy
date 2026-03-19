@@ -20,11 +20,9 @@ DelveBuddy.Zone = {
 DelveBuddy.IDS = {
     Currency = {
         RestoredCofferKey = 3028,
-        CofferKeyShard = 3310, -- Midnight only (in TWW it's an item)
+        CofferKeyShard = 3310,
     },
     Quest = {
-        ShardsEarned = { 84736, 84737, 84738, 84739 },
-        KeyEarned = { 91175, 91176, 91177, 91178 },
         BountyLooted = 86371,
     },
     Item = {
@@ -47,14 +45,12 @@ DelveBuddy.IDS = {
         BountyBuff_Midnight = { 1254631, },
     },
     CONST = {
-        CHAR_DATA_SCHEMA_VERSION = 2,
+        CHAR_DATA_SCHEMA_VERSION = 3,
         MIDNIGHT_S1_START_US = 1773759600, -- March 17, 2026 08:00 PDT
         MIDNIGHT_S1_START_EU = 1773813600, -- March 18, 2026 06:00 UTC
         UNKNOWN_GILDED_STASH_COUNT = -1,
         UNKNOWN_SHARD_COUNT = -1,
         MAX_WEEKLY_GILDED_STASHES = 3,
-        MAX_WEEKLY_SHARDS = 200,
-        MAX_WEEKLY_KEYS = 4,
         MIN_BOUNTIFUL_DELVE_LEVEL = 80,
     },
 }

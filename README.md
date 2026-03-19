@@ -1,20 +1,19 @@
 # DelveBuddy
 
-**DelveBuddy** is a World of Warcraft addon that helps you track weekly Delve activities and rewards across all your characters. It integrates with Data Broker displays (Titan Panel, ChocolateBar, Bazooka, etc.) and provides a minimap icon for quick access. Updated for Midnight pre-patch 12.0.0.
+**DelveBuddy** is a World of Warcraft addon that helps you track weekly Delve activities and rewards across all your characters. It integrates with Data Broker displays (Titan Panel, ChocolateBar, Bazooka, etc.) and provides a minimap icon for quick access. Updated for Midnight 12.0.1 and Season 1.
 
 ## Features
 *	Tracking
-    * **Restored Coffer Keys** (weekly earned and total owned)
-    * **Coffer Key Shards** (weekly earned and total owned)
+    * **Coffer Key Shards** (weekly earned, weekly max, and total owned)
+    * **Restored Coffer Keys** (total owned)
     * **Gilded Stashes** (weekly looted)
     * **Delver’s Bounty** (owned and looted this week)
     * **Great Vault Rewards** (World Delves progress per tier)
     * **Current Gear Item Level** (so you know who needs to do more delves)
 *	UI Enhancements
     * Shows currently active Bountiful Delves
-    * Shows currently active Worldsoul Memories (and Radiant Echoes owned)
-    * Click a Delve or World Soul Memory to create a waypoint to it
-    * Easy access to Delve-O-Bot, Delver's Bounty, and Shrieking Quartz items - one-click!
+    * Click a Delve to create a waypoint to it
+    * Easy access to Delver's Bounty and Beacon of Hope - one-click!
 * Reminders & Warnings
     * Warning when entering a Bountiful Delve without a Restored Coffer Key
     * Warning when entering a Delve if your companion doesn't have an assigned role

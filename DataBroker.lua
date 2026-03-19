@@ -51,7 +51,6 @@ local function GetCharacterSortSettings()
         name = true,
         ilevel = true,
         shards_earned = true,
-        keys_earned = true,
         shards_owned = true,
         coffer_keys_owned = true,
         stashes = true,
@@ -92,9 +91,12 @@ local function GetCharacterSortValue(charKey, data, field)
     if field == "ilevel" then
         return tonumber(data and data.itemLevel) or 0
     elseif field == "shards_earned" then
-        return tonumber(data and data.shardsEarned) or 0
-    elseif field == "keys_earned" then
-        return tonumber(data and data.keysEarned) or 0
+        local earned = tonumber(data and data.shardsEarned) or 0
+        local max = tonumber(data and data.shardsEarnedMax) or 0
+        if max > 0 then
+            return (math.floor((earned / max) * 1000 + 0.5) * 100000) + earned
+        end
+        return earned
     elseif field == "shards_owned" then
         return tonumber(data and data.shardsOwned) or DelveBuddy.IDS.CONST.UNKNOWN_SHARD_COUNT
     elseif field == "coffer_keys_owned" then
@@ -166,15 +168,14 @@ local CHARACTER_SORT_COLUMNS = {
     [1] = { field = "name", label = "Name", tooltip = "Sort by character name" },
     [2] = { field = "ilevel", label = "iLvl" },
     [3] = { field = "shards_earned", label = "Earned" },
-    [4] = { field = "keys_earned", label = "Earned" },
-    [5] = { field = "shards_owned", label = "Owned" },
-    [6] = { field = "coffer_keys_owned", label = "Owned" },
-    [7] = { field = "stashes", label = "Stashes" },
-    [8] = { field = "bounty_owned", label = "Owned" },
-    [9] = { field = "bounty_looted", label = "Looted" },
-    [10] = { field = "vault_1", label = "Vault 1" },
-    [11] = { field = "vault_2", label = "Vault 2" },
-    [12] = { field = "vault_3", label = "Vault 3" },
+    [4] = { field = "shards_owned", label = "Owned" },
+    [5] = { field = "coffer_keys_owned", label = "Owned" },
+    [6] = { field = "stashes", label = "Stashes" },
+    [7] = { field = "bounty_owned", label = "Owned" },
+    [8] = { field = "bounty_looted", label = "Looted" },
+    [9] = { field = "vault_1", label = "Vault 1" },
+    [10] = { field = "vault_2", label = "Vault 2" },
+    [11] = { field = "vault_3", label = "Vault 3" },
 }
 
 local function GetCharacterHeaderLabels()
@@ -183,7 +184,6 @@ local function GetCharacterHeaderLabels()
     local labels = {
         "Name",
         "iLvl",
-        "Earned",
         "Earned",
         "Owned",
         "Owned",
@@ -637,7 +637,6 @@ function DelveBuddy:PopulateCharacterSection(tip)
         " ",
         ILVL_ICON,
         SHARD_ICON,
-        KEY_ICON,
         SHARD_ICON,
         KEY_ICON,
         STASH_ICON,
@@ -661,8 +660,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
         labels[8],
         labels[9],
         labels[10],
-        labels[11],
-        labels[12]
+        labels[11]
     )
     tip:SetCell(labelLine, 1, labels[1], nil, "CENTER")
     AddCharacterSortHeaderHandlers(tip, iconHeaderLine)
@@ -683,9 +681,8 @@ function DelveBuddy:PopulateCharacterSection(tip)
             local icon = self:ClassIconMarkup(data.class)
             local displayName = icon .. self:ClassColoredName(name, data.class)
             local itemLevel = self:FormatItemLevel(data.itemLevel or 0, charKey == current)
-            local shardsEarnedText = self:FormatKeysEarned(data.shardsEarned or 0, self.IDS.CONST.MAX_WEEKLY_SHARDS)
+            local shardsEarnedText = self:FormatShardProgress(data.shardsEarned, data.shardsEarnedMax)
             local shardsOwnedText = self:FormatShardCount(data.shardsOwned)
-            local keysEarnedText = self:FormatKeysEarned(data.keysEarned, self.IDS.CONST.MAX_WEEKLY_KEYS)
             local keysOwnedText = self:FormatKeysOwned(data.keysOwned)
             local stashesText = self:FormatStashes(data.gildedStashes)
 
@@ -699,13 +696,13 @@ function DelveBuddy:PopulateCharacterSection(tip)
             local vault2 = self:FormatVaultCell(rewards and rewards[2])
             local vault3 = self:FormatVaultCell(rewards and rewards[3])
 
-            local line = tip:AddLine(displayName, itemLevel, shardsEarnedText, keysEarnedText, shardsOwnedText, keysOwnedText, 
+            local line = tip:AddLine(displayName, itemLevel, shardsEarnedText, shardsOwnedText, keysOwnedText,
             stashesText, bountyText, lootedText, vault1, vault2, vault3)
 
             -- Only for current character
             if name == UnitName("player") then
                 if vaultRewardsAvailable then
-                    tip:SetCell(line, 10, ("%s %s"):format(vault1, self:ColorText("!", "ffd100")))
+                    tip:SetCell(line, 9, ("%s %s"):format(vault1, self:ColorText("!", "ffd100")))
                 end
 
                 local function showVaultReadyTooltip()
@@ -726,7 +723,7 @@ function DelveBuddy:PopulateCharacterSection(tip)
                 end
 
                 -- Vault cells: open the vault
-                for col = 10, 12 do
+                for col = 9, 11 do
                     if vaultRewardsAvailable then
                         tip:SetCellScript(line, col, "OnEnter", showVaultReadyTooltip)
                         tip:SetCellScript(line, col, "OnLeave", hideVaultReadyTooltip)
@@ -737,9 +734,9 @@ function DelveBuddy:PopulateCharacterSection(tip)
                     end)
                 end
 
-                -- Column 5 (shards owned): overlay a secure button to use the Coffer Key Shard (not for Midnight)
+                -- Column 4 (shards owned): overlay a secure button to use the Coffer Key Shard (not for Midnight)
                 if not self:IsMidnight() and not InCombatLockdown() then
-                    local cell = tip.lines[line].cells[5]
+                    local cell = tip.lines[line].cells[4]
                     if cell then
                         cofferKeyShardButton = DelveBuddy:CreateAndAttachSecureButton(
                             cofferKeyShardButton,
@@ -749,8 +746,8 @@ function DelveBuddy:PopulateCharacterSection(tip)
                     end
 
                     -- Keep these so QTip applies highlight
-                    tip:SetCellScript(line, 5, "OnEnter", function() end)
-                    tip:SetCellScript(line, 5, "OnLeave", function() end)
+                    tip:SetCellScript(line, 4, "OnEnter", function() end)
+                    tip:SetCellScript(line, 4, "OnLeave", function() end)
                 end
             end
         end
@@ -1047,14 +1044,54 @@ function DelveBuddy:FormatItemLevel(itemLevel, useBlizzardColor)
     return self:ColorText(text, hex)
 end
 
-function DelveBuddy:FormatKeysEarned(earned, max)
-    local earnedPart = tostring(earned)
+local function BlendChannel(a, b, t)
+    return math.floor(a + ((b - a) * t) + 0.5)
+end
 
-    if earned >= max then
-        earnedPart = self:ColorText(earnedPart, self.Colors.Green)
+-- Color scales from red (0) to yellow (1/2 max) to green (max).
+function DelveBuddy:GetShardProgressColorHex(earned, max)
+    if not max or max <= 0 then
+        return self.Colors.White
     end
 
-    return earnedPart
+    local ratio = earned / max
+    if ratio < 0 then ratio = 0 end
+    if ratio > 1 then ratio = 1 end
+
+    local fromR, fromG, fromB
+    local toR, toG, toB
+    local t
+
+    if ratio <= 0.5 then
+        fromR, fromG, fromB = 255, 51, 51
+        toR, toG, toB = 255, 255, 0
+        t = ratio / 0.5
+    else
+        fromR, fromG, fromB = 255, 255, 0
+        toR, toG, toB = 0, 255, 0
+        t = (ratio - 0.5) / 0.5
+    end
+
+    return ("%02x%02x%02x"):format(
+        BlendChannel(fromR, toR, t),
+        BlendChannel(fromG, toG, t),
+        BlendChannel(fromB, toB, t)
+    )
+end
+
+function DelveBuddy:FormatShardProgress(earned, max)
+    earned = tonumber(earned) or 0
+    max = tonumber(max) or 0
+
+    if earned == 0 and max == 0 then
+        return self:ColorText("—", self.Colors.Gray)
+    end
+
+    if max <= 0 then
+        return self:ColorText(("%d/?"):format(earned), self.Colors.Gray)
+    end
+
+    return self:ColorText(("%d/%d"):format(earned, max), self:GetShardProgressColorHex(earned, max))
 end
 
 function DelveBuddy:FormatKeysOwned(owned)
@@ -1073,7 +1110,7 @@ function DelveBuddy:FormatShardCount(count)
         return self:ColorText("?", self.Colors.Gray)
     end
 
-    return self:FormatKeysEarned(count or 0, 100)
+    return tostring(count or 0)
 end
 
 function DelveBuddy:FormatStashes(cur)
