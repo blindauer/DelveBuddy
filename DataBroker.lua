@@ -56,39 +56,92 @@ end
 local function ShowDelveRewardsTooltip(owner)
     if not owner then return end
 
-    local lootByTier = {
-        220, 224, 227, 230, 233, 237, 246, 250, 250, 250, 250
+    local rewardQualityByType = {
+        adventurer = 2,
+        veteran = 3,
+        champion = 4,
+        hero = 5,
+        myth = 6,
     }
-    local vaultByTier = {
-        233, 237, 240, 243, 246, 250, 253, 259, 259, 259, 259
+    local crestCurrencyByType = {
+        adventurer = DelveBuddy.IDS.Currency.AdventurerDawncrest,
+        veteran = DelveBuddy.IDS.Currency.VeteranDawncrest,
+        champion = DelveBuddy.IDS.Currency.ChampionDawncrest,
+        hero = DelveBuddy.IDS.Currency.HeroDawncrest,
+        myth = DelveBuddy.IDS.Currency.MythDawncrest,
     }
-    local crestRewardByTier = {
-        nil,
-        nil,
-        nil,
-        { currencyID = DelveBuddy.IDS.Currency.AdventurerDawncrest, count = 5 },
-        { currencyID = DelveBuddy.IDS.Currency.VeteranDawncrest, count = 5 },
-        { currencyID = DelveBuddy.IDS.Currency.VeteranDawncrest, count = 10 },
-        { currencyID = DelveBuddy.IDS.Currency.ChampionDawncrest, count = 4 },
-        { currencyID = DelveBuddy.IDS.Currency.ChampionDawncrest, count = 6 },
-        { currencyID = DelveBuddy.IDS.Currency.ChampionDawncrest, count = 8 },
-        { currencyID = DelveBuddy.IDS.Currency.ChampionDawncrest, count = 10 },
-        { currencyID = DelveBuddy.IDS.Currency.HeroDawncrest, count = 5 },
-    }
-    local crestQualityByCurrency = {
-        [DelveBuddy.IDS.Currency.AdventurerDawncrest] = 2,
-        [DelveBuddy.IDS.Currency.VeteranDawncrest] = 3,
-        [DelveBuddy.IDS.Currency.ChampionDawncrest] = 4,
-        [DelveBuddy.IDS.Currency.HeroDawncrest] = 5,
-    }
-    local nemesisByTier = {
-        nil, nil, nil, nil, nil, nil, nil, 5, 5, 5, 5
-    }
-    local bountyLootByTier = {
-        nil, nil, nil, 237, 243, 246, 250, 259, 259, 259, 259
-    }
-    local bountyCrestsByTier = {
-        nil, nil, nil, 8, 16, 8, 16, 14, 16, 18, 20
+    local rewardsByTier = {
+        [1] = { loot = { type = "adventurer", value = 220 }, vault = { type = "veteran", value = 233 }, hasGildedStash = false },
+        [2] = { loot = { type = "adventurer", value = 224 }, vault = { type = "veteran", value = 237 }, hasGildedStash = false },
+        [3] = { loot = { type = "adventurer", value = 227 }, vault = { type = "veteran", value = 240 }, hasGildedStash = false },
+        [4] = {
+            loot = { type = "adventurer", value = 230 },
+            vault = { type = "veteran", value = 243 },
+            crest = { type = "adventurer", value = 5 },
+            bountyLoot = { type = "veteran", value = 237 },
+            bountyCrest = { type = "veteran", value = 8 },
+            hasGildedStash = false,
+        },
+        [5] = {
+            loot = { type = "adventurer", value = 233 },
+            vault = { type = "champion", value = 246 },
+            crest = { type = "veteran", value = 5 },
+            bountyLoot = { type = "veteran", value = 243 },
+            bountyCrest = { type = "veteran", value = 16 },
+            hasGildedStash = false,
+        },
+        [6] = {
+            loot = { type = "veteran", value = 237 },
+            vault = { type = "champion", value = 250 },
+            crest = { type = "veteran", value = 10 },
+            bountyLoot = { type = "champion", value = 246 },
+            bountyCrest = { type = "champion", value = 8 },
+            hasGildedStash = false,
+        },
+        [7] = {
+            loot = { type = "champion", value = 246 },
+            vault = { type = "champion", value = 253 },
+            crest = { type = "champion", value = 4 },
+            bountyLoot = { type = "champion", value = 250 },
+            bountyCrest = { type = "champion", value = 16 },
+            hasGildedStash = false,
+        },
+        [8] = {
+            loot = { type = "champion", value = 250 },
+            vault = { type = "hero", value = 259 },
+            crest = { type = "champion", value = 6 },
+            nemesisCrest = { type = "champion", value = 5 },
+            bountyLoot = { type = "hero", value = 259 },
+            bountyCrest = { type = "hero", value = 14 },
+            hasGildedStash = false,
+        },
+        [9] = {
+            loot = { type = "champion", value = 250 },
+            vault = { type = "hero", value = 259 },
+            crest = { type = "champion", value = 8 },
+            nemesisCrest = { type = "champion", value = 5 },
+            bountyLoot = { type = "hero", value = 259 },
+            bountyCrest = { type = "hero", value = 16 },
+            hasGildedStash = false,
+        },
+        [10] = {
+            loot = { type = "champion", value = 250 },
+            vault = { type = "hero", value = 259 },
+            crest = { type = "champion", value = 10 },
+            nemesisCrest = { type = "hero", value = 5 },
+            bountyLoot = { type = "hero", value = 259 },
+            bountyCrest = { type = "hero", value = 18 },
+            hasGildedStash = false,
+        },
+        [11] = {
+            loot = { type = "champion", value = 250 },
+            vault = { type = "hero", value = 259 },
+            crest = { type = "hero", value = 5 },
+            nemesisCrest = { type = "hero", value = 5 },
+            bountyLoot = { type = "hero", value = 259 },
+            bountyCrest = { type = "hero", value = 20 },
+            hasGildedStash = true,
+        },
     }
     local function colorWithQuality(value, quality)
         local color = ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
@@ -98,47 +151,31 @@ local function ShowDelveRewardsTooltip(owner)
 
         return tostring(value)
     end
-    local function colorLootByTier(tier, value)
-        local quality = 4
-        if tier <= 4 then
-            quality = 2
-        elseif tier <= 6 then
-            quality = 3
-        end
-
-        return colorWithQuality(value, quality)
+    local function colorWithType(value, rewardType)
+        return colorWithQuality(value, rewardQualityByType[rewardType])
     end
-    local function colorVaultByTier(tier, value)
-        local quality = 5
-        if tier <= 4 then
-            quality = 3
-        elseif tier <= 7 then
-            quality = 4
-        end
-
-        return colorWithQuality(value, quality)
-    end
-    local function formatCrestsByTier(tier)
-        local reward = crestRewardByTier[tier]
-        if not reward then
+    local function formatTypedValue(reward)
+        if not reward or reward.value == nil then
             return ""
         end
 
-        local quality = crestQualityByCurrency[reward.currencyID]
-        return colorWithQuality(reward.count, quality)
+        return colorWithType(reward.value, reward.type)
     end
-    local function formatNemesisByTier(tier)
-        local value = nemesisByTier[tier]
-        if not value then
-            return ""
+    local function getCrestCurrencyInfo(reward)
+        if not reward or not reward.type then
+            return nil
         end
 
-        local quality = tier <= 9 and 4 or 5
-        return colorWithQuality(value, quality)
+        local currencyID = crestCurrencyByType[reward.type]
+        if not currencyID then
+            return nil
+        end
+
+        return C_CurrencyInfo.GetCurrencyInfo(currencyID), currencyID
     end
-    local function formatCrestsAndNemesisByTier(tier)
-        local crests = formatCrestsByTier(tier)
-        local nemesis = formatNemesisByTier(tier)
+    local function formatCrestsAndNemesis(rewards)
+        local crests = formatTypedValue(rewards.crest)
+        local nemesis = formatTypedValue(rewards.nemesisCrest)
         if crests ~= "" and nemesis ~= "" then
             return ("%s |cffffffff+|r %s"):format(crests, nemesis)
         end
@@ -147,35 +184,23 @@ local function ShowDelveRewardsTooltip(owner)
         end
         return nemesis
     end
-    local function formatBountyLootByTier(tier)
-        local value = bountyLootByTier[tier]
-        if not value then
+    local function addCrestLineToTooltip(prefix, reward)
+        if not reward then
             return ""
         end
 
-        local quality = 5
-        if tier <= 5 then
-            quality = 3
-        elseif tier <= 7 then
-            quality = 4
-        end
-
-        return colorWithQuality(value, quality)
-    end
-    local function formatBountyCrestsByTier(tier)
-        local value = bountyCrestsByTier[tier]
-        if not value then
-            return ""
-        end
-
-        local quality = 5
-        if tier <= 5 then
-            quality = 3
-        elseif tier <= 7 then
-            quality = 4
-        end
-
-        return colorWithQuality(value, quality)
+        local crestInfo = getCrestCurrencyInfo(reward)
+        local crestIcon = (crestInfo and crestInfo.iconFileID) and DelveBuddy:TextureIcon(crestInfo.iconFileID, 16) .. " " or ""
+        local crestName = (crestInfo and crestInfo.name) or "Dawncrest"
+        GameTooltip:AddLine(
+            ("%s%s %s%s"):format(
+                prefix or "",
+                colorWithType(reward.value, reward.type),
+                crestIcon,
+                crestName
+            ),
+            1, 1, 1
+        )
     end
 
     HideDelveRewardsTooltip()
@@ -205,16 +230,80 @@ local function ShowDelveRewardsTooltip(owner)
     rewardsTip:AddHeader("Tier", lootHeader, vaultHeader, crestsHeader, bountyLootHeader, bountyCrestsHeader)
 
     for tier = 1, 11 do
-        rewardsTip:AddLine(
+        local rewards = rewardsByTier[tier] or {}
+        local line = rewardsTip:AddLine(
             tostring(tier),
-            colorLootByTier(tier, lootByTier[tier] or "?"),
-            colorVaultByTier(tier, vaultByTier[tier] or "?"),
-            formatCrestsAndNemesisByTier(tier),
-            formatBountyLootByTier(tier),
-            formatBountyCrestsByTier(tier)
+            formatTypedValue(rewards.loot),
+            formatTypedValue(rewards.vault),
+            formatCrestsAndNemesis(rewards),
+            formatTypedValue(rewards.bountyLoot),
+            formatTypedValue(rewards.bountyCrest)
         )
+        rewardsTip:SetLineScript(line, "OnEnter", function()
+            GameTooltip:Hide()
+            GameTooltip:SetOwner(rewardsTip, "ANCHOR_NONE")
+            GameTooltip:ClearLines()
+            GameTooltip:ClearAllPoints()
+            GameTooltip:SetPoint("TOPLEFT", (rewardsTip.frame or rewardsTip), "TOPRIGHT", 8, 0)
+            GameTooltip:AddLine(("Completing a tier %d Bountiful Delve rewards the following:"):format(tier), 1, 1, 1, true)
+            GameTooltip:AddLine(("- Gear (iLvl %s)"):format(formatTypedValue(rewards.loot)), 1, 1, 1)
+            if rewards.crest then
+                addCrestLineToTooltip("- ", rewards.crest)
+            end
+            if rewards.nemesisCrest then
+                local nemesisInfo = getCrestCurrencyInfo(rewards.nemesisCrest)
+                local nemesisIcon = (nemesisInfo and nemesisInfo.iconFileID) and DelveBuddy:TextureIcon(nemesisInfo.iconFileID, 16) .. " " or ""
+                local nemesisName = (nemesisInfo and nemesisInfo.name) or "Dawncrest"
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine(
+                    ("Defeating all nemesis groups awards an additional %s %s%s"):format(
+                        colorWithType(rewards.nemesisCrest.value, rewards.nemesisCrest.type),
+                        nemesisIcon,
+                        nemesisName
+                    ),
+                    1, 1, 1, true
+                )
+            end
+            if rewards.bountyLoot and rewards.bountyCrest then
+                local bountyIcon = DelveBuddy:TextureIcon("Interface\\Icons\\Icon_treasuremap", 16)
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine(
+                    ("Completing it with a %s Trovehunter's Bounty active additionally rewards:"):format(bountyIcon),
+                    1, 1, 1, true
+                )
+                GameTooltip:AddLine(("- Gear (iLvl %s)"):format(formatTypedValue(rewards.bountyLoot)), 1, 1, 1)
+                addCrestLineToTooltip("- ", rewards.bountyCrest)
+            end
+            if rewards.hasGildedStash then
+                local heroCrestName = (heroCrestInfo and heroCrestInfo.name) or "Hero Dawncrest"
+                local heroCrestIcon = (heroCrestInfo and heroCrestInfo.iconFileID) and DelveBuddy:TextureIcon(heroCrestInfo.iconFileID, 16) .. " " or ""
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine(
+                    ("The first %d completed per week additionally reward a Gilded Stash containing:"):format(
+                        DelveBuddy.IDS.CONST.MAX_WEEKLY_GILDED_STASHES
+                    ),
+                    1, 1, 1, true
+                )
+                GameTooltip:AddLine(
+                    ("- %s %s%s"):format(
+                        colorWithQuality(10, 5),
+                        heroCrestIcon,
+                        heroCrestName
+                    ),
+                    1, 1, 1
+                )
+            end
+            GameTooltip:Show()
+        end)
+        rewardsTip:SetLineScript(line, "OnLeave", function()
+            GameTooltip:Hide()
+        end)
     end
 
+    rewardsTip:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+        MaybeHideHoverTips()
+    end)
     rewardsTip:Show()
 
     DelveBuddy.delveRewardsTip = rewardsTip
@@ -442,7 +531,7 @@ MaybeHideHoverTips = function()
     if tipMode ~= "hover" then return end
     C_Timer.After(0.1, function()
         if ldbHovering then return end
-        if not (_over(DelveBuddy.charTip) or _over(DelveBuddy.delveTip)) then
+        if not (_over(DelveBuddy.charTip) or _over(DelveBuddy.delveTip) or _over(DelveBuddy.delveRewardsTip)) then
             HideAllTips()
         end
     end)
@@ -943,7 +1032,7 @@ function DelveBuddy:PopulateDelveSection(tip)
         ShowDelveRewardsTooltip(tip)
     end)
     tip:SetLineScript(headerLine, "OnLeave", function()
-        HideDelveRewardsTooltip()
+        MaybeHideHoverTips()
     end)
     for poiID, d in pairs(delves) do
         local info = C_AreaPoiInfo.GetAreaPOIInfo(d.zoneID, poiID)
@@ -1318,7 +1407,7 @@ end
 function DelveBuddy:ShowMinimapHint(owner)
     if not owner then return end
     -- If our big tooltips are open, don't show the hint
-    if self.charTip or self.delveTip then return end
+    if self.charTip or self.delveTip or self.delveRewardsTip then return end
     GameTooltip:Hide()
     GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     GameTooltip:ClearLines()
