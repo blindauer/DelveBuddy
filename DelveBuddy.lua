@@ -134,7 +134,6 @@ function DelveBuddy:SlashCommand(input)
             -- apply immediately if our LibQTip tips are open
             if self.charTip then self.charTip:SetScale(v) end
             if self.delveTip then self.delveTip:SetScale(v) end
-            if self.worldTip then self.worldTip:SetScale(v) end
             self:Print(("Tooltip scale set to %d%%"):format(math.floor(v*100+0.5)))
         else
             self:Print("Usage: /db scale <0.75-2.0>")
@@ -869,32 +868,6 @@ function DelveBuddy:GetAllDelvePOIs()
     )
 
     return pois
-end
-
-function DelveBuddy:GetWorldSoulMemories()
-    local memories = {}
-
-    -- Worldsoul memories appear not to be a thing in Midnight.
-    if self:IsMidnight() then return memories end
-
-    for _, zoneID in pairs(self.Zone) do
-        local pois = C_AreaPoiInfo.GetEventsForMap(zoneID) or {}
-        for _, poiID in ipairs(pois) do
-            local poi = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poiID)
-            if poi and poi.atlasName == "UI-EventPoi-WorldSoulMemory" then
-                local name = (poi.name and (poi.name:match(":%s*(.+)") or poi.name)) or "World Soul Memory"
-                memories[poiID] = {
-                    name      = name,
-                    zoneID    = zoneID,
-                    x         = poi.position and poi.position.x * 100 or 0,
-                    y         = poi.position and poi.position.y * 100 or 0,
-                    areaPoiID = poi.areaPoiID,
-                }
-            end
-        end
-    end
-
-    return memories
 end
 
 function DelveBuddy:IsInBountifulDelve()

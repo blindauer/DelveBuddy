@@ -40,7 +40,6 @@ local function HideAllTips()
 
     if DelveBuddy.charTip  then DelveBuddy.charTip:Hide();  QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
     if DelveBuddy.delveTip then DelveBuddy.delveTip:Hide(); QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
-    if DelveBuddy.worldTip then DelveBuddy.worldTip:Hide(); QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip = nil end
 end
 
 local function GetCharacterSortSettings()
@@ -265,7 +264,7 @@ local function MaybeHideHoverTips()
     if tipMode ~= "hover" then return end
     C_Timer.After(0.1, function()
         if ldbHovering then return end
-        if not (_over(DelveBuddy.charTip) or _over(DelveBuddy.delveTip) or _over(DelveBuddy.worldTip)) then
+        if not (_over(DelveBuddy.charTip) or _over(DelveBuddy.delveTip)) then
             HideAllTips()
         end
     end)
@@ -305,9 +304,9 @@ local function OpenAllTips(display, mode)
     delveTip:EnableMouse(true)
     delveTip:ClearAllPoints()
     if stackUp then
-        delveTip:SetPoint("BOTTOMRIGHT", (charTip.frame or charTip), "TOP", -4, 0)
+        delveTip:SetPoint("BOTTOM", (charTip.frame or charTip), "TOP", 0, 4)
     else
-        delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
+        delveTip:SetPoint("TOP", (charTip.frame or charTip), "BOTTOM", 0, -4)
     end
     delveTip:SetScale(DelveBuddy.db.global.tooltipScale)
     delveTip:SetHitRectInsets(-2, -2, -2, -2)
@@ -317,24 +316,6 @@ local function OpenAllTips(display, mode)
         MaybeHideHoverTips()
     end)
     delveTip:Show()
-
-    -- World Soul Memories tooltip
-    local worldTip = QTip:Acquire("DelveBuddyWorldTip", 2, "LEFT","LEFT")
-    worldTip:EnableMouse(true)
-    worldTip:ClearAllPoints()
-    if stackUp then
-        worldTip:SetPoint("BOTTOMLEFT", (charTip.frame or charTip), "TOP", 4, 0)
-    else
-        worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
-    end
-    worldTip:SetScale(DelveBuddy.db.global.tooltipScale)
-    worldTip:SetHitRectInsets(-2, -2, -2, -2)
-    DelveBuddy:PopulateWorldSoulSection(worldTip)
-    DelveBuddy.worldTip = worldTip
-    worldTip:SetScript("OnLeave", function()
-        MaybeHideHoverTips()
-    end)
-    worldTip:Show()
 end
 
 -- Custom dropdown entry: slider for tooltip scale
@@ -365,7 +346,6 @@ local function CreateTooltipScaleDropdownEntry()
         _G[slider:GetName() .. "Text"]:SetText(string.format("%d%%", math.floor(val * 100 + 0.5)))
         if DelveBuddy.charTip then DelveBuddy.charTip:SetScale(val) end
         if DelveBuddy.delveTip then DelveBuddy.delveTip:SetScale(val) end
-        if DelveBuddy.worldTip then DelveBuddy.worldTip:SetScale(val) end
     end
 
     slider:SetScript("OnValueChanged", function(self, value)
@@ -407,7 +387,7 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
                 OpenAllTips(self, "pinned")
             end
         else
-            if DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip then
+            if DelveBuddy.charTip or DelveBuddy.delveTip then
                 HideAllTips()
             end
         end
@@ -423,7 +403,7 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
             HideAllTips()
         end
         -- If hover tips are already up, do nothing to avoid flicker
-        if tipMode == "hover" and (DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip) then
+        if tipMode == "hover" and (DelveBuddy.charTip or DelveBuddy.delveTip) then
             return
         end
         OpenAllTips(display, "hover")
@@ -971,46 +951,6 @@ function DelveBuddy:PopulateDelveSection(tip)
     end
 end
 
-function DelveBuddy:PopulateWorldSoulSection(tip)
-    tip:Clear()
-
-    local memories = self:GetWorldSoulMemories() or {}
-    if not next(memories) then
-        tip:SetColumnLayout(1, "LEFT")
-        tip:AddLine("|cffaaaaaaNo World Soul Memories available|r")
-        return
-    end
-
-    tip:SetColumnLayout(2, "LEFT", "LEFT")
-    local echoesCount = GetItemCount(self.IDS.Item.RadiantEcho)
-    local numText = tostring(echoesCount)
-    if echoesCount >= 5 then
-        numText = self:ColorText(numText, self.Colors.Green)
-    end
-    local echoesText = ("|TInterface\\Icons\\spell_holy_pureofheart:16:16:0:0|t x %s"):format(numText)
-    tip:AddHeader("|cff80c0ffWorld Soul Memories|r", echoesText)
-
-    -- name, zone
-    for poiID, m in pairs(memories) do
-        local zoneName = self:GetZoneName(m.zoneID)
-        local poiInfo = C_AreaPoiInfo.GetAreaPOIInfo(m.zoneID, poiID)
-        local icon = ""
-        if poiInfo and poiInfo.atlasName then
-            icon = self:AtlasIcon(poiInfo.atlasName) .. " "
-        else
-            -- Fallback to the known World Soul Memory atlas if not provided
-            icon = self:AtlasIcon("UI-EventPoi-WorldSoulMemory") .. " "
-        end
-        local displayName = icon .. (m.name or "World Soul Memory")
-
-        local line = tip:AddLine(displayName, zoneName)
-        tip:SetLineScript(line, "OnMouseUp", function(_, button)
-            HideAllTips()
-            self:SetWaypoint(m)
-        end)
-    end
-end
-
 DelveBuddy.Colors = {
     Green = "00ff00",
     Red   = "ff3333",
@@ -1192,7 +1132,7 @@ end
 function DelveBuddy:ShowMinimapHint(owner)
     if not owner then return end
     -- If our big tooltips are open, don't show the hint
-    if self.charTip or self.delveTip or self.worldTip then return end
+    if self.charTip or self.delveTip then return end
     GameTooltip:Hide()
     GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     GameTooltip:ClearLines()
