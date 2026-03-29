@@ -7,6 +7,7 @@
 * "Delver's Bounty Available" messge wrong - use actual item name - DONE
 * New nemesis lure: beacon of hope
 * Maybe busted
+  * Woldsoul memories - are those a thing at all in Midnight??
   * New Nemesis Lure item not working?
   * Fix LibQTip LUA error 
     * `HookScript is not allowed on LibQTip tooltips`
@@ -22,6 +23,7 @@
   - Stashes looted
 * Zero out Coffer Key count when logging in after S1 started (if last login was before) - DONE
 * Disable Coffer Key Shard cell click in Midnight (b/c shards no longer an item). - DONE
+* Don't show worldsoul memories, because not relevant to Midnight S1. - DONE
 * Don't show delve-o-bot, because not relevant to Midnight S1. - DONE
 * Show new Delves - DONE
 * Only show delves for L90 chars? - DONE
@@ -34,3 +36,10 @@
     * Would be good to refactor some of that stuff, too.
 * Feature: reminder for Shrieking Quartz?
 * Feature: show changelog on first login after update?
+* Feature: Bountiful Delve Cheat Sheet
+
+Rewards module:
+* If broker bar on bottom, rewards tip shown in weird spot
+* If broker bar, or using map icon, reward explanation tooltip comes up in weird spot
+* TODO need more testing of other edge cases
+
