@@ -40,7 +40,7 @@ local function HideAllTips()
 
     if DelveBuddy.charTip  then DelveBuddy.charTip:Hide();  QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
     if DelveBuddy.delveTip then DelveBuddy.delveTip:Hide(); QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
-    if DelveBuddy.delveRewardsTip then DelveBuddy.delveRewardsTip:Hide(); QTip:Release(DelveBuddy.delveRewardsTip); DelveBuddy.delveRewardsTip = nil end
+    DelveBuddy:HideDelveRewardsTooltip()
 end
 
 local MaybeHideHoverTips
@@ -536,6 +536,7 @@ MaybeHideHoverTips = function()
         end
     end)
 end
+DelveBuddy.MaybeHideHoverTips = MaybeHideHoverTips
 
 -- Helper to build/show all tooltips anchored to a display owner
 local function OpenAllTips(display, mode)
@@ -1004,7 +1005,7 @@ end
 
 function DelveBuddy:PopulateDelveSection(tip)
     tip:Clear()
-    HideDelveRewardsTooltip()
+    self:HideDelveRewardsTooltip()
 
     -- Get all bountiful delves; if none, show a placeholder message
     local delves = self:GetDelves() or {}
@@ -1029,7 +1030,7 @@ function DelveBuddy:PopulateDelveSection(tip)
     local keysHeaderText = ("%s x %s"):format(keyIcon, ownedText)
     local headerLine = tip:AddHeader("|cffdda0ddBountiful Delves|r", keysHeaderText)
     tip:SetLineScript(headerLine, "OnEnter", function()
-        ShowDelveRewardsTooltip(tip)
+        self:ShowDelveRewardsTooltip(tip)
     end)
     tip:SetLineScript(headerLine, "OnLeave", function()
         MaybeHideHoverTips()

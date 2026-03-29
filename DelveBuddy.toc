@@ -22,4 +22,5 @@ libs\LibButtonGlow-1.0\LibButtonGlow-1.0.lua
 
 DelveBuddy.lua
 Constants.lua
+Rewards.lua
 DataBroker.lua
