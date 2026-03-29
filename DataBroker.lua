@@ -40,6 +40,184 @@ local function HideAllTips()
 
     if DelveBuddy.charTip  then DelveBuddy.charTip:Hide();  QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
     if DelveBuddy.delveTip then DelveBuddy.delveTip:Hide(); QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
+    if DelveBuddy.delveRewardsTip then DelveBuddy.delveRewardsTip:Hide(); QTip:Release(DelveBuddy.delveRewardsTip); DelveBuddy.delveRewardsTip = nil end
+end
+
+local MaybeHideHoverTips
+
+local function HideDelveRewardsTooltip()
+    if DelveBuddy.delveRewardsTip then
+        DelveBuddy.delveRewardsTip:Hide()
+        QTip:Release(DelveBuddy.delveRewardsTip)
+        DelveBuddy.delveRewardsTip = nil
+    end
+end
+
+local function ShowDelveRewardsTooltip(owner)
+    if not owner then return end
+
+    local lootByTier = {
+        220, 224, 227, 230, 233, 237, 246, 250, 250, 250, 250
+    }
+    local vaultByTier = {
+        233, 237, 240, 243, 246, 250, 253, 259, 259, 259, 259
+    }
+    local crestRewardByTier = {
+        nil,
+        nil,
+        nil,
+        { currencyID = DelveBuddy.IDS.Currency.AdventurerDawncrest, count = 5 },
+        { currencyID = DelveBuddy.IDS.Currency.VeteranDawncrest, count = 5 },
+        { currencyID = DelveBuddy.IDS.Currency.VeteranDawncrest, count = 10 },
+        { currencyID = DelveBuddy.IDS.Currency.ChampionDawncrest, count = 4 },
+        { currencyID = DelveBuddy.IDS.Currency.ChampionDawncrest, count = 6 },
+        { currencyID = DelveBuddy.IDS.Currency.ChampionDawncrest, count = 8 },
+        { currencyID = DelveBuddy.IDS.Currency.ChampionDawncrest, count = 10 },
+        { currencyID = DelveBuddy.IDS.Currency.HeroDawncrest, count = 5 },
+    }
+    local crestQualityByCurrency = {
+        [DelveBuddy.IDS.Currency.AdventurerDawncrest] = 2,
+        [DelveBuddy.IDS.Currency.VeteranDawncrest] = 3,
+        [DelveBuddy.IDS.Currency.ChampionDawncrest] = 4,
+        [DelveBuddy.IDS.Currency.HeroDawncrest] = 5,
+    }
+    local nemesisByTier = {
+        nil, nil, nil, nil, nil, nil, nil, 5, 5, 5, 5
+    }
+    local bountyLootByTier = {
+        nil, nil, nil, 237, 243, 246, 250, 259, 259, 259, 259
+    }
+    local bountyCrestsByTier = {
+        nil, nil, nil, 8, 16, 8, 16, 14, 16, 18, 20
+    }
+    local function colorWithQuality(value, quality)
+        local color = ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[quality]
+        if color and color.hex then
+            return ("|c%s%s|r"):format(color.hex:gsub("|c", ""), tostring(value))
+        end
+
+        return tostring(value)
+    end
+    local function colorLootByTier(tier, value)
+        local quality = 4
+        if tier <= 4 then
+            quality = 2
+        elseif tier <= 6 then
+            quality = 3
+        end
+
+        return colorWithQuality(value, quality)
+    end
+    local function colorVaultByTier(tier, value)
+        local quality = 5
+        if tier <= 4 then
+            quality = 3
+        elseif tier <= 7 then
+            quality = 4
+        end
+
+        return colorWithQuality(value, quality)
+    end
+    local function formatCrestsByTier(tier)
+        local reward = crestRewardByTier[tier]
+        if not reward then
+            return ""
+        end
+
+        local quality = crestQualityByCurrency[reward.currencyID]
+        return colorWithQuality(reward.count, quality)
+    end
+    local function formatNemesisByTier(tier)
+        local value = nemesisByTier[tier]
+        if not value then
+            return ""
+        end
+
+        local quality = tier <= 9 and 4 or 5
+        return colorWithQuality(value, quality)
+    end
+    local function formatCrestsAndNemesisByTier(tier)
+        local crests = formatCrestsByTier(tier)
+        local nemesis = formatNemesisByTier(tier)
+        if crests ~= "" and nemesis ~= "" then
+            return ("%s |cffffffff+|r %s"):format(crests, nemesis)
+        end
+        if crests ~= "" then
+            return crests
+        end
+        return nemesis
+    end
+    local function formatBountyLootByTier(tier)
+        local value = bountyLootByTier[tier]
+        if not value then
+            return ""
+        end
+
+        local quality = 5
+        if tier <= 5 then
+            quality = 3
+        elseif tier <= 7 then
+            quality = 4
+        end
+
+        return colorWithQuality(value, quality)
+    end
+    local function formatBountyCrestsByTier(tier)
+        local value = bountyCrestsByTier[tier]
+        if not value then
+            return ""
+        end
+
+        local quality = 5
+        if tier <= 5 then
+            quality = 3
+        elseif tier <= 7 then
+            quality = 4
+        end
+
+        return colorWithQuality(value, quality)
+    end
+
+    HideDelveRewardsTooltip()
+
+    local rewardsTip = QTip:Acquire(
+        "DelveBuddyDelveRewardsTip",
+        6,
+        "LEFT", "LEFT", "LEFT", "LEFT", "LEFT", "LEFT"
+    )
+    rewardsTip:EnableMouse(true)
+    rewardsTip:ClearAllPoints()
+    rewardsTip:SetPoint("TOPLEFT", (owner.frame or owner), "TOPRIGHT", 8, 0)
+    rewardsTip:SetScale(DelveBuddy.db.global.tooltipScale)
+    rewardsTip:SetHitRectInsets(-2, -2, -2, -2)
+    rewardsTip:Clear()
+    rewardsTip:SetColumnLayout(6, "CENTER", "CENTER", "CENTER", "CENTER", "CENTER", "CENTER")
+    local lootHeader = DelveBuddy:TextureIcon("Interface\\Icons\\inv_helmet_06", 16)
+    local vaultHeader = DelveBuddy:TextureIcon("Interface\\Icons\\Delves-scenario-treasure-upgrade", 16)
+    local crestsHeader = "Crests"
+    local bountyLootHeader = DelveBuddy:TextureIcon("Interface\\Icons\\Icon_treasuremap", 16) .. " " .. lootHeader
+    local bountyCrestsHeader = "Bounty Crests"
+    local heroCrestInfo = C_CurrencyInfo.GetCurrencyInfo(DelveBuddy.IDS.Currency.HeroDawncrest)
+    if heroCrestInfo and heroCrestInfo.iconFileID then
+        crestsHeader = DelveBuddy:TextureIcon(heroCrestInfo.iconFileID, 16)
+        bountyCrestsHeader = DelveBuddy:TextureIcon("Interface\\Icons\\Icon_treasuremap", 16) .. " " .. crestsHeader
+    end
+    rewardsTip:AddHeader("Tier", lootHeader, vaultHeader, crestsHeader, bountyLootHeader, bountyCrestsHeader)
+
+    for tier = 1, 11 do
+        rewardsTip:AddLine(
+            tostring(tier),
+            colorLootByTier(tier, lootByTier[tier] or "?"),
+            colorVaultByTier(tier, vaultByTier[tier] or "?"),
+            formatCrestsAndNemesisByTier(tier),
+            formatBountyLootByTier(tier),
+            formatBountyCrestsByTier(tier)
+        )
+    end
+
+    rewardsTip:Show()
+
+    DelveBuddy.delveRewardsTip = rewardsTip
 end
 
 local function GetCharacterSortSettings()
@@ -260,7 +438,7 @@ local function _over(t)
 end
 
 -- After leaving one tip, wait a frame and hide all if we're not over any tip or the LDB/menu
-local function MaybeHideHoverTips()
+MaybeHideHoverTips = function()
     if tipMode ~= "hover" then return end
     C_Timer.After(0.1, function()
         if ldbHovering then return end
@@ -346,6 +524,7 @@ local function CreateTooltipScaleDropdownEntry()
         _G[slider:GetName() .. "Text"]:SetText(string.format("%d%%", math.floor(val * 100 + 0.5)))
         if DelveBuddy.charTip then DelveBuddy.charTip:SetScale(val) end
         if DelveBuddy.delveTip then DelveBuddy.delveTip:SetScale(val) end
+        if DelveBuddy.delveRewardsTip then DelveBuddy.delveRewardsTip:SetScale(val) end
     end
 
     slider:SetScript("OnValueChanged", function(self, value)
@@ -736,14 +915,15 @@ end
 
 function DelveBuddy:PopulateDelveSection(tip)
     tip:Clear()
+    HideDelveRewardsTooltip()
 
     -- Get all bountiful delves; if none, show a placeholder message
     local delves = self:GetDelves() or {}
-    if not next(delves) then
-        tip:SetColumnLayout(1, "LEFT")
-        tip:AddLine("|cffaaaaaaNo bountiful delves available|r")
-        return
-    end
+    -- if not next(delves) then
+    --     tip:SetColumnLayout(1, "LEFT")
+    --     tip:AddLine("|cffaaaaaaNo bountiful delves available|r")
+    --     return
+    -- end
 
     -- Otherwise show the list
     tip:SetColumnLayout(2, "LEFT", "LEFT")
@@ -758,7 +938,13 @@ function DelveBuddy:PopulateDelveSection(tip)
         ownedText = self:ColorText(ownedText, self.Colors.Red)
     end
     local keysHeaderText = ("%s x %s"):format(keyIcon, ownedText)
-    tip:AddHeader("|cffdda0ddBountiful Delves|r", keysHeaderText)
+    local headerLine = tip:AddHeader("|cffdda0ddBountiful Delves|r", keysHeaderText)
+    tip:SetLineScript(headerLine, "OnEnter", function()
+        ShowDelveRewardsTooltip(tip)
+    end)
+    tip:SetLineScript(headerLine, "OnLeave", function()
+        HideDelveRewardsTooltip()
+    end)
     for poiID, d in pairs(delves) do
         local info = C_AreaPoiInfo.GetAreaPOIInfo(d.zoneID, poiID)
         local icon = ""
