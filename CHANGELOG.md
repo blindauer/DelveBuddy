@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.1.3 ==
+Fixes:
+* Now properly shows the number of Gilded Stashes looted
+
 == 2.1.2 ==
 Enhancements:
 * Updated UI to better reflect how shards and keys are earned in Midnight Season 1

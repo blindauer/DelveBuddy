@@ -419,7 +419,7 @@ function DelveBuddy:GetGildedStashCounts()
 
     local cur, max = UNKNOWN, fallback
 
-    local widget = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(6659)
+    local widget = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(self.IDS.CONST.WIDGET_ID_GILDED_STASH)
     local tooltip = widget and widget.spellInfo and widget.spellInfo.tooltip
     if tooltip then
         local c, m = tooltip:match("(%d+)%s*/%s*(%d+)")

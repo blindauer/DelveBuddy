@@ -4,7 +4,7 @@
 * Put in failsafe code for if doing stuff in delves when in combat?
 
 === Midnight ===
-* "Delver's Bounty Available" messge wrong - use actual item name
+* "Delver's Bounty Available" messge wrong - use actual item name - DONE
 * New nemesis lure: beacon of hope
 * Maybe busted
   * Woldsoul memories - are those a thing at all in Midnight??
