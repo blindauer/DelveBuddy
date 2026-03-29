@@ -1008,11 +1008,11 @@ function DelveBuddy:PopulateDelveSection(tip)
 
     -- Get all bountiful delves; if none, show a placeholder message
     local delves = self:GetDelves() or {}
-    -- if not next(delves) then
-    --     tip:SetColumnLayout(1, "LEFT")
-    --     tip:AddLine("|cffaaaaaaNo bountiful delves available|r")
-    --     return
-    -- end
+    if not next(delves) then
+        tip:SetColumnLayout(1, "LEFT")
+        tip:AddLine("|cffaaaaaaNo bountiful delves available|r")
+        return
+    end
 
     -- Otherwise show the list
     tip:SetColumnLayout(2, "LEFT", "LEFT")
