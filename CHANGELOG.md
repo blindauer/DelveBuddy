@@ -1,8 +1,9 @@
 = DelveBuddy Changelog =
 
-== 2.2-beta.1 ==
+== 2.2 ==
 Enhancements:
-* Added new rewards tooltip showing delve rewards per tier
+* Added new rewards tooltip showing delve rewards per tier. 
+  * Hold the Shift key while hovering over the data broker icon, or Shift+Click the minimap icon to see it.
 * Removed Worldsoul Memories. It's not a thing in Midnight.
 
 == 2.1.3 ==

@@ -6,27 +6,28 @@
 *	Tracking
     * **Coffer Key Shards** (weekly earned, weekly max, and total owned)
     * **Restored Coffer Keys** (total owned)
-    * **Gilded Stashes** (weekly looted)
-    * **Delver’s Bounty** (owned and looted this week)
+    * **Gilded Stashes** (weekly looted, weekly max)
+    * **Trovehunter's Bounty** (owned and looted this week)
     * **Great Vault Rewards** (World Delves progress per tier)
     * **Current Gear Item Level** (so you know who needs to do more delves)
 *	UI Enhancements
     * Shows currently active Bountiful Delves
     * Click a Delve to create a waypoint to it
-    * Easy access to Delver's Bounty and Beacon of Hope - one-click!
+    * Easy access to Trovehunter's Bounty and Beacon of Hope - one-click!
 * Reminders & Warnings
+    * Reminder to use Trovehunter's Bounty when inside a Bountiful Delve
     * Warning when entering a Bountiful Delve without a Restored Coffer Key
     * Warning when entering a Delve if your companion doesn't have an assigned role
-    * Reminds you to use Delver’s Bounty when inside a Bountiful Delve
 
 ## Installation
 * For the latest stable version, download from CurseForge: https://www.curseforge.com/wow/addons/delvebuddy
 * For cutting-edge, not yet released version, clone or download this repository into your WoW `Interface/AddOns` folder.
 
 ## Usage
-* **Minimap icon:** Click the minimap icon to show/hide DelveBuddy's tooltip UI.
+* **Minimap icon:** Click the minimap icon to show/hide DelveBuddy's tooltip UI.rewards.
 * **Data Broker:** Hover over the LibDataBroker icon to see DelveBuddy's tooltip UI.
 * **Right-click** the broker or minimap icon for options menu
+* **Shift+click** the minimap icon (or Shift-hover on the DataBroker) to show the rewards UI.
 * **Slash Commands:**
     * `/db minimap` — Show/hide the minimap icon.
     * `/db scale <0.75-2.0>` -- Set tooltip scale
