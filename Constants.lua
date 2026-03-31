@@ -19,6 +19,11 @@ DelveBuddy.Zone = {
 
 DelveBuddy.IDS = {
     Currency = {
+        AdventurerDawncrest = 3383,
+        VeteranDawncrest = 3341,
+        ChampionDawncrest = 3343,
+        HeroDawncrest = 3345,
+        MythDawncrest = 3347,
         RestoredCofferKey = 3028,
         CofferKeyShard = 3310,
     },

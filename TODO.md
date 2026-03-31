@@ -36,3 +36,10 @@
     * Would be good to refactor some of that stuff, too.
 * Feature: reminder for Shrieking Quartz?
 * Feature: show changelog on first login after update?
+* Feature: Bountiful Delve Cheat Sheet
+
+Rewards module:
+* If broker bar on bottom, rewards tip shown in weird spot
+* If broker bar, or using map icon, reward explanation tooltip comes up in weird spot
+* TODO need more testing of other edge cases
+

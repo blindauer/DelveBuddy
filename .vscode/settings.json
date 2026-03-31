@@ -64,7 +64,8 @@
         "ActionButtonUtil",
         "AnimateTexCoords",
         "WeeklyRewards_ShowUI",
-        "DelvesCompanionConfigurationFrame"
+        "DelvesCompanionConfigurationFrame",
+        "ITEM_QUALITY_COLORS"
     ],
     "Lua.type.weakUnionCheck": true
 }

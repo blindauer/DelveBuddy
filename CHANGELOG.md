@@ -1,5 +1,10 @@
 = DelveBuddy Changelog =
 
+== 2.2-beta.1 ==
+Enhancements:
+* Added new rewards tooltip showing delve rewards per tier
+* Removed Worldsoul Memories. It's not a thing in Midnight.
+
 == 2.1.3 ==
 Fixes:
 * Now properly shows the number of Gilded Stashes looted

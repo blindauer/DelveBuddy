@@ -40,8 +40,10 @@ local function HideAllTips()
 
     if DelveBuddy.charTip  then DelveBuddy.charTip:Hide();  QTip:Release(DelveBuddy.charTip);  DelveBuddy.charTip  = nil end
     if DelveBuddy.delveTip then DelveBuddy.delveTip:Hide(); QTip:Release(DelveBuddy.delveTip); DelveBuddy.delveTip = nil end
-    if DelveBuddy.worldTip then DelveBuddy.worldTip:Hide(); QTip:Release(DelveBuddy.worldTip); DelveBuddy.worldTip = nil end
+    DelveBuddy:HideDelveRewardsTooltip()
 end
+
+local MaybeHideHoverTips
 
 local function GetCharacterSortSettings()
     local g = DelveBuddy.db and DelveBuddy.db.global or {}
@@ -261,15 +263,16 @@ local function _over(t)
 end
 
 -- After leaving one tip, wait a frame and hide all if we're not over any tip or the LDB/menu
-local function MaybeHideHoverTips()
+MaybeHideHoverTips = function()
     if tipMode ~= "hover" then return end
     C_Timer.After(0.1, function()
         if ldbHovering then return end
-        if not (_over(DelveBuddy.charTip) or _over(DelveBuddy.delveTip) or _over(DelveBuddy.worldTip)) then
+        if not (_over(DelveBuddy.charTip) or _over(DelveBuddy.delveTip) or _over(DelveBuddy.delveRewardsTip)) then
             HideAllTips()
         end
     end)
 end
+DelveBuddy.MaybeHideHoverTips = MaybeHideHoverTips
 
 -- Helper to build/show all tooltips anchored to a display owner
 local function OpenAllTips(display, mode)
@@ -305,9 +308,9 @@ local function OpenAllTips(display, mode)
     delveTip:EnableMouse(true)
     delveTip:ClearAllPoints()
     if stackUp then
-        delveTip:SetPoint("BOTTOMRIGHT", (charTip.frame or charTip), "TOP", -4, 0)
+        delveTip:SetPoint("BOTTOM", (charTip.frame or charTip), "TOP", 0, 4)
     else
-        delveTip:SetPoint("TOPRIGHT", (charTip.frame or charTip), "BOTTOM", -4, 0)
+        delveTip:SetPoint("TOP", (charTip.frame or charTip), "BOTTOM", 0, -4)
     end
     delveTip:SetScale(DelveBuddy.db.global.tooltipScale)
     delveTip:SetHitRectInsets(-2, -2, -2, -2)
@@ -317,24 +320,6 @@ local function OpenAllTips(display, mode)
         MaybeHideHoverTips()
     end)
     delveTip:Show()
-
-    -- World Soul Memories tooltip
-    local worldTip = QTip:Acquire("DelveBuddyWorldTip", 2, "LEFT","LEFT")
-    worldTip:EnableMouse(true)
-    worldTip:ClearAllPoints()
-    if stackUp then
-        worldTip:SetPoint("BOTTOMLEFT", (charTip.frame or charTip), "TOP", 4, 0)
-    else
-        worldTip:SetPoint("TOPLEFT", (charTip.frame or charTip), "BOTTOM", 4, 0)
-    end
-    worldTip:SetScale(DelveBuddy.db.global.tooltipScale)
-    worldTip:SetHitRectInsets(-2, -2, -2, -2)
-    DelveBuddy:PopulateWorldSoulSection(worldTip)
-    DelveBuddy.worldTip = worldTip
-    worldTip:SetScript("OnLeave", function()
-        MaybeHideHoverTips()
-    end)
-    worldTip:Show()
 end
 
 -- Custom dropdown entry: slider for tooltip scale
@@ -365,7 +350,7 @@ local function CreateTooltipScaleDropdownEntry()
         _G[slider:GetName() .. "Text"]:SetText(string.format("%d%%", math.floor(val * 100 + 0.5)))
         if DelveBuddy.charTip then DelveBuddy.charTip:SetScale(val) end
         if DelveBuddy.delveTip then DelveBuddy.delveTip:SetScale(val) end
-        if DelveBuddy.worldTip then DelveBuddy.worldTip:SetScale(val) end
+        if DelveBuddy.delveRewardsTip then DelveBuddy.delveRewardsTip:SetScale(val) end
     end
 
     slider:SetScript("OnValueChanged", function(self, value)
@@ -400,6 +385,15 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
         local name = self and self.GetName and self:GetName()
         local isMinimap = (type(name) == "string" and name:find("^LibDBIcon")) or false
         if isMinimap then
+            if IsShiftKeyDown() then
+                GameTooltip:Hide()
+                if DelveBuddy.delveRewardsTip then
+                    DelveBuddy:HideDelveRewardsTooltip()
+                else
+                    DelveBuddy:ShowDelveRewardsTooltip(self)
+                end
+                return
+            end
             if tipMode == "pinned" then
                 HideAllTips()
             else
@@ -407,7 +401,16 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
                 OpenAllTips(self, "pinned")
             end
         else
-            if DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip then
+            if IsShiftKeyDown() then
+                local wasShowing = DelveBuddy.delveRewardsTip ~= nil
+                HideAllTips()
+                if not wasShowing then
+                    tipMode = "hover"
+                    DelveBuddy:ShowDelveRewardsTooltip(self)
+                end
+                return
+            end
+            if DelveBuddy.charTip or DelveBuddy.delveTip then
                 HideAllTips()
             end
         end
@@ -419,11 +422,21 @@ DelveBuddy.ldb = LDB:NewDataObject("DelveBuddy", {
             DelveBuddy:ShowMinimapHint(display)
             return
         end
+        if IsShiftKeyDown() then
+            -- Avoid flicker if rewards tip is already up in hover mode
+            if tipMode == "hover" and DelveBuddy.delveRewardsTip then
+                return
+            end
+            HideAllTips()
+            tipMode = "hover"
+            DelveBuddy:ShowDelveRewardsTooltip(display)
+            return
+        end
         if tipMode == "pinned" then
             HideAllTips()
         end
         -- If hover tips are already up, do nothing to avoid flicker
-        if tipMode == "hover" and (DelveBuddy.charTip or DelveBuddy.delveTip or DelveBuddy.worldTip) then
+        if tipMode == "hover" and (DelveBuddy.charTip or DelveBuddy.delveTip) then
             return
         end
         OpenAllTips(display, "hover")
@@ -801,7 +814,7 @@ function DelveBuddy:PopulateDelveSection(tip)
                 GameTooltip:SetOwner(tip, "ANCHOR_NONE")
                 GameTooltip:ClearLines()
                 GameTooltip:ClearAllPoints()
-                GameTooltip:SetPoint("TOPRIGHT", (tip.frame or tip), "TOPLEFT", -8, 0)
+                GameTooltip:SetPoint("TOPLEFT", (tip.frame or tip), "TOPRIGHT", 8, 0)
                 GameTooltip:AddLine(d.name or "Delve", 1, 0.82, 0)
                 GameTooltip:AddLine(story, 1, 1, 1, true)
                 GameTooltip:Show()
@@ -967,46 +980,6 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
         tip:SetLineScript(itemLine, "OnLeave", function()
             GameTooltip:Hide()
-        end)
-    end
-end
-
-function DelveBuddy:PopulateWorldSoulSection(tip)
-    tip:Clear()
-
-    local memories = self:GetWorldSoulMemories() or {}
-    if not next(memories) then
-        tip:SetColumnLayout(1, "LEFT")
-        tip:AddLine("|cffaaaaaaNo World Soul Memories available|r")
-        return
-    end
-
-    tip:SetColumnLayout(2, "LEFT", "LEFT")
-    local echoesCount = GetItemCount(self.IDS.Item.RadiantEcho)
-    local numText = tostring(echoesCount)
-    if echoesCount >= 5 then
-        numText = self:ColorText(numText, self.Colors.Green)
-    end
-    local echoesText = ("|TInterface\\Icons\\spell_holy_pureofheart:16:16:0:0|t x %s"):format(numText)
-    tip:AddHeader("|cff80c0ffWorld Soul Memories|r", echoesText)
-
-    -- name, zone
-    for poiID, m in pairs(memories) do
-        local zoneName = self:GetZoneName(m.zoneID)
-        local poiInfo = C_AreaPoiInfo.GetAreaPOIInfo(m.zoneID, poiID)
-        local icon = ""
-        if poiInfo and poiInfo.atlasName then
-            icon = self:AtlasIcon(poiInfo.atlasName) .. " "
-        else
-            -- Fallback to the known World Soul Memory atlas if not provided
-            icon = self:AtlasIcon("UI-EventPoi-WorldSoulMemory") .. " "
-        end
-        local displayName = icon .. (m.name or "World Soul Memory")
-
-        local line = tip:AddLine(displayName, zoneName)
-        tip:SetLineScript(line, "OnMouseUp", function(_, button)
-            HideAllTips()
-            self:SetWaypoint(m)
         end)
     end
 end
@@ -1192,13 +1165,14 @@ end
 function DelveBuddy:ShowMinimapHint(owner)
     if not owner then return end
     -- If our big tooltips are open, don't show the hint
-    if self.charTip or self.delveTip or self.worldTip then return end
+    if self.charTip or self.delveTip or self.delveRewardsTip then return end
     GameTooltip:Hide()
     GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     GameTooltip:ClearLines()
     GameTooltip:SetPoint("TOPRIGHT", owner, "BOTTOMRIGHT")
     GameTooltip:AddLine("DelveBuddy")
     GameTooltip:AddLine("|cffffff00Click|r to show/hide UI")
+    GameTooltip:AddLine("|cffffff00Shift+Click|r to show/hide rewards")
     GameTooltip:AddLine("|cffffff00Right-click|r for options")
     GameTooltip:Show()
 end
