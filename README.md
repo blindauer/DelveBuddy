@@ -10,9 +10,12 @@
     * **Trovehunter's Bounty** (owned and looted this week)
     * **Great Vault Rewards** (World Delves progress per tier)
     * **Current Gear Item Level** (so you know who needs to do more delves)
+*	Sorting
+    * Click any column in the main tooltip UI to sort by that column
 *	UI Enhancements
     * Shows currently active Bountiful Delves
     * Click a Delve to create a waypoint to it
+    * Click any vault cell to show the Great Vault UI
     * Easy access to Trovehunter's Bounty and Beacon of Hope - one-click!
 * Reminders & Warnings
     * Reminder to use Trovehunter's Bounty when inside a Bountiful Delve
