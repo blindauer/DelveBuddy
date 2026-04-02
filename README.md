@@ -17,6 +17,7 @@
     * Click a Delve to create a waypoint to it
     * Click any vault cell to show the Great Vault UI
     * Easy access to Trovehunter's Bounty and Beacon of Hope - one-click!
+    * Rewards cheat sheet to show all rewards given from each tier delve
 * Reminders & Warnings
     * Reminder to use Trovehunter's Bounty when inside a Bountiful Delve
     * Warning when entering a Bountiful Delve without a Restored Coffer Key
@@ -42,9 +43,13 @@
 ## Screenshots
 ![DelveBuddy Tooltip](screenshots/ToolTip-Minimap.jpg)
 ![DelveBuddy Full Screenshot](screenshots/screenshot_full.jpg)
+![Rewards Cheat Sheet](screenshots/RewardsCheatSheet.jpg)
 ![TomTom Waypoint to Delve](screenshots/TomTom.jpg)
 ![Bounty Reminder](screenshots/BountyReminder.jpg)
+![One-click Bounty Item Access](screenshots/BountyItem.jpg)
+![One-click Beacon of Hope Access](screenshots/NemesisLureItem.jpg)
 ![Coffer Key Warning](screenshots/coffer-key-warning.jpg)
+![Companion Role Warning](screenshots/CompanionRoleWarning.jpg)
 ![Bounty Highlight](screenshots/BountyHighlight.jpg)
 ![Minimap Icon](screenshots/minimap-icon.jpg)
 ![Options](screenshots/minimap-options-menu.jpg)
