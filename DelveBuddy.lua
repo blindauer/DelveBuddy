@@ -227,6 +227,55 @@ function DelveBuddy:SlashCommand(input)
         else
             self:Print("Usage: /db printiteminfo <partial item name>")
         end
+    elseif cmd == "mock" then
+        local key, val = arg:match("^(%S*)%s*(.-)%s*$")
+        key = key or ""
+        local validKeys = {
+            IsDelveInProgress    = true,
+            IsInBountifulDelve   = true,
+            IsDelveComplete      = true,
+            HasDelversBountyBuff = true,
+            HasDelversBountyItem = true,
+            HasNemesisLureItem   = true,
+            GetKeyCount          = true,
+            GetShardCount        = true,
+            CompanionRoleSet     = true,
+            IsPlayerTimerunning  = true,
+        }
+        if key == "" then
+            local isMocked = self.PlayerState == self.MockPlayerState
+            self:Print("Mock state: " .. (isMocked and "ACTIVE" or "inactive (live)"))
+            if isMocked then
+                local any = false
+                for k, v in pairs(self.MockPlayerState._values) do
+                    self:Print("  " .. k .. " = " .. tostring(v))
+                    any = true
+                end
+                if not any then self:Print("  (no values set — all falling through to live)") end
+            end
+        elseif key:lower() == "reset" then
+            self:UseLivePlayerState()
+            self:Print("Mock state cleared. Using live player state.")
+        elseif not validKeys[key] then
+            self:Print("Unknown mock key: " .. key)
+            self:Print("Valid keys: IsDelveInProgress, IsInBountifulDelve, IsDelveComplete,")
+            self:Print("  HasDelversBountyBuff, HasDelversBountyItem, HasNemesisLureItem,")
+            self:Print("  GetKeyCount, GetShardCount, CompanionRoleSet, IsPlayerTimerunning")
+        else
+            local value
+            local n = tonumber(val)
+            if n ~= nil then
+                value = n
+            else
+                value = StringToBool(val)
+            end
+            if value == nil then
+                self:Print("Invalid value: '" .. val .. "'. Use 1/0/on/off/true/false or a number.")
+            else
+                self:SetMock(key, value)
+                self:Print(("Mock: %s = %s"):format(key, tostring(value)))
+            end
+        end
     else
         self:Print("Available commands:")
         self:Print("/db debugLogging <on||off> -- Enable/disable debug logging")
@@ -236,8 +285,25 @@ function DelveBuddy:SlashCommand(input)
         self:Print("/db waypoints <blizzard||tomtom||both> -- Set waypoint providers")
         self:Print("/db rewards -- Dump Great Vault (World) tier IDs and example reward item levels")
         self:Print("/db ilvl <num> -- Print GetItemLevelColor() result for an item level")
+        self:Print("/db mock [<key> <value> | reset] -- Set/clear mock player state for testing")
     end
 end
+
+-- ── PlayerState delegators ────────────────────────────────────────────────────
+-- Real implementations live in PlayerState.lua (LivePlayerState / MockPlayerState).
+-- These thin wrappers let all existing callers (ShouldShow*, debuginfo, DataBroker)
+-- continue to work unchanged while routing through the swappable PlayerState.
+
+function DelveBuddy:IsDelveInProgress()     return self.PlayerState:IsDelveInProgress()     end
+function DelveBuddy:IsInBountifulDelve()    return self.PlayerState:IsInBountifulDelve()    end
+function DelveBuddy:IsDelveComplete()       return self.PlayerState:IsDelveComplete()       end
+function DelveBuddy:HasDelversBountyBuff()  return self.PlayerState:HasDelversBountyBuff()  end
+function DelveBuddy:HasDelversBountyItem()  return self.PlayerState:HasDelversBountyItem()  end
+function DelveBuddy:HasNemesisLureItem()    return self.PlayerState:HasNemesisLureItem()    end
+function DelveBuddy:GetKeyCount()           return self.PlayerState:GetKeyCount()           end
+function DelveBuddy:GetShardCount()         return self.PlayerState:GetShardCount()         end
+function DelveBuddy:CompanionRoleSet()      return self.PlayerState:CompanionRoleSet()      end
+function DelveBuddy:IsPlayerTimerunning()   return self.PlayerState:IsPlayerTimerunning()   end
 
 function DelveBuddy:GetDelveStoryVariant(zoneID, poiID)
     local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poiID)
@@ -465,26 +531,6 @@ function DelveBuddy:FlashDelversBounty()
     end
 end
 
-function DelveBuddy:IsDelveInProgress()
-    local  result = C_PartyInfo.IsDelveInProgress()
-
-    -- I've seen cases where IsDelveInProgress returns true when the player is clearly NOT in
-    -- a delve (e.g., when zoning out of the Warlock class hall into the Dalaran Underbelly).
-    -- To guard against this false positive, make sure the player has a mapID.
-    local mapID = C_Map.GetBestMapForUnit("player")
-    if mapID == nil then return false end
-
-    return result
-end
-
-function DelveBuddy:HasDelversBountyItem()
-    return C_Item.GetItemCount(self:GetDelversBountyItemId(), false) > 0
-end
-
-function DelveBuddy:HasNemesisLureItem()
-    return C_Item.GetItemCount(self:GetNemesisLureItemId(), false) > 0
-end
-
 function DelveBuddy:GetDelversBountyItemId()
     if self:IsMidnight() then
         return DelveBuddy.IDS.Item.BountyItem_Midnight
@@ -511,30 +557,6 @@ function DelveBuddy:GetDelversBountyBuffIds()
     end
 
     return self.IDS.Spell.BountyBuff_TWW
-end
-
-function DelveBuddy:HasDelversBountyBuff()
-    -- Can't get buffs (they're secret) in combat.
-    if InCombatLockdown() then return false end
-
-    local result = false
-
-    local buffIDs = self:GetDelversBountyBuffIds()
-    local i = 1
-    while true do
-        local aura = C_UnitAuras.GetBuffDataByIndex("player", i)
-        self:Log("aura %d: %s", i, aura and tostring(aura.spellId) or "nil")
-        if not aura then break end
-        for _, id in ipairs(buffIDs) do
-            if aura.spellId == id then
-                result = true
-                break
-            end
-        end
-        i = i + 1
-    end
-
-    return result
 end
 
 local flashTicker = nil
@@ -618,28 +640,9 @@ function DelveBuddy:Log(fmt, ...)
     self:Print(fmt:format(...))
 end
 
-function DelveBuddy:IsDelveComplete()
-    return C_PartyInfo.IsDelveComplete()
-end
-
 function DelveBuddy:ClassColoredName(name, class)
     local classColor = RAID_CLASS_COLORS[class] or {["r"] = 1, ["g"] = 1, ["b"] = 0}
     return format("|cff%02x%02x%02x%s|r", classColor["r"] * 255, classColor["g"] * 255, classColor["b"] * 255, name)
-end
-
-function DelveBuddy:GetKeyCount()
-    local c = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.RestoredCofferKey)
-    return c and c.quantity or 0
-end
-
-function DelveBuddy:GetShardCount()
-    if self:IsMidnight() then
-        local c = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.CofferKeyShard)
-        return c and c.quantity or 0
-    end
-
-    -- This is the TWW way
-    return C_Item.GetItemCount(self.IDS.Item.CofferKeyShard)
 end
 
 function DelveBuddy:GetShardsEarnedThisWeek()
@@ -870,88 +873,6 @@ function DelveBuddy:GetAllDelvePOIs()
     return pois
 end
 
-function DelveBuddy:IsInBountifulDelve()
-    if not self:IsDelveInProgress() then return false end
-
-    -- Instance name appears to match the delve name.
-    local instanceName = GetInstanceInfo()
-    if not instanceName or instanceName == "" then
-        self:Log("IsInBountifulDelve: no instance name")
-        return false
-    end
-
-    local mapID = C_Map.GetBestMapForUnit("player")
-    if not mapID then
-        self:Log("IsInBountifulDelve: no mapID")
-        return false
-    end
-
-    -- Walk up the map chain; stop at the first map that has delve POIs.
-    local zoneMap = mapID
-    local poiIDs
-    for _ = 1, 12 do
-        poiIDs = C_AreaPoiInfo.GetDelvesForMap(zoneMap)
-        if poiIDs and #poiIDs > 0 then
-            break
-        end
-        local mi = C_Map.GetMapInfo(zoneMap)
-        if not mi or not mi.parentMapID or mi.parentMapID == 0 then
-            break
-        end
-        zoneMap = mi.parentMapID
-    end
-
-    if not poiIDs or #poiIDs == 0 then
-        self:Log("IsInBountifulDelve: no POIs found in map chain. map=%s inst=%q",
-            tostring(mapID), tostring(instanceName))
-        return false
-    end
-
-    -- Try exact name match first.
-    local matchedPoiID
-    for _, poiID in ipairs(poiIDs) do
-        local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneMap, poiID)
-        if info and info.name == instanceName then
-            matchedPoiID = poiID
-            break
-        end
-    end
-
-    if not matchedPoiID then
-        self:Log("IsInBountifulDelve: could not match instance name to any POI. map=%s zone=%s inst=%q",
-            tostring(mapID), tostring(zoneMap), tostring(instanceName))
-        return false
-    end
-
-    local matchedInfo = C_AreaPoiInfo.GetAreaPOIInfo(zoneMap, matchedPoiID)
-    local bountiful = matchedInfo.atlasName == "delves-bountiful"
-
-    self:Log("IsInBountifulDelve: map=%s zone=%s poi=%s inst=%q poiName=%q bountiful=%s",
-        tostring(mapID),
-        tostring(zoneMap),
-        tostring(matchedPoiID),
-        tostring(instanceName),
-        tostring(matchedInfo and matchedInfo.name or ""),
-        tostring(bountiful)
-    )
-
-    return bountiful
-end
-
-function DelveBuddy:IsPlayerTimerunning()
-    if C_ChatInfo.IsTimerunningPlayer(UnitGUID("player")) then
-        return true
-    end
-
-    -- Sometimes the above check erroneously returns false. Fallback to season check.
-    local sid = PlayerGetTimerunningSeasonID()
-    if sid and sid ~= 0 then
-        return true
-    end
-
-    return false
-end
-
 function DelveBuddy:GetPlayerItemLevel()
     local avg, equipped = GetAverageItemLevel()
     self:Log("GetPlayerItemLevel: avg=%s equipped=%s", tostring(avg), tostring(equipped))
@@ -1058,11 +979,6 @@ function DelveBuddy:RewardTierToiLvl(tierID)
     }
     self:Log("RewardTierToiLvl: tier=%s", tostring(TierToiLvl[tierID]))
     return TierToiLvl[tierID] or nil
-end
-
-function DelveBuddy:CompanionRoleSet()
-    local roleSet, _, _ = self:GetActiveCompanionConfigFlags()
-    return roleSet
 end
 
 function DelveBuddy:GetActiveCompanionConfigFlags()

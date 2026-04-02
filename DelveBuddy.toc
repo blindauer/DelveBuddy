@@ -21,6 +21,7 @@ libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
 libs\LibButtonGlow-1.0\LibButtonGlow-1.0.lua
 
 DelveBuddy.lua
+PlayerState.lua
 Constants.lua
 Rewards.lua
 DataBroker.lua
