@@ -267,6 +267,17 @@ function DelveBuddy:SlashCommand(input)
         self:Print("/db reminders <coffer||bounty> <on||off> -- Enable/disable reminders")
         self:Print("/db minimap -- Toggle minimap icon")
         self:Print("/db waypoints <blizzard||tomtom||both> -- Set waypoint providers")
+        if self.db.global.debugLogging then
+            self:Print("Debug-only commands:")
+            self:Print("/db debuginfo (di) -- Print player/delve state")
+            self:Print("/db rewards (rw) -- Dump vault rewards")
+            self:Print("/db ilvl <num> -- Print item level color")
+            self:Print("/db dumppois (dp) [mapID] -- Dump delve POIs")
+            self:Print("/db printiteminfo (pii) <name> -- Print item info by partial name")
+            self:Print("/db storyach (sa) -- Dump story achievements")
+            self:Print("/db achievement (ach) <id> -- Print achievement info")
+            self:Print("/db mock [key] [value] -- Get/set mock player state values")
+        end
     end
 end
 
