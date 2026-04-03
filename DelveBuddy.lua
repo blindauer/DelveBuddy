@@ -963,6 +963,20 @@ function DelveBuddy:EnsureWeeklyRewardsReady()
     C_WeeklyRewards.OnUIInteract()
 end
 
+local TierToiLvl = {
+    233, -- T1
+    237,
+    240,
+    243,
+    246,
+    253,
+    256,
+    259, -- T8
+    259,
+    259,
+    259,
+}
+
 function DelveBuddy:RewardTierToiLvl(tierID)
     self:Log("RewardTierToiLvl: tierID=%s", tostring(tierID))
     if type(tierID) ~= "number" then return nil end
@@ -975,19 +989,6 @@ function DelveBuddy:RewardTierToiLvl(tierID)
     -- end
     -- return C_Item.GetDetailedItemLevelInfo(link)
 
-    TierToiLvl = {
-        233, -- T1
-        237,
-        240,
-        243,
-        246,
-        253,
-        256,
-        259, -- T8
-        259,
-        259,
-        259,
-    }
     self:Log("RewardTierToiLvl: tier=%s", tostring(TierToiLvl[tierID]))
     return TierToiLvl[tierID] or nil
 end

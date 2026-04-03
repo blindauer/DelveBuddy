@@ -99,7 +99,7 @@ local function GetCharacterSortValue(charKey, data, field)
         return tonumber(data and data.keysOwned) or 0
     elseif field == "stashes" then
         local unknown = DelveBuddy.IDS.CONST.UNKNOWN_GILDED_STASH_COUNT
-        local v = tonumber(data.gildedStashes)
+        local v = tonumber(data and data.gildedStashes)
         if v == nil or (unknown ~= nil and v == unknown) then
             return -1
         end
@@ -177,27 +177,10 @@ local CHARACTER_SORT_COLUMNS = {
 local function GetCharacterHeaderLabels()
     local sort = GetCharacterSortSettings()
     local arrow = (sort.direction == "desc") and " v" or " ^"
-    local labels = {
-        "Name",
-        "iLvl",
-        "Earned",
-        "Owned",
-        "Owned",
-        "Stashes",
-        "Owned",
-        "Looted",
-        "Vault 1",
-        "Vault 2",
-        "Vault 3",
-    }
-
-    for col, cfg in pairs(CHARACTER_SORT_COLUMNS) do
-        labels[col] = cfg.label
-        if cfg.field == sort.field then
-            labels[col] = cfg.label .. arrow
-        end
+    local labels = {}
+    for col, cfg in ipairs(CHARACTER_SORT_COLUMNS) do
+        labels[col] = (cfg.field == sort.field) and (cfg.label .. arrow) or cfg.label
     end
-
     return labels
 end
 
@@ -279,8 +262,8 @@ local function OpenAllTips(display, mode)
     tipMode = mode
 
     -- Character summary tooltip
-    local charTip = QTip:Acquire("DelveBuddyCharTip", 12,
-        "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER", "CENTER", "CENTER", "CENTER")
+    local charTip = QTip:Acquire("DelveBuddyCharTip", 11,
+        "LEFT","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER","CENTER")
     charTip:EnableMouse(true)
     charTip:SmartAnchorTo(display)
     charTip:SetScale(DelveBuddy.db.global.tooltipScale)
@@ -358,11 +341,6 @@ local function CreateTooltipScaleDropdownEntry()
     DelveBuddy.tooltipScaleEntry = entry
     return entry
 end
-
--- Initialize settings in the global table
-DelveBuddy.db.global = DelveBuddy.db.global or {}
-if DelveBuddy.db.global.showIcon == nil then DelveBuddy.db.global.showIcon = true end
-if DelveBuddy.db.global.mode == nil then DelveBuddy.db.global.mode = "A" end
 
 local DelveBuddyMenu = CreateFrame("Frame", "DelveBuddyMenu", nil, "UIDropDownMenuTemplate")
 DelveBuddyMenu.displayMode = "MENU"
