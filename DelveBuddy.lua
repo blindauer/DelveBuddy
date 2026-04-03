@@ -198,6 +198,7 @@ function DelveBuddy:SlashCommand(input)
         self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
         self:Print("Has " .. self:GetDelversBountyItemName() .. " item: " .. tostring(self:HasDelversBountyItem()))
         self:Print("Has " .. self:GetDelversBountyItemName() .. " buff: " .. tostring(self:HasDelversBountyBuff()))
+        self:Print("Was " .. self:GetDelversBountyItemName() .. " looted this week: " .. tostring(self:WasBountyLootedThisWeek()))
         self:Print("Has Nemesis Lure item: " .. tostring(self:HasNemesisLureItem()))
         local roleSet, curiosSet, detail = self:GetActiveCompanionConfigFlags()
         self:Print("Companion role set: " .. tostring(roleSet))
@@ -237,6 +238,7 @@ function DelveBuddy:SlashCommand(input)
             HasDelversBountyBuff = true,
             HasDelversBountyItem = true,
             HasNemesisLureItem   = true,
+            WasBountyLootedThisWeek = true,
             GetKeyCount          = true,
             GetShardCount        = true,
             CompanionRoleSet     = true,
@@ -259,7 +261,7 @@ function DelveBuddy:SlashCommand(input)
         elseif not validKeys[key] then
             self:Print("Unknown mock key: " .. key)
             self:Print("Valid keys: IsDelveInProgress, IsInBountifulDelve, IsDelveComplete,")
-            self:Print("  HasDelversBountyBuff, HasDelversBountyItem, HasNemesisLureItem,")
+            self:Print("  HasDelversBountyBuff, HasDelversBountyItem, HasNemesisLureItem, WasBountyLootedThisWeek,")
             self:Print("  GetKeyCount, GetShardCount, CompanionRoleSet, IsPlayerTimerunning")
         else
             local value
@@ -294,16 +296,17 @@ end
 -- These thin wrappers let all existing callers (ShouldShow*, debuginfo, DataBroker)
 -- continue to work unchanged while routing through the swappable PlayerState.
 
-function DelveBuddy:IsDelveInProgress()     return self.PlayerState:IsDelveInProgress()     end
-function DelveBuddy:IsInBountifulDelve()    return self.PlayerState:IsInBountifulDelve()    end
-function DelveBuddy:IsDelveComplete()       return self.PlayerState:IsDelveComplete()       end
-function DelveBuddy:HasDelversBountyBuff()  return self.PlayerState:HasDelversBountyBuff()  end
-function DelveBuddy:HasDelversBountyItem()  return self.PlayerState:HasDelversBountyItem()  end
-function DelveBuddy:HasNemesisLureItem()    return self.PlayerState:HasNemesisLureItem()    end
-function DelveBuddy:GetKeyCount()           return self.PlayerState:GetKeyCount()           end
-function DelveBuddy:GetShardCount()         return self.PlayerState:GetShardCount()         end
-function DelveBuddy:CompanionRoleSet()      return self.PlayerState:CompanionRoleSet()      end
-function DelveBuddy:IsPlayerTimerunning()   return self.PlayerState:IsPlayerTimerunning()   end
+function DelveBuddy:IsDelveInProgress()         return self.PlayerState:IsDelveInProgress()         end
+function DelveBuddy:IsInBountifulDelve()        return self.PlayerState:IsInBountifulDelve()        end
+function DelveBuddy:IsDelveComplete()           return self.PlayerState:IsDelveComplete()           end
+function DelveBuddy:HasDelversBountyBuff()      return self.PlayerState:HasDelversBountyBuff()      end
+function DelveBuddy:HasDelversBountyItem()      return self.PlayerState:HasDelversBountyItem()      end
+function DelveBuddy:HasNemesisLureItem()        return self.PlayerState:HasNemesisLureItem()        end
+function DelveBuddy:WasBountyLootedThisWeek()   return self.PlayerState:WasBountyLootedThisWeek()   end
+function DelveBuddy:GetKeyCount()               return self.PlayerState:GetKeyCount()               end
+function DelveBuddy:GetShardCount()             return self.PlayerState:GetShardCount()             end
+function DelveBuddy:CompanionRoleSet()          return self.PlayerState:CompanionRoleSet()          end
+function DelveBuddy:IsPlayerTimerunning()       return self.PlayerState:IsPlayerTimerunning()       end
 
 function DelveBuddy:GetDelveStoryVariant(zoneID, poiID)
     local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poiID)

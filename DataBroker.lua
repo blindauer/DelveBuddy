@@ -952,7 +952,7 @@ function DelveBuddy:PopulateDelveSection(tip)
     end
 
     -- Nemesis Lure
-    if not InCombatLockdown() and self:IsDelveInProgress() and self:HasNemesisLureItem() then
+    if not InCombatLockdown() and self:IsDelveInProgress() and self:HasNemesisLureItem() and not self:WasBountyLootedThisWeek() then
         local itemID = self:GetNemesisLureItemId()
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
         local itemName = ("%s %s"):format(itemIcon, C_Item.GetItemNameByID(itemID))

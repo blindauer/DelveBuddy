@@ -124,6 +124,10 @@ function LivePlayerState:HasNemesisLureItem()
     return C_Item.GetItemCount(DelveBuddy:GetNemesisLureItemId(), false) > 0
 end
 
+function LivePlayerState:WasBountyLootedThisWeek()
+    return C_QuestLog.IsQuestFlaggedCompleted(DelveBuddy.IDS.Quest.BountyLooted)
+end
+
 function LivePlayerState:GetKeyCount()
     local c = C_CurrencyInfo.GetCurrencyInfo(DelveBuddy.IDS.Currency.RestoredCofferKey)
     return c and c.quantity or 0
@@ -211,6 +215,12 @@ function MockPlayerState:HasNemesisLureItem()
     local v = self._values["HasNemesisLureItem"]
     if v ~= nil then return v end
     return LivePlayerState:HasNemesisLureItem()
+end
+
+function MockPlayerState:WasBountyLootedThisWeek()
+    local v = self._values["WasBountyLootedThisWeek"]
+    if v ~= nil then return v end
+    return LivePlayerState:WasBountyLootedThisWeek()
 end
 
 function MockPlayerState:GetKeyCount()
