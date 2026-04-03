@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.2.1-beta.2 ==
+Misc:
+* Random code cleanups and improvements
+
 == 2.2.1-beta.1 ==
 Enhancements:
 * Only show Beacon of Hope if you haven't looted a Trovehunter's Bounty this week
