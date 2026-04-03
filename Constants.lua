@@ -49,6 +49,9 @@ DelveBuddy.IDS = {
         BountyBuff_TWW = { 1246363, },
         BountyBuff_Midnight = { 1254631, },
     },
+    Achievement = {
+        DelveLoremaster = 61741,  -- "Delve Loremaster: Midnight"
+    },
     CONST = {
         CHAR_DATA_SCHEMA_VERSION = 3,
         MIDNIGHT_S1_START_US = 1773759600, -- March 17, 2026 08:00 PDT

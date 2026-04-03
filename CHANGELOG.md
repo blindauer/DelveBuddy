@@ -1,5 +1,10 @@
 = DelveBuddy Changelog =
 
+== 2.2.1-beta.1 ==
+Enhancements:
+* Only show Beacon of Hope if you haven't looted a Trovehunter's Bounty this week
+* When displaying delve story variant, show a little icon indicating whether you've completed that variant
+
 == 2.2 ==
 Enhancements:
 * Added new rewards tooltip showing delve rewards per tier. 

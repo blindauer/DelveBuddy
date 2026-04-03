@@ -810,13 +810,22 @@ function DelveBuddy:PopulateDelveSection(tip)
         tip:SetLineScript(line, "OnEnter", function()
             local story = self:GetDelveStoryVariant(d.zoneID, poiID)
             if story and story ~= "" then
+                local done = self:IsStoryVariantComplete(d.name, story:gsub("^Story Variant: ", ""))
+                local storyLine
+                if done == true then
+                    storyLine = story .. " |TInterface\\RaidFrame\\ReadyCheck-Ready:16|t"
+                elseif done == false then
+                    storyLine = story .. " |TInterface\\RaidFrame\\ReadyCheck-NotReady:16|t"
+                else
+                    storyLine = story
+                end
                 GameTooltip:Hide()
                 GameTooltip:SetOwner(tip, "ANCHOR_NONE")
                 GameTooltip:ClearLines()
                 GameTooltip:ClearAllPoints()
                 GameTooltip:SetPoint("TOPLEFT", (tip.frame or tip), "TOPRIGHT", 8, 0)
                 GameTooltip:AddLine(d.name or "Delve", 1, 0.82, 0)
-                GameTooltip:AddLine(story, 1, 1, 1, true)
+                GameTooltip:AddLine(storyLine, 1, 1, 1, true)
                 GameTooltip:Show()
             end
         end)

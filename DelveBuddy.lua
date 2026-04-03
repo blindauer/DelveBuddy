@@ -228,6 +228,15 @@ function DelveBuddy:SlashCommand(input)
         else
             self:Print("Usage: /db printiteminfo <partial item name>")
         end
+    elseif cmd == "storyach" or cmd == "sa" then
+        self:DumpStoryAchievements()
+    elseif cmd == "achievement" or cmd == "ach" then
+        local id = tonumber(arg)
+        if not id then
+            self:Print("Usage: /db achievement <id>")
+        else
+            self:PrintAchievementInfo(id)
+        end
     elseif cmd == "mock" then
         local key, val = arg:match("^(%S*)%s*(.-)%s*$")
         key = key or ""
@@ -285,9 +294,6 @@ function DelveBuddy:SlashCommand(input)
         self:Print("/db reminders <coffer||bounty> <on||off> -- Enable/disable reminders")
         self:Print("/db minimap -- Toggle minimap icon")
         self:Print("/db waypoints <blizzard||tomtom||both> -- Set waypoint providers")
-        self:Print("/db rewards -- Dump Great Vault (World) tier IDs and example reward item levels")
-        self:Print("/db ilvl <num> -- Print GetItemLevelColor() result for an item level")
-        self:Print("/db mock [<key> <value> | reset] -- Set/clear mock player state for testing")
     end
 end
 
@@ -308,6 +314,34 @@ function DelveBuddy:GetShardCount()             return self.PlayerState:GetShard
 function DelveBuddy:CompanionRoleSet()          return self.PlayerState:CompanionRoleSet()          end
 function DelveBuddy:IsPlayerTimerunning()       return self.PlayerState:IsPlayerTimerunning()       end
 
+-- Returns true (done), false (not done), or nil (delve/variant not found in achievement data).
+function DelveBuddy:IsStoryVariantComplete(delveName, variantName)
+    local loremasterID = self.IDS.Achievement.DelveLoremaster
+    local numDelves = GetAchievementNumCriteria(loremasterID)
+
+    for i = 1, numDelves do
+        local criteriaString, criteriaType, _, _, _, _, _, assetID =
+            GetAchievementCriteriaInfo(loremasterID, i)
+
+        if criteriaType == 8 and assetID and assetID ~= 0 then
+            local thisDelveName = criteriaString:gsub(" Stories$", "")
+            if thisDelveName == delveName then
+                local numVariants = GetAchievementNumCriteria(assetID)
+                for j = 1, numVariants do
+                    local variantCriteriaString, _, variantDone =
+                        GetAchievementCriteriaInfo(assetID, j)
+                    if variantCriteriaString == variantName then
+                        return variantDone
+                    end
+                end
+                return nil  -- delve matched, variant not found
+            end
+        end
+    end
+
+    return nil  -- delve not found
+end
+
 function DelveBuddy:GetDelveStoryVariant(zoneID, poiID)
     local info = C_AreaPoiInfo.GetAreaPOIInfo(zoneID, poiID)
 
@@ -318,7 +352,9 @@ function DelveBuddy:GetDelveStoryVariant(zoneID, poiID)
                 if widgetInfo.widgetType == Enum.UIWidgetVisualizationType.TextWithState then
                     local visInfo = C_UIWidgetManager.GetTextWithStateWidgetVisualizationInfo(widgetInfo.widgetID)
                     if visInfo and visInfo.orderIndex == 0 then
-                        return visInfo.text
+                        local text = visInfo.text
+                        text = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|cn[^:]+:", ""):gsub("|r", "")
+                        return text
                     end
                 end
             end
@@ -1198,6 +1234,79 @@ function DelveBuddy:PrintItemLevelColor(itemLevel)
 
     self:Print(("GetItemLevelColor(%d) -> r=%.3f g=%.3f b=%.3f hex=#%s sample=%s")
         :format(itemLevel, r, g, b, hex, sample))
+end
+
+function DelveBuddy:DumpStoryAchievements()
+    local loremasterID = self.IDS.Achievement.DelveLoremaster
+    local _, loremasterName = GetAchievementInfo(loremasterID)
+    self:Print(("Loremaster [%d]: %s"):format(loremasterID, tostring(loremasterName)))
+
+    local numDelves = GetAchievementNumCriteria(loremasterID)
+    self:Print(("  %d criteria:"):format(numDelves))
+
+    for i = 1, numDelves do
+        local criteriaString, criteriaType, _, _, _, _, _, assetID =
+            GetAchievementCriteriaInfo(loremasterID, i)
+
+        self:Print(("  [%d] criteriaString=%q  criteriaType=%s  assetID=%s"):format(
+            i, tostring(criteriaString), tostring(criteriaType), tostring(assetID)))
+
+        if assetID and assetID ~= 0 then
+            local _, subName = GetAchievementInfo(assetID)
+            local numVariants = GetAchievementNumCriteria(assetID)
+            self:Print(("    -> sub-ach [%d]: %s  (%d criteria)"):format(
+                assetID, tostring(subName), numVariants))
+
+            for j = 1, numVariants do
+                local variantName, variantType, variantDone =
+                    GetAchievementCriteriaInfo(assetID, j)
+                local mark = variantDone and "[x]" or "[ ]"
+                self:Print(("    %s [%d] %q  type=%s"):format(
+                    mark, j, tostring(variantName), tostring(variantType)))
+            end
+        end
+    end
+end
+
+function DelveBuddy:PrintAchievementInfo(id)
+    local achID, name, points, completed, month, day, year,
+          description, flags, icon, rewardText, isGuild, wasEarnedByMe = GetAchievementInfo(id)
+
+    if not achID then
+        self:Print(("Achievement %d: not found"):format(id))
+        return
+    end
+
+    self:Print(("Achievement %d: %s"):format(id, name))
+    self:Print(("  completed=%s  points=%s  guild=%s"):format(
+        tostring(wasEarnedByMe), tostring(points), tostring(isGuild)))
+    if description and description ~= "" then
+        self:Print("  desc: " .. description)
+    end
+
+    local numCriteria = GetAchievementNumCriteria(id)
+    if numCriteria == 0 then
+        self:Print("  (no criteria)")
+        return
+    end
+
+    self:Print(("  %d criteria:"):format(numCriteria))
+    for i = 1, numCriteria do
+        local criteriaString, criteriaType, critCompleted, quantity,
+              reqQuantity, charName, critFlags, assetID, quantityString, criteriaID =
+            GetAchievementCriteriaInfo(id, i)
+
+        local mark = critCompleted and "[x]" or "[ ]"
+        local progress = ""
+        if reqQuantity and reqQuantity > 1 then
+            progress = (" (%d/%d)"):format(quantity or 0, reqQuantity)
+        end
+        local asset = ""
+        if assetID and assetID ~= 0 then
+            asset = (" assetID=%d type=%d"):format(assetID, criteriaType or 0)
+        end
+        self:Print(("  %s [%d] %s%s%s"):format(mark, i, criteriaString or "?", progress, asset))
+    end
 end
 
 -- Tiny function for measuring execution time of functions.
