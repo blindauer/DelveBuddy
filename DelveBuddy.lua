@@ -183,29 +183,7 @@ function DelveBuddy:SlashCommand(input)
             end
         end
     elseif cmd == "debuginfo" or cmd == "di" then
-        self:Print("Debug Info:")
-        self:Print("Is in delve: " .. tostring(self:IsDelveInProgress()))
-        self:Print("Is in bountiful delve: " .. tostring(self:IsInBountifulDelve()))
-        self:Print("Is delve complete: " .. tostring(self:IsDelveComplete()))
-        local owned = self:GetShardCount()
-        local earned, weeklyMax = self:GetShardsEarnedThisWeek()
-        self:Print("Shards: " .. tostring(owned) .. " | weekly " .. tostring(earned) .. "/" .. tostring(weeklyMax))
-        local cur, max = self:GetGildedStashCounts()
-        self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
-        self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
-        local instanceName, instanceType = GetInstanceInfo()
-        self:Print("Instance name=" .. instanceName .. " type=" .. instanceType)
-        self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
-        self:Print("Has " .. self:GetDelversBountyItemName() .. " item: " .. tostring(self:HasDelversBountyItem()))
-        self:Print("Has " .. self:GetDelversBountyItemName() .. " buff: " .. tostring(self:HasDelversBountyBuff()))
-        self:Print("Was " .. self:GetDelversBountyItemName() .. " looted this week: " .. tostring(self:WasBountyLootedThisWeek()))
-        self:Print("Has Nemesis Lure item: " .. tostring(self:HasNemesisLureItem()))
-        local roleSet, curiosSet, detail = self:GetActiveCompanionConfigFlags()
-        self:Print("Companion role set: " .. tostring(roleSet))
-        self:Print("Companion curios set: " .. tostring(curiosSet))
-        self:Print("Companion config: " .. detail)
-        self:Print("Player iLevel: " .. tostring(self:GetPlayerItemLevel()))
-        self:Print("Has available vault rewards: " .. tostring(self:HasAvailableVaultRewards()))
+        self:PrintDebugInfo()
     elseif cmd == "rewards" or cmd == "rw" then
         self:DumpVaultRewards()
     elseif cmd == "ilvl" then
@@ -1055,6 +1033,32 @@ end
 -- Debug-only functions.
 -- Below are just for debugging, or accessible via slash commands.
 -- Using Print instead of Log to output uncondintionally (regardless of Debug Logging being enabled).
+
+function DelveBuddy:PrintDebugInfo()
+    self:Print("Debug Info:")
+    self:Print("Is in delve: " .. tostring(self:IsDelveInProgress()))
+    self:Print("Is in bountiful delve: " .. tostring(self:IsInBountifulDelve()))
+    self:Print("Is delve complete: " .. tostring(self:IsDelveComplete()))
+    local owned = self:GetShardCount()
+    local earned, weeklyMax = self:GetShardsEarnedThisWeek()
+    self:Print("Shards: " .. tostring(owned) .. " | weekly " .. tostring(earned) .. "/" .. tostring(weeklyMax))
+    local cur, max = self:GetGildedStashCounts()
+    self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
+    self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
+    local instanceName, instanceType = GetInstanceInfo()
+    self:Print("Instance name=" .. instanceName .. " type=" .. instanceType)
+    self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
+    self:Print("Has " .. self:GetDelversBountyItemName() .. " item: " .. tostring(self:HasDelversBountyItem()))
+    self:Print("Has " .. self:GetDelversBountyItemName() .. " buff: " .. tostring(self:HasDelversBountyBuff()))
+    self:Print("Was " .. self:GetDelversBountyItemName() .. " looted this week: " .. tostring(self:WasBountyLootedThisWeek()))
+    self:Print("Has Nemesis Lure item: " .. tostring(self:HasNemesisLureItem()))
+    local roleSet, curiosSet, detail = self:GetActiveCompanionConfigFlags()
+    self:Print("Companion role set: " .. tostring(roleSet))
+    self:Print("Companion curios set: " .. tostring(curiosSet))
+    self:Print("Companion config: " .. detail)
+    self:Print("Player iLevel: " .. tostring(self:GetPlayerItemLevel()))
+    self:Print("Has available vault rewards: " .. tostring(self:HasAvailableVaultRewards()))
+end
 
 -- Only for discovering new delves.
 function DelveBuddy:DumpPOIs(mapID)
