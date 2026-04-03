@@ -10,12 +10,6 @@ local tipMode = "none"
 -- Tracks whether the mouse is currently over the LDB/menu area
 local ldbHovering = false
 
--- Secure button for using Coffer Key Shards (created lazily, later)
-local cofferKeyShardButton
-
--- Secure button for using the Delve-O-Bot 7001 toy (created lazily, later)
-local delveOBotButton
-
 -- Secure button for using the Nemesis Call item (created lazily, later)
 local nemesisCallButton
 
@@ -26,7 +20,7 @@ local delversBountyButton
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_REGEN_DISABLED")
 f:SetScript("OnEvent", function()
-    for _, btn in ipairs({cofferKeyShardButton, delveOBotButton, nemesisCallButton, delversBountyButton}) do
+    for _, btn in ipairs({nemesisCallButton, delversBountyButton}) do
         if btn and btn.Hide and btn.ClearAllPoints then
             btn:Hide()
             btn:ClearAllPoints()
@@ -746,22 +740,6 @@ function DelveBuddy:PopulateCharacterSection(tip)
                         DelveBuddy:OpenVaultUI()
                     end)
                 end
-
-                -- Column 4 (shards owned): overlay a secure button to use the Coffer Key Shard (not for Midnight)
-                if not self:IsMidnight() and not InCombatLockdown() then
-                    local cell = tip.lines[line].cells[4]
-                    if cell then
-                        cofferKeyShardButton = DelveBuddy:CreateAndAttachSecureButton(
-                            cofferKeyShardButton,
-                            function() return DelveBuddy:BuildCofferKeyShardButton() end,
-                            cell
-                        )
-                    end
-
-                    -- Keep these so QTip applies highlight
-                    tip:SetCellScript(line, 4, "OnEnter", function() end)
-                    tip:SetCellScript(line, 4, "OnLeave", function() end)
-                end
             end
         end
     end
@@ -831,90 +809,6 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
 
         tip:SetLineScript(line, "OnLeave", function()
-            GameTooltip:Hide()
-        end)
-    end
-
-    -- Delve-O-Bot 7001 (non-Midnight only)
-    local toyID = DelveBuddy.IDS.Item.DelveOBot7001
-    if not InCombatLockdown() and not self:IsDelveInProgress() and not self:IsMidnight() and PlayerHasToy(toyID) then
-        tip:AddSeparator(1,1,1,1,.45)
-        local toyName = self:GetToyName(toyID)
-        local toyLine = tip:AddLine(toyName, "")
-
-        local row = tip.lines[toyLine]
-        if row then
-            delveOBotButton = DelveBuddy:CreateAndAttachSecureButton(
-                delveOBotButton,
-                function() return DelveBuddy:BuildDelveOBotButton() end,
-                row
-            )
-        end
-
-        -- Update function to be called periodically
-        local function UpdateToyCooldownText()
-            local startTime, duration = C_Item.GetItemCooldown(toyID)
-            local currentTime = GetTime()
-            local timeLeft = (startTime + duration) - currentTime
-            local cdText
-            local toyText = toyName
-
-            if duration and duration > 0 and timeLeft and timeLeft > 0 then
-                local hours = math.floor(timeLeft / 3600)
-                local minutes = math.floor((timeLeft % 3600) / 60)
-                local seconds = math.floor(timeLeft % 60)
-
-                -- Build the formatted string conditionally
-                local timeString = ""
-                if hours > 0 then
-                    timeString = timeString .. ("%dh "):format(hours)
-                end
-                if minutes > 0 or hours > 0 then
-                    timeString = timeString .. ("%dm "):format(minutes)
-                end
-                timeString = timeString .. ("%ds"):format(seconds)
-
-                cdText = ("ready in %s"):format(timeString)
-                cdText = self:ColorText(cdText, self.Colors.Red)
-                toyText = self:ColorText(toyText, self.Colors.Gray)
-            else
-                cdText = self:ColorText("click to summon", self.Colors.Green)
-            end
-            tip:SetCell(toyLine, 1, toyText)
-            tip:SetCell(toyLine, 2, cdText)
-        end
-
-        UpdateToyCooldownText()
-
-        -- Set up the OnUpdate timer
-        local lastUpdate = 0
-        tip:SetScript("OnUpdate", function(_, elapsed)
-            lastUpdate = lastUpdate + elapsed
-            if lastUpdate >= 1 then
-                UpdateToyCooldownText()
-                lastUpdate = 0
-            end
-        end)
-
-        -- Clear the OnUpdate script when the tip is hidden
-        tip:SetScript("OnHide", function(self)
-            self:SetScript("OnUpdate", nil)
-            if not InCombatLockdown() and delveOBotButton then
-                delveOBotButton:Hide()
-                delveOBotButton:ClearAllPoints()
-            end
-        end)
-
-        tip:SetLineScript(toyLine, "OnEnter", function()
-            GameTooltip:Hide()
-            GameTooltip:SetOwner(tip, "ANCHOR_NONE")
-            GameTooltip:ClearLines()
-            GameTooltip:ClearAllPoints()
-            GameTooltip:SetPoint("TOPRIGHT", (tip.frame or tip), "TOPLEFT", -8, 0)
-            GameTooltip:SetToyByItemID(toyID)
-            GameTooltip:Show()
-        end)
-        tip:SetLineScript(toyLine, "OnLeave", function()
             GameTooltip:Hide()
         end)
     end
@@ -1251,33 +1145,6 @@ function DelveBuddy:BuildSecureButton(name, setupFn)
     b:SetSize(1, 1)
     if setupFn then setupFn(b) end
     return b
-end
-
-function DelveBuddy:BuildCofferKeyShardButton()
-    local button = self:BuildSecureButton("SecureTooltipCofferKeyShardButton", function(b)
-        b:SetAttribute("type1", "macro")
-        b:SetAttribute("macrotext1", "/use item:" .. tostring(DelveBuddy.IDS.Item.CofferKeyShard))
-    end)
-
-    button:Hide()
-
-    if not button._dbPostClickHooked then
-        button._dbPostClickHooked = true
-        button:HookScript("PostClick", function()
-            C_Timer.After(2.0, function()
-                DelveBuddy:RefreshShardsAndKeys()
-            end)
-        end)
-    end
-
-    return button
-end
-
-function DelveBuddy:BuildDelveOBotButton()
-    return self:BuildSecureButton("DelveBuddySecureToyButton", function(b)
-        b:SetAttribute("type", "toy")
-        b:SetAttribute("toy", DelveBuddy.IDS.Item.DelveOBot7001)
-    end)
 end
 
 function DelveBuddy:BuildNemesisLureButton()

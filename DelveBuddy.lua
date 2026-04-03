@@ -240,19 +240,13 @@ function DelveBuddy:SlashCommand(input)
     elseif cmd == "mock" then
         local key, val = arg:match("^(%S*)%s*(.-)%s*$")
         key = key or ""
-        local validKeys = {
-            IsDelveInProgress    = true,
-            IsInBountifulDelve   = true,
-            IsDelveComplete      = true,
-            HasDelversBountyBuff = true,
-            HasDelversBountyItem = true,
-            HasNemesisLureItem   = true,
-            WasBountyLootedThisWeek = true,
-            GetKeyCount          = true,
-            GetShardCount        = true,
-            CompanionRoleSet     = true,
-            IsPlayerTimerunning  = true,
-        }
+        local _internalKeys = { Set = true, ResetAll = true }
+        local validKeys = {}
+        for k, v in pairs(self.MockPlayerState) do
+            if type(v) == "function" and not _internalKeys[k] then
+                validKeys[k] = true
+            end
+        end
         if key == "" then
             local isMocked = self.PlayerState == self.MockPlayerState
             self:Print("Mock state: " .. (isMocked and "ACTIVE" or "inactive (live)"))
@@ -269,9 +263,10 @@ function DelveBuddy:SlashCommand(input)
             self:Print("Mock state cleared. Using live player state.")
         elseif not validKeys[key] then
             self:Print("Unknown mock key: " .. key)
-            self:Print("Valid keys: IsDelveInProgress, IsInBountifulDelve, IsDelveComplete,")
-            self:Print("  HasDelversBountyBuff, HasDelversBountyItem, HasNemesisLureItem, WasBountyLootedThisWeek,")
-            self:Print("  GetKeyCount, GetShardCount, CompanionRoleSet, IsPlayerTimerunning")
+            local keyList = {}
+            for k in pairs(validKeys) do keyList[#keyList + 1] = k end
+            table.sort(keyList)
+            self:Print("Valid keys: " .. table.concat(keyList, ", "))
         else
             local value
             local n = tonumber(val)
@@ -483,8 +478,8 @@ function DelveBuddy:CollectDelveData()
     end
 
     -- Have bounty / looted bounty
-    data.hasBounty = C_Item.GetItemCount(self:GetDelversBountyItemId()) > 0
-    data.bountyLooted = C_QuestLog.IsQuestFlaggedCompleted(IDS.Quest.BountyLooted) or false
+    data.hasBounty = self:HasDelversBountyItem()
+    data.bountyLooted = self:WasBountyLootedThisWeek()
 
     -- Vault rewards
     data.vaultRewards = {}
@@ -571,11 +566,7 @@ function DelveBuddy:FlashDelversBounty()
 end
 
 function DelveBuddy:GetDelversBountyItemId()
-    if self:IsMidnight() then
-        return DelveBuddy.IDS.Item.BountyItem_Midnight
-    end
-
-    return DelveBuddy.IDS.Item.BountyItem_TWW
+    return DelveBuddy.IDS.Item.BountyItem_Midnight
 end
 
 function DelveBuddy:GetDelversBountyItemName()
@@ -583,19 +574,11 @@ function DelveBuddy:GetDelversBountyItemName()
 end
 
 function DelveBuddy:GetNemesisLureItemId()
-    if self:IsMidnight() then
-        return DelveBuddy.IDS.Item.NemesisLure_Midnight
-    end
-
-    return DelveBuddy.IDS.Item.NemesisLure_TWW
+    return DelveBuddy.IDS.Item.NemesisLure_Midnight
 end
 
 function DelveBuddy:GetDelversBountyBuffIds()
-    if self:IsMidnight() then
-        return self.IDS.Spell.BountyBuff_Midnight
-    end
-
-    return self.IDS.Spell.BountyBuff_TWW
+    return self.IDS.Spell.BountyBuff_Midnight
 end
 
 local flashTicker = nil
@@ -1067,13 +1050,6 @@ function DelveBuddy:GetActiveCompanionConfigFlags()
         :format(tostring(treeID), tostring(configID), tostring(rolePurchased), tostring(combatPurchased), tostring(utilityPurchased))
 
     return roleSet, curiosSet, detail
-end
-
--- Midnight does a bunch of stuff different. For example, coffer key shards are a currency, not an item.
--- This function allows us to abstract those differences. For testing on PTR), flip this to true. 
--- Once launched, we can flip it to true, or maybe remove it entirely.
-function DelveBuddy:IsMidnight()
-    return true
 end
 
 -- Debug-only functions.

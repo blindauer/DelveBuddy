@@ -134,13 +134,8 @@ function LivePlayerState:GetKeyCount()
 end
 
 function LivePlayerState:GetShardCount()
-    if DelveBuddy:IsMidnight() then
-        local c = C_CurrencyInfo.GetCurrencyInfo(DelveBuddy.IDS.Currency.CofferKeyShard)
-        return c and c.quantity or 0
-    end
-
-    -- This is the TWW way
-    return C_Item.GetItemCount(DelveBuddy.IDS.Item.CofferKeyShard)
+    local c = C_CurrencyInfo.GetCurrencyInfo(DelveBuddy.IDS.Currency.CofferKeyShard)
+    return c and c.quantity or 0
 end
 
 function LivePlayerState:CompanionRoleSet()
