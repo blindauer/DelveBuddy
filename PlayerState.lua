@@ -96,24 +96,15 @@ function LivePlayerState:HasDelversBountyBuff()
     -- Can't get buffs (they're secret) in combat.
     if InCombatLockdown() then return false end
 
-    local result = false
-
-    local buffIDs = DelveBuddy:GetDelversBountyBuffIds()
-    local i = 1
-    while true do
+    local buffID = DelveBuddy:GetDelversBountyBuffId()
+    for i = 1, math.huge do
         local aura = C_UnitAuras.GetBuffDataByIndex("player", i)
         DelveBuddy:Log("aura %d: %s", i, aura and tostring(aura.spellId) or "nil")
         if not aura then break end
-        for _, id in ipairs(buffIDs) do
-            if aura.spellId == id then
-                result = true
-                break
-            end
-        end
-        i = i + 1
+        if aura.spellId == buffID then return true end
     end
 
-    return result
+    return false
 end
 
 function LivePlayerState:HasDelversBountyItem()

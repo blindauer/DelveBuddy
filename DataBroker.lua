@@ -1077,9 +1077,7 @@ function DelveBuddy:InitMinimapIcon()
             btn:SetScript("OnEnter", function(self)
                 DelveBuddy:ShowMinimapHint(self)
             end)
-        end
 
-        if btn then
             btn:HookScript("OnMouseDown", function()
                 GameTooltip:Hide()
             end)

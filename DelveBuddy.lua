@@ -99,7 +99,7 @@ function DelveBuddy:MigrateCharacterDataRecord(data, fromVersion, toVersion)
 end
 
 function DelveBuddy:GetMidnightSeason1StartTimestamp()
-    local region = GetCurrentRegion and GetCurrentRegion() or nil
+    local region = GetCurrentRegion and GetCurrentRegion()
     if region == 3 then
         return self.IDS.CONST.MIDNIGHT_S1_START_EU
     end
@@ -507,7 +507,7 @@ function DelveBuddy:GetGildedStashCounts()
 
     local cur, max = UNKNOWN, fallback
 
-    local widget = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(self.IDS.CONST.WIDGET_ID_GILDED_STASH)
+    local widget = C_UIWidgetManager.GetSpellDisplayVisualizationInfo(self.IDS.Widget.GildedStash)
     local tooltip = widget and widget.spellInfo and widget.spellInfo.tooltip
     if tooltip then
         local c, m = tooltip:match("(%d+)%s*/%s*(%d+)")
@@ -566,7 +566,7 @@ function DelveBuddy:GetNemesisLureItemId()
     return DelveBuddy.IDS.Item.NemesisLure_Midnight
 end
 
-function DelveBuddy:GetDelversBountyBuffIds()
+function DelveBuddy:GetDelversBountyBuffId()
     return self.IDS.Spell.BountyBuff_Midnight
 end
 
@@ -653,7 +653,7 @@ end
 
 function DelveBuddy:ClassColoredName(name, class)
     local classColor = RAID_CLASS_COLORS[class] or {["r"] = 1, ["g"] = 1, ["b"] = 0}
-    return format("|cff%02x%02x%02x%s|r", classColor["r"] * 255, classColor["g"] * 255, classColor["b"] * 255, name)
+    return string.format("|cff%02x%02x%02x%s|r", classColor["r"] * 255, classColor["g"] * 255, classColor["b"] * 255, name)
 end
 
 function DelveBuddy:GetShardsEarnedThisWeek()

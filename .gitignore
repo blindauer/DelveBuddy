@@ -44,3 +44,6 @@ Releases/
 
 # VS Code stuff
 .vscode/
+
+# Claude Code
+.claude/

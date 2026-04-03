@@ -36,13 +36,13 @@ DelveBuddy.IDS = {
         NemesisLure_Midnight = 253342,
     },
     Widget = {
-        GildedStash = 6659,
+        GildedStash = 7591,
     },
     Activity = {
         World = 6
     },
     Spell = {
-        BountyBuff_Midnight = { 1254631, },
+        BountyBuff_Midnight = 1254631,
     },
     Achievement = {
         DelveLoremaster = 61741,  -- "Delve Loremaster: Midnight"
@@ -51,7 +51,6 @@ DelveBuddy.IDS = {
         CHAR_DATA_SCHEMA_VERSION = 3,
         MIDNIGHT_S1_START_US = 1773759600, -- March 17, 2026 08:00 PDT
         MIDNIGHT_S1_START_EU = 1773813600, -- March 18, 2026 06:00 UTC
-        WIDGET_ID_GILDED_STASH = 7591,
         UNKNOWN_GILDED_STASH_COUNT = -1,
         UNKNOWN_SHARD_COUNT = -1,
         MAX_WEEKLY_GILDED_STASHES = 4,
