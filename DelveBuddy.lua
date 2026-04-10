@@ -302,6 +302,7 @@ function DelveBuddy:IsPlayerTimerunning()       return self.PlayerState:IsPlayer
 function DelveBuddy:IsStoryVariantComplete(delveName, variantName)
     local loremasterID = self.IDS.Achievement.DelveLoremaster
     local numDelves = GetAchievementNumCriteria(loremasterID)
+    self:Log("IsStoryVariantComplete: delveName=%q variantName=%q", tostring(delveName), tostring(variantName))
 
     for i = 1, numDelves do
         local criteriaString, criteriaType, _, _, _, _, _, assetID =
@@ -309,20 +310,24 @@ function DelveBuddy:IsStoryVariantComplete(delveName, variantName)
 
         if criteriaType == 8 and assetID and assetID ~= 0 then
             local thisDelveName = criteriaString:gsub(" Stories$", "")
+            self:Log("  checking criteria[%d]: criteriaString=%q -> thisDelveName=%q", i, tostring(criteriaString), tostring(thisDelveName))
             if thisDelveName == delveName then
                 local numVariants = GetAchievementNumCriteria(assetID)
                 for j = 1, numVariants do
                     local variantCriteriaString, _, variantDone =
                         GetAchievementCriteriaInfo(assetID, j)
+                    self:Log("    variant[%d]: %q (done=%s)", j, tostring(variantCriteriaString), tostring(variantDone))
                     if variantCriteriaString == variantName then
                         return variantDone
                     end
                 end
+                self:Log("  -> delve matched but variant %q not found", tostring(variantName))
                 return nil  -- delve matched, variant not found
             end
         end
     end
 
+    self:Log("  -> delve %q not found in achievement data", tostring(delveName))
     return nil  -- delve not found
 end
 

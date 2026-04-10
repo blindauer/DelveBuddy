@@ -17,6 +17,11 @@ DelveBuddy.Zone = {
     Harandar = 2413,
 }
 
+-- Blizzard typos in story variant widget text, mapped to the correct achievement criteria string.
+DelveBuddy.StoryVariantTypoFixes = {
+    ["Captured Widlife"] = "Captured Wildlife",
+}
+
 DelveBuddy.IDS = {
     Currency = {
         AdventurerDawncrest = 3383,

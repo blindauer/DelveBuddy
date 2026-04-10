@@ -766,7 +766,9 @@ function DelveBuddy:PopulateDelveSection(tip)
         tip:SetLineScript(line, "OnEnter", function()
             local story = self:GetDelveStoryVariant(d.zoneID, poiID)
             if story and story ~= "" then
-                local done = self:IsStoryVariantComplete(d.name, story:gsub("^Story Variant: ", ""))
+                local variantText = story:gsub("^Story Variant: ", "")
+                variantText = self.StoryVariantTypoFixes[variantText] or variantText
+                local done = self:IsStoryVariantComplete(d.name, variantText)
                 local storyLine
                 if done == true then
                     storyLine = story .. " |TInterface\\RaidFrame\\ReadyCheck-Ready:16|t"

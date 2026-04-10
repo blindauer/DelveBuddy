@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.2.2 ==
+Fixes:
+* Fixed bug which cause the "Captured Wildlife" story variant of Shadowguard Point to not show if it was completed or not. This is a workaround to a Blizzard bug - they spelled it "Widlife" in the story variagnt name on the delve tooltip.
+
 == 2.2.1 ==
 Enhancements:
 * Only show Beacon of Hope if you haven't looted a Trovehunter's Bounty this week
