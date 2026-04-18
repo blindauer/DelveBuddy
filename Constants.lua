@@ -60,5 +60,7 @@ DelveBuddy.IDS = {
         UNKNOWN_SHARD_COUNT = -1,
         MAX_WEEKLY_GILDED_STASHES = 4,
         MIN_BOUNTIFUL_DELVE_LEVEL = 80,
+        BOUNTY_MIN_TIER = 4,
+        BOUNTY_ITEM_REQUIRED_LEVEL = 90,
     },
 }

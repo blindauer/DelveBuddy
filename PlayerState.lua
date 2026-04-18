@@ -115,6 +115,39 @@ function LivePlayerState:HasNemesisLureItem()
     return C_Item.GetItemCount(DelveBuddy:GetNemesisLureItemId(), false) > 0
 end
 
+function LivePlayerState:GetPlayerLevel()
+    return UnitLevel("player")
+end
+
+function LivePlayerState:GetCurrentDelveTier()
+    -- Uses the scenario header widget — the same source the default UI uses to display tier.
+    local WIDGET_TYPE_DELVES = Enum.UIWidgetVisualizationType
+        and Enum.UIWidgetVisualizationType.ScenarioHeaderDelves or 29
+    local _, _, _, _, _, _, _, _, _, _, _, widgetSetID = C_Scenario.GetStepInfo()
+    if not widgetSetID or widgetSetID == 0 then
+        DelveBuddy:Log("GetCurrentDelveTier: no widgetSetID")
+        return 0
+    end
+    local widgets = C_UIWidgetManager.GetAllWidgetsBySetID(widgetSetID)
+    if not widgets then
+        DelveBuddy:Log("GetCurrentDelveTier: no widgets for setID=%s", tostring(widgetSetID))
+        return 0
+    end
+    for _, w in ipairs(widgets) do
+        if w.widgetType == WIDGET_TYPE_DELVES then
+            local info = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(w.widgetID)
+            if info and info.shownState ~= Enum.WidgetShownState.Hidden then
+                local tier = tonumber(info.tierText and info.tierText:match("%d+")) or 0
+                DelveBuddy:Log("GetCurrentDelveTier: tierText=%q tier=%s",
+                    tostring(info.tierText), tostring(tier))
+                return tier
+            end
+        end
+    end
+    DelveBuddy:Log("GetCurrentDelveTier: no delves widget found in setID=%s", tostring(widgetSetID))
+    return 0
+end
+
 function LivePlayerState:WasBountyLootedThisWeek()
     return C_QuestLog.IsQuestFlaggedCompleted(DelveBuddy.IDS.Quest.BountyLooted)
 end
@@ -201,6 +234,18 @@ function MockPlayerState:HasNemesisLureItem()
     local v = self._values["HasNemesisLureItem"]
     if v ~= nil then return v end
     return LivePlayerState:HasNemesisLureItem()
+end
+
+function MockPlayerState:GetPlayerLevel()
+    local v = self._values["GetPlayerLevel"]
+    if v ~= nil then return v end
+    return LivePlayerState:GetPlayerLevel()
+end
+
+function MockPlayerState:GetCurrentDelveTier()
+    local v = self._values["GetCurrentDelveTier"]
+    if v ~= nil then return v end
+    return LivePlayerState:GetCurrentDelveTier()
 end
 
 function MockPlayerState:WasBountyLootedThisWeek()

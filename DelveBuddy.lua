@@ -292,6 +292,8 @@ function DelveBuddy:IsDelveComplete()           return self.PlayerState:IsDelveC
 function DelveBuddy:HasDelversBountyBuff()      return self.PlayerState:HasDelversBountyBuff()      end
 function DelveBuddy:HasDelversBountyItem()      return self.PlayerState:HasDelversBountyItem()      end
 function DelveBuddy:HasNemesisLureItem()        return self.PlayerState:HasNemesisLureItem()        end
+function DelveBuddy:GetPlayerLevel()            return self.PlayerState:GetPlayerLevel()            end
+function DelveBuddy:GetCurrentDelveTier()       return self.PlayerState:GetCurrentDelveTier()       end
 function DelveBuddy:WasBountyLootedThisWeek()   return self.PlayerState:WasBountyLootedThisWeek()   end
 function DelveBuddy:GetKeyCount()               return self.PlayerState:GetKeyCount()               end
 function DelveBuddy:GetShardCount()             return self.PlayerState:GetShardCount()             end
@@ -383,6 +385,8 @@ function DelveBuddy:ShouldShowBounty()
         and not self:IsDelveComplete()
         and self:HasDelversBountyItem()
         and not self:HasDelversBountyBuff()
+        and self:GetPlayerLevel() >= self.IDS.CONST.BOUNTY_ITEM_REQUIRED_LEVEL
+        and self:GetCurrentDelveTier() >= self.IDS.CONST.BOUNTY_MIN_TIER
 
     self:Log("ShouldShowBounty: %s", tostring(result))
     return result
@@ -1062,8 +1066,11 @@ function DelveBuddy:PrintDebugInfo()
     local cur, max = self:GetGildedStashCounts()
     self:Print("Gilded stash count: " .. tostring(cur) .. "/" .. tostring(max))
     self:Print("Is player timerunning: " .. tostring(self:IsPlayerTimerunning()))
-    local instanceName, instanceType = GetInstanceInfo()
-    self:Print("Instance name=" .. instanceName .. " type=" .. instanceType)
+    local instanceName, instanceType, _, _, _, dynamicDifficulty = GetInstanceInfo()
+    self:Print("Instance name=" .. instanceName .. " type=" .. instanceType
+        .. " dynamicDifficulty=" .. tostring(dynamicDifficulty))
+    self:Print("Player level: " .. tostring(self:GetPlayerLevel()))
+    self:Print("Current delve tier: " .. tostring(self:GetCurrentDelveTier()))
     self:Print("Player mapID: " .. tostring(C_Map.GetBestMapForUnit("player")))
     self:Print("Has " .. self:GetDelversBountyItemName() .. " item: " .. tostring(self:HasDelversBountyItem()))
     self:Print("Has " .. self:GetDelversBountyItemName() .. " buff: " .. tostring(self:HasDelversBountyBuff()))
