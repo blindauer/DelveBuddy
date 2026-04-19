@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.2.4 ==
+Fixes:
+* Fixed a bug which caused DelveBuddy not to load if no other Ace3 addons are present.
+
 == 2.2.3 ==
 Fixes:
 * Fixed a bug which caused the Trovehunter's bounty reminder to be erreously displayed on below-90 characters

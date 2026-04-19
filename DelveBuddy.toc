@@ -7,14 +7,15 @@
 ## Version: 2.2.3
 ## SavedVariables: DelveBuddyDB
 
+libs\LibStub\LibStub.lua
+libs\Ace3\CallbackHandler-1.0\CallbackHandler-1.0.lua
 libs\Ace3\AceAddon-3.0\AceAddon-3.0.xml
 libs\Ace3\AceConsole-3.0\AceConsole-3.0.xml
 libs\Ace3\AceEvent-3.0\AceEvent-3.0.xml
 libs\Ace3\AceBucket-3.0\AceBucket-3.0.xml
 libs\Ace3\AceTimer-3.0\AceTimer-3.0.lua
 
-## OptionalDeps: LibStub LibDataBroker-1.1 LibQTip-1.0 Blizzard_UIDropDownMenu
-libs\LibStub\LibStub.lua
+## OptionalDeps: LibDataBroker-1.1 LibQTip-1.0 Blizzard_UIDropDownMenu
 libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibQTip-1.0\LibQTip-1.0.lua
 libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
