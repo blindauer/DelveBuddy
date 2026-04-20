@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.2.5 ==
+Misc:
+* Updated TOC for 12.0.5
+
 == 2.2.4 ==
 Fixes:
 * Fixed a bug which caused DelveBuddy not to load if no other Ace3 addons are present.
