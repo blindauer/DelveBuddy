@@ -281,7 +281,7 @@ local function OpenAllTips(display, mode)
     local stackUp = point and point:find("BOTTOM")
 
     -- Delve list tooltip
-    local delveTip = QTip:Acquire("DelveBuddyDelveTip", 2, "LEFT","LEFT")
+    local delveTip = QTip:Acquire("DelveBuddyDelveTip", 3, "LEFT","LEFT","CENTER")
     delveTip:EnableMouse(true)
     delveTip:ClearAllPoints()
     if stackUp then
@@ -723,52 +723,40 @@ function DelveBuddy:PopulateCharacterSection(tip)
     end
 end
 
-function DelveBuddy:PopulateDelveSection(tip)
-    tip:Clear()
-
-    -- Get all bountiful delves; if none, show a placeholder message
-    local delves = self:GetDelves() or {}
-    if not next(delves) then
-        tip:SetColumnLayout(1, "LEFT")
-        tip:AddLine("|cffaaaaaaNo bountiful delves available|r")
-        return
-    end
-
-    -- Otherwise show the list
-    tip:SetColumnLayout(2, "LEFT", "LEFT")
-
-    -- Header: show coffer keys owned for current character
-    local curKey = self:GetCharacterKey()
-    local curData = self.db.charData and self.db.charData[curKey] or nil
-    local ownedKeys = (curData and curData.keysOwned) or 0
-    local keyIcon = self:TextureIcon("Interface\\Icons\\Inv_10_blacksmithing_consumable_key_color1", 16)
-    local ownedText = self:FormatKeysOwned(ownedKeys)
-    if ownedKeys == 0 then
-        ownedText = self:ColorText(ownedText, self.Colors.Red)
-    end
-    local keysHeaderText = ("%s x %s"):format(keyIcon, ownedText)
-    tip:AddHeader("|cffdda0ddBountiful Delves|r", keysHeaderText)
+local function AddDelveRows(tip, delves, showQuestStatus)
     for poiID, d in pairs(delves) do
         local info = C_AreaPoiInfo.GetAreaPOIInfo(d.zoneID, poiID)
         local icon = ""
         if info and info.atlasName then
-            icon = self:AtlasIcon(info.atlasName) .. " "
+            icon = DelveBuddy:AtlasIcon(info.atlasName) .. " "
         end
         local name = icon .. d.name
         local mapInfo = C_Map.GetMapInfo(d.zoneID)
         local zoneName = (mapInfo and mapInfo.name) or "?"
-        local line = tip:AddLine(name, zoneName)
+        local questIcon = ""
+        if showQuestStatus then
+            local questID = DelveBuddy.DelveQuest and DelveBuddy.DelveQuest[poiID]
+            if questID then
+                if C_QuestLog.IsQuestFlaggedCompleted(questID) then
+                    questIcon = "|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t"
+                elseif C_QuestLog.IsOnQuest(questID) then
+                    questIcon = "|TInterface\\RaidFrame\\ReadyCheck-Waiting:14|t"
+                else
+                    questIcon = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:14|t"
+                end
+            end
+        end
+        local line = tip:AddLine(name, zoneName, questIcon)
         tip:SetLineScript(line, "OnMouseUp", function(_, button)
             HideAllTips()
-            self:SetWaypoint(d)
+            DelveBuddy:SetWaypoint(d)
         end)
-        -- Show the active story variant when hovering a delve row
         tip:SetLineScript(line, "OnEnter", function()
-            local story = self:GetDelveStoryVariant(d.zoneID, poiID)
+            local story = DelveBuddy:GetDelveStoryVariant(d.zoneID, poiID)
             if story and story ~= "" then
                 local variantText = story:gsub("^Story Variant: ", "")
-                variantText = self.StoryVariantTypoFixes[variantText] or variantText
-                local done = self:IsStoryVariantComplete(d.name, variantText)
+                variantText = DelveBuddy.StoryVariantTypoFixes[variantText] or variantText
+                local done = DelveBuddy:IsStoryVariantComplete(d.name, variantText)
                 local storyLine
                 if done == true then
                     storyLine = story .. " |TInterface\\RaidFrame\\ReadyCheck-Ready:16|t"
@@ -787,13 +775,58 @@ function DelveBuddy:PopulateDelveSection(tip)
                 GameTooltip:Show()
             end
         end)
-
         tip:SetLineScript(line, "OnLeave", function()
             GameTooltip:Hide()
         end)
     end
+end
 
-    -- Bounty item (only in a Bountiful Delve and if player has one)
+function DelveBuddy:PopulateDelveSection(tip)
+    tip:Clear()
+    tip:SetColumnLayout(3, "LEFT", "LEFT", "CENTER")
+
+    local isMaxLevel = self:GetPlayerLevel() >= 90
+    -- Sub-90 characters never have bountiful delves; default them to All.
+    local showAll = self.db.global.showAllDelves or not isMaxLevel
+    local delves = showAll and (self:GetMidnightDelves() or {}) or (self:GetDelves() or {})
+
+    -- Header (clickable at max level to toggle mode)
+    local headerLine
+    if showAll then
+        local title = isMaxLevel
+            and ("|cffffff00All Delves|r " .. self:TextureIcon("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up", 12))
+            or  "|cffdda0ddAll Delves|r"
+        headerLine = tip:AddHeader(title)
+    else
+        local curKey = self:GetCharacterKey()
+        local curData = self.db.charData and self.db.charData[curKey] or nil
+        local ownedKeys = (curData and curData.keysOwned) or 0
+        local keyIcon = self:TextureIcon("Interface\\Icons\\Inv_10_blacksmithing_consumable_key_color1", 16)
+        local ownedText = self:FormatKeysOwned(ownedKeys)
+        if ownedKeys == 0 then
+            ownedText = self:ColorText(ownedText, self.Colors.Red)
+        end
+        headerLine = tip:AddHeader(
+            "|cffffff00Bountiful Delves|r " .. self:TextureIcon("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up", 12),
+            ("%s x %s"):format(keyIcon, ownedText))
+    end
+    if isMaxLevel then
+        tip:SetLineScript(headerLine, "OnMouseUp", function()
+            self.db.global.showAllDelves = not self.db.global.showAllDelves
+            self:PopulateDelveSection(tip)
+        end)
+    end
+
+    -- Delve rows
+    if next(delves) then
+        AddDelveRows(tip, delves, showAll)
+    else
+        tip:AddLine(showAll and "|cffaaaaaaNo delves available|r" or "|cffaaaaaaNo bountiful delves available|r")
+    end
+
+    -- Bounty item and Nemesis Lure only apply in bountiful mode
+    if showAll then return end
+
     if not InCombatLockdown() and self:IsInBountifulDelve() and self:HasDelversBountyItem() then
         local itemID = self:GetDelversBountyItemId()
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
@@ -825,7 +858,6 @@ function DelveBuddy:PopulateDelveSection(tip)
             GameTooltip:Hide()
         end)
 
-        -- Ensure the button is cleared when the tip hides
         tip:HookScript("OnHide", function(self)
             if not InCombatLockdown() and delversBountyButton then
                 delversBountyButton:Hide()
@@ -834,7 +866,6 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
     end
 
-    -- Nemesis Lure
     if not InCombatLockdown() and self:IsDelveInProgress() and self:HasNemesisLureItem() and not self:WasBountyLootedThisWeek() then
         local itemID = self:GetNemesisLureItemId()
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))

@@ -28,6 +28,7 @@ function DelveBuddy:OnInitialize()
     DelveBuddyDB.global.reminders = DelveBuddyDB.global.reminders or {}
     if DelveBuddyDB.global.reminders.cofferKey == nil then DelveBuddyDB.global.reminders.cofferKey = true end
     if DelveBuddyDB.global.reminders.delversBounty == nil then DelveBuddyDB.global.reminders.delversBounty = true end
+    if DelveBuddyDB.global.showAllDelves == nil then DelveBuddyDB.global.showAllDelves = false end
 
     -- Slash commands
     self:RegisterChatCommand("delvebuddy", "SlashCommand")
@@ -696,6 +697,31 @@ function DelveBuddy:GetDelves()
         end
     end
 
+    return delves
+end
+
+function DelveBuddy:GetMidnightDelves()
+    if self:IsPlayerTimerunning() then return {} end
+    local master = self:GetAllDelvePOIs()
+    local delves = {}
+    for areaPoiID, cached in pairs(master) do
+        if self.MidnightZone[cached.zoneID] then
+            local info = C_AreaPoiInfo.GetAreaPOIInfo(cached.zoneID, areaPoiID)
+            if info then
+                local px, py
+                if info.position and info.position.GetXY then
+                    px, py = info.position:GetXY()
+                end
+                delves[areaPoiID] = {
+                    name      = info.name,
+                    zoneID    = cached.zoneID,
+                    areaPoiID = info.areaPoiID,
+                    x         = (tonumber(px) or 0) * 100,
+                    y         = (tonumber(py) or 0) * 100,
+                }
+            end
+        end
+    end
     return delves
 end
 

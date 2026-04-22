@@ -17,6 +17,30 @@ DelveBuddy.Zone = {
     Harandar = 2413,
 }
 
+-- Maps Midnight delve POI IDs (both active and inactive) to their "Delver's Call" quest ID.
+-- Covering both POI states so the lookup works regardless of which ID GetDelvesForMap returns.
+DelveBuddy.DelveQuest = {
+    [8426] = 93384, [8425] = 93384, -- Collegiate Calamity   (Silvermoon City)
+    [8440] = 93385, [8439] = 93385, -- The Darkway           (Silvermoon City)
+    [8428] = 93386, [8427] = 93386, -- Parhelion Plaza       (Isle of Quel'Danas)
+    [8438] = 93372, [8437] = 93372, -- The Shadow Enclave    (Eversong Woods)
+    [8432] = 93428, [8431] = 93428, -- Shadowguard Point     (Voidstorm)
+    [8430] = 93427, [8429] = 93427, -- Sunkiller Sanctum     (Voidstorm)
+    [8434] = 93421, [8433] = 93421, -- The Grudge Pit        (Harandar)
+    [8436] = 93416, [8435] = 93416, -- The Gulf of Memory    (Harandar)
+    [8444] = 93409, [8443] = 93409, -- Atal'Aman             (Zul'Aman)
+    [8442] = 93410, [8441] = 93410, -- Twilight Crypts       (Zul'Aman)
+}
+
+DelveBuddy.MidnightZone = {
+    [2395] = true, -- EversongWoods
+    [2393] = true, -- SilvermoonCity
+    [2424] = true, -- IsleOfQuelDanas
+    [2405] = true, -- Voidstorm
+    [2437] = true, -- ZulAman
+    [2413] = true, -- Harandar
+}
+
 -- Blizzard typos in story variant widget text, mapped to the correct achievement criteria string.
 DelveBuddy.StoryVariantTypoFixes = {
     ["Captured Widlife"] = "Captured Wildlife",
