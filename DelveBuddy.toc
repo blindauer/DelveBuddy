@@ -4,7 +4,7 @@
 ## IconTexture: Interface\Addons\DelveBuddy\media\DelveIcon.tga
 ## Notes: Tracks weekly Delve progress across characters
 ## Author: Malevolens
-## Version: 2.2.5
+## Version: 2.3-beta.1
 ## SavedVariables: DelveBuddyDB
 
 libs\LibStub\LibStub.lua
