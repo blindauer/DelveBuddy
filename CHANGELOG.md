@@ -1,5 +1,10 @@
 = DelveBuddy Changelog =
 
+== 2.3-beta.1 ==
+Enhancements:
+* Option to show all delves (vs. just bountiful ones). Click the header of the delves tooltip to toggle between them.
+* When showing all delves, show an indicator (X or checkmar) of whether you've completed the quest for that delve on this character
+
 == 2.2.5 ==
 Misc:
 * Updated TOC for 12.0.5

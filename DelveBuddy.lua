@@ -671,8 +671,9 @@ function DelveBuddy:GetShardsEarnedThisWeek()
     return (c and c.quantityEarnedThisWeek) or 0, (c and c.maxWeeklyQuantity) or 0
 end
 
-function DelveBuddy:GetDelves()
-    -- Timerunners can't do delves.
+-- filter(areaPoiID, cached, info) -> bool; info may be nil if the API returned nothing.
+-- Omit filter for bountiful-only (default behavior).
+function DelveBuddy:GetDelves(filter)
     if self:IsPlayerTimerunning() then return {} end
 
     local master = self:GetAllDelvePOIs()
@@ -680,8 +681,11 @@ function DelveBuddy:GetDelves()
 
     for areaPoiID, cached in pairs(master) do
         local info = cached and cached.zoneID and C_AreaPoiInfo.GetAreaPOIInfo(cached.zoneID, areaPoiID)
+        local include = filter
+            and filter(areaPoiID, cached, info)
+            or  (info and info.atlasName == "delves-bountiful")
 
-        if info and info.atlasName == "delves-bountiful" then
+        if include then
             local px, py
             if info.position and info.position.GetXY then
                 px, py = info.position:GetXY()
@@ -701,28 +705,9 @@ function DelveBuddy:GetDelves()
 end
 
 function DelveBuddy:GetMidnightDelves()
-    if self:IsPlayerTimerunning() then return {} end
-    local master = self:GetAllDelvePOIs()
-    local delves = {}
-    for areaPoiID, cached in pairs(master) do
-        if self.MidnightZone[cached.zoneID] then
-            local info = C_AreaPoiInfo.GetAreaPOIInfo(cached.zoneID, areaPoiID)
-            if info then
-                local px, py
-                if info.position and info.position.GetXY then
-                    px, py = info.position:GetXY()
-                end
-                delves[areaPoiID] = {
-                    name      = info.name,
-                    zoneID    = cached.zoneID,
-                    areaPoiID = info.areaPoiID,
-                    x         = (tonumber(px) or 0) * 100,
-                    y         = (tonumber(py) or 0) * 100,
-                }
-            end
-        end
-    end
-    return delves
+    return self:GetDelves(function(_, cached, info)
+        return info and self.MidnightZone[cached.zoneID]
+    end)
 end
 
 local mapDepthCache = {}

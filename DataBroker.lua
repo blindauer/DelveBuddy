@@ -723,19 +723,19 @@ function DelveBuddy:PopulateCharacterSection(tip)
     end
 end
 
-local function AddDelveRows(tip, delves, showQuestStatus)
+function DelveBuddy:AddDelveRows(tip, delves, showQuestStatus)
     for poiID, d in pairs(delves) do
         local info = C_AreaPoiInfo.GetAreaPOIInfo(d.zoneID, poiID)
         local icon = ""
         if info and info.atlasName then
-            icon = DelveBuddy:AtlasIcon(info.atlasName) .. " "
+            icon = self:AtlasIcon(info.atlasName) .. " "
         end
         local name = icon .. d.name
         local mapInfo = C_Map.GetMapInfo(d.zoneID)
         local zoneName = (mapInfo and mapInfo.name) or "?"
         local questIcon = ""
         if showQuestStatus then
-            local questID = DelveBuddy.DelveQuest and DelveBuddy.DelveQuest[poiID]
+            local questID = self.DelveQuest[poiID]
             if questID then
                 if C_QuestLog.IsQuestFlaggedCompleted(questID) then
                     questIcon = "|TInterface\\RaidFrame\\ReadyCheck-Ready:14|t"
@@ -749,14 +749,15 @@ local function AddDelveRows(tip, delves, showQuestStatus)
         local line = tip:AddLine(name, zoneName, questIcon)
         tip:SetLineScript(line, "OnMouseUp", function(_, button)
             HideAllTips()
-            DelveBuddy:SetWaypoint(d)
+            self:SetWaypoint(d)
         end)
+        -- Show the active story variant when hovering a delve row
         tip:SetLineScript(line, "OnEnter", function()
-            local story = DelveBuddy:GetDelveStoryVariant(d.zoneID, poiID)
+            local story = self:GetDelveStoryVariant(d.zoneID, poiID)
             if story and story ~= "" then
                 local variantText = story:gsub("^Story Variant: ", "")
-                variantText = DelveBuddy.StoryVariantTypoFixes[variantText] or variantText
-                local done = DelveBuddy:IsStoryVariantComplete(d.name, variantText)
+                variantText = self.StoryVariantTypoFixes[variantText] or variantText
+                local done = self:IsStoryVariantComplete(d.name, variantText)
                 local storyLine
                 if done == true then
                     storyLine = story .. " |TInterface\\RaidFrame\\ReadyCheck-Ready:16|t"
@@ -796,7 +797,7 @@ function DelveBuddy:PopulateDelveSection(tip)
         local title = isMaxLevel
             and ("|cffffff00All Delves|r " .. self:TextureIcon("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up", 12))
             or  "|cffdda0ddAll Delves|r"
-        headerLine = tip:AddHeader(title)
+        headerLine = tip:AddHeader(title, "", "")
     else
         local curKey = self:GetCharacterKey()
         local curData = self.db.charData and self.db.charData[curKey] or nil
@@ -819,7 +820,7 @@ function DelveBuddy:PopulateDelveSection(tip)
 
     -- Delve rows
     if next(delves) then
-        AddDelveRows(tip, delves, showAll)
+        self:AddDelveRows(tip, delves, showAll)
     else
         tip:AddLine(showAll and "|cffaaaaaaNo delves available|r" or "|cffaaaaaaNo bountiful delves available|r")
     end
@@ -827,6 +828,7 @@ function DelveBuddy:PopulateDelveSection(tip)
     -- Bounty item and Nemesis Lure only apply in bountiful mode
     if showAll then return end
 
+    -- Bounty item (only in a Bountiful Delve and if player has one)
     if not InCombatLockdown() and self:IsInBountifulDelve() and self:HasDelversBountyItem() then
         local itemID = self:GetDelversBountyItemId()
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
@@ -858,6 +860,7 @@ function DelveBuddy:PopulateDelveSection(tip)
             GameTooltip:Hide()
         end)
 
+        -- Ensure the button is cleared when the tip hides
         tip:HookScript("OnHide", function(self)
             if not InCombatLockdown() and delversBountyButton then
                 delversBountyButton:Hide()
@@ -866,6 +869,7 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
     end
 
+    -- Nemesis Lure
     if not InCombatLockdown() and self:IsDelveInProgress() and self:HasNemesisLureItem() and not self:WasBountyLootedThisWeek() then
         local itemID = self:GetNemesisLureItemId()
         local itemIcon = self:TextureIcon(C_Item.GetItemIconByID(itemID))
