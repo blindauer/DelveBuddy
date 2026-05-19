@@ -1,9 +1,10 @@
 = DelveBuddy Changelog =
 
-== 2.3-beta.1 ==
+== 2.3 ==
 Enhancements:
-* Option to show all delves (vs. just bountiful ones). Click the header of the delves tooltip to toggle between them.
+* Added ability to show all delves (vs. just bountiful ones). Click the header of the delves tooltip to toggle between them.
 * When showing all delves, show an indicator (X or checkmar) of whether you've completed the quest for that delve on this character
+* Now properly displays rewards for T12 and T13 (T4 and T5 Ritual Sites, respectively)
 
 == 2.2.5 ==
 Misc:

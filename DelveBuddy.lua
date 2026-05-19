@@ -994,7 +994,9 @@ local TierToiLvl = {
     259, -- T8
     259,
     259,
-    259,
+    259, -- T11 (max delve)
+    263, -- T12 (T4 Ritual Site)
+    269, -- T13 (T5 Ritual Site)
 }
 
 function DelveBuddy:RewardTierToiLvl(tierID)
