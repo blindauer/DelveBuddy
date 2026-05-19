@@ -1,6 +1,7 @@
 == DelveBuddy TODO ==
 
 === Midnight ===
+* Enhancement: /command to show/hide UI (user request)
 * Enhancement: only show nemesis item if not looted bounty this week?
 * Enhancement: allow enabling/disabling of specific columns?
 * Bug: Should do warning checks periodically (and not on bag update)
