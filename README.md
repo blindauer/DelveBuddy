@@ -42,6 +42,7 @@
 
 ## Screenshots
 ![DelveBuddy Tooltip](screenshots/ToolTip-Minimap.jpg)
+![All Delves Tooltip](screenshots/AllDelvesTooltip.jpg)
 ![DelveBuddy Full Screenshot](screenshots/screenshot_full.jpg)
 ![Rewards Cheat Sheet](screenshots/RewardsCheatSheet.jpg)
 ![TomTom Waypoint to Delve](screenshots/TomTom.jpg)
