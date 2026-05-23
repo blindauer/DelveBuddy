@@ -565,7 +565,7 @@ function DelveBuddy:FlashDelversBounty()
 end
 
 function DelveBuddy:GetDelversBountyItemId()
-    return DelveBuddy.IDS.Item.BountyItem_Midnight
+    return DelveBuddy.IDS.Item.BountyItem
 end
 
 function DelveBuddy:GetDelversBountyItemName()
@@ -573,11 +573,11 @@ function DelveBuddy:GetDelversBountyItemName()
 end
 
 function DelveBuddy:GetNemesisLureItemId()
-    return DelveBuddy.IDS.Item.NemesisLure_Midnight
+    return DelveBuddy.IDS.Item.NemesisLure
 end
 
 function DelveBuddy:GetDelversBountyBuffId()
-    return self.IDS.Spell.BountyBuff_Midnight
+    return self.IDS.Spell.BountyBuff
 end
 
 local flashTicker = nil
