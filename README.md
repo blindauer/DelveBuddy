@@ -25,10 +25,10 @@
 
 ## Installation
 * For the latest stable version, download from CurseForge: https://www.curseforge.com/wow/addons/delvebuddy
-* For cutting-edge, not yet released version, clone or download this repository into your WoW `Interface/AddOns` folder.
+* For cutting-edge, unreleased versions, clone or download this repository into your WoW `Interface/AddOns` folder.
 
 ## Usage
-* **Minimap icon:** Click the minimap icon to show/hide DelveBuddy's tooltip UI.rewards.
+* **Minimap icon:** Click the minimap icon to show/hide DelveBuddy's tooltip UI.
 * **Data Broker:** Hover over the LibDataBroker icon to see DelveBuddy's tooltip UI.
 * **Right-click** the broker or minimap icon for options menu
 * **Shift+click** the minimap icon (or Shift-hover on the DataBroker) to show the rewards UI.
@@ -55,7 +55,14 @@
 ![Minimap Icon](screenshots/minimap-icon.jpg)
 ![Options](screenshots/minimap-options-menu.jpg)
 
+## Technical Highlights
+
+- Built with Ace3 and LibDataBroker
+- Dynamic tooltip and window-mode UI architecture
+- Cross-character persistence and weekly reset tracking
+- Integration with Blizzard APIs and optional TomTom waypoints
+- Actively maintained across World of Warcraft expansions and API changes
+
 ## License
 
 See [LICENSE](./LICENSE) for details.
-
