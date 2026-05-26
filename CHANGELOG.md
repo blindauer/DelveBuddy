@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.3.1 ==
+Enhancements:
+* Now properly renders item level color for all characters, just not current logged in one
+
 == 2.3 ==
 Enhancements:
 * Added ability to show all delves (vs. just bountiful ones). Click the header of the delves tooltip to toggle between them.

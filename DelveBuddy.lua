@@ -446,6 +446,7 @@ function DelveBuddy:CollectDelveData()
 
     -- iLvl
     data.itemLevel = self:GetPlayerItemLevel()
+    data.itemLevelColor = self:GetItemLevelColorHex(data.itemLevel)
 
     -- Shards earned (this week)
     do
@@ -908,6 +909,24 @@ function DelveBuddy:GetPlayerItemLevel()
     local avg, equipped = GetAverageItemLevel()
     self:Log("GetPlayerItemLevel: avg=%s equipped=%s", tostring(avg), tostring(equipped))
     return math.floor(equipped or 0)
+end
+
+-- GetItemLevelColor only returns a meaningful color for the logged-in player's iLvl
+-- regardless of the value passed in, so we capture it for the current character at
+-- collection time and persist it for use when rendering other characters' rows.
+function DelveBuddy:GetItemLevelColorHex(itemLevel)
+    itemLevel = tonumber(itemLevel)
+    if not itemLevel or itemLevel <= 0 then
+        return nil
+    end
+    local r, g, b = GetItemLevelColor(itemLevel)
+    if not r then
+        return nil
+    end
+    return string.format("%02x%02x%02x",
+        math.floor(r * 255 + 0.5),
+        math.floor(g * 255 + 0.5),
+        math.floor(b * 255 + 0.5))
 end
 
 function DelveBuddy:GetZoneName(uiMapID)
