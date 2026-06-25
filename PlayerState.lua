@@ -115,6 +115,10 @@ function LivePlayerState:HasNemesisLureItem()
     return C_Item.GetItemCount(DelveBuddy:GetNemesisLureItemId(), false) > 0
 end
 
+function LivePlayerState:GetNemesisLureItemCount()
+    return C_Item.GetItemCount(DelveBuddy:GetNemesisLureItemId(), false)
+end
+
 function LivePlayerState:GetPlayerLevel()
     return UnitLevel("player")
 end
@@ -234,6 +238,12 @@ function MockPlayerState:HasNemesisLureItem()
     local v = self._values["HasNemesisLureItem"]
     if v ~= nil then return v end
     return LivePlayerState:HasNemesisLureItem()
+end
+
+function MockPlayerState:GetNemesisLureItemCount()
+    local v = self._values["GetNemesisLureItemCount"]
+    if v ~= nil then return v end
+    return LivePlayerState:GetNemesisLureItemCount()
 end
 
 function MockPlayerState:GetPlayerLevel()

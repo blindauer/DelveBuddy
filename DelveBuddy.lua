@@ -293,6 +293,7 @@ function DelveBuddy:IsDelveComplete()           return self.PlayerState:IsDelveC
 function DelveBuddy:HasDelversBountyBuff()      return self.PlayerState:HasDelversBountyBuff()      end
 function DelveBuddy:HasDelversBountyItem()      return self.PlayerState:HasDelversBountyItem()      end
 function DelveBuddy:HasNemesisLureItem()        return self.PlayerState:HasNemesisLureItem()        end
+function DelveBuddy:GetNemesisLureItemCount()   return self.PlayerState:GetNemesisLureItemCount()   end
 function DelveBuddy:GetPlayerLevel()            return self.PlayerState:GetPlayerLevel()            end
 function DelveBuddy:GetCurrentDelveTier()       return self.PlayerState:GetCurrentDelveTier()       end
 function DelveBuddy:WasBountyLootedThisWeek()   return self.PlayerState:WasBountyLootedThisWeek()   end

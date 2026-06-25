@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.3.2 == (in progress)
+Enhancements:
+* Now shows the number of Beacons of Hope you have in the Delve tooltip
+
 == 2.3.1 ==
 Enhancements:
 * Now properly renders item level color for all characters, just not current logged in one
