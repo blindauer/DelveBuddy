@@ -3,6 +3,7 @@
 == 2.3.2 ==
 Enhancements:
 * Now shows the number of Beacons of Hope you have in the Delve tooltip
+* Updated .toc for 12.0.7
 
 == 2.3.1 ==
 Enhancements:
