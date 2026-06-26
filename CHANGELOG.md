@@ -1,6 +1,6 @@
 = DelveBuddy Changelog =
 
-== 2.3.2 == (in progress)
+== 2.3.2 ==
 Enhancements:
 * Now shows the number of Beacons of Hope you have in the Delve tooltip
 
