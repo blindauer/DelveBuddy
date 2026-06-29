@@ -201,6 +201,8 @@ function DelveBuddy:SlashCommand(input)
         else
             self:Print("Usage: /db dumppois <mapID> -- if omitted, use player's current map ID")
         end
+    elseif cmd == "scandump" or cmd == "ds" then
+        self:DumpDelveScan()
     elseif cmd == "printiteminfo" or cmd == "pii" then
         if arg and arg ~= "" then
             self:PrintItemInfoByName(arg)
@@ -274,6 +276,7 @@ function DelveBuddy:SlashCommand(input)
             self:Print("/db rewards (rw) -- Dump vault rewards")
             self:Print("/db ilvl <num> -- Print item level color")
             self:Print("/db dumppois (dp) [mapID] -- Dump delve POIs")
+            self:Print("/db scandump (ds) -- Dump delves found across the GetAllDelvePOIs scan set")
             self:Print("/db printiteminfo (pii) <name> -- Print item info by partial name")
             self:Print("/db storyach (sa) -- Dump story achievements")
             self:Print("/db achievement (ach) <id> -- Print achievement info")
@@ -1150,6 +1153,48 @@ function DelveBuddy:DumpPOIs(mapID)
             ))
         end
     end
+end
+
+-- Replicates the map set GetAllDelvePOIs scans (fallback world map + descendants)
+-- and prints every delve found per map. Use to diagnose delves missed by the scan:
+-- if a delve shows in /db dumppois (current map) but not here, its map isn't reachable
+-- from the fallback world map via GetMapChildrenInfo.
+function DelveBuddy:DumpDelveScan()
+    local root = C_Map.GetFallbackWorldMapID()
+    local mapIDs = { root }
+    local children = C_Map.GetMapChildrenInfo(root, nil, true) or {}
+    for _, mi in ipairs(children) do
+        if mi and type(mi.mapID) == "number" then
+            table.insert(mapIDs, mi.mapID)
+        end
+    end
+
+    local playerMap = C_Map.GetBestMapForUnit("player")
+    self:Print(("DelveBuddy: scan root=%d, %d maps in set, player map=%s")
+        :format(root, #mapIDs, tostring(playerMap)))
+
+    local playerMapInSet = false
+    local total = 0
+    for _, mapID in ipairs(mapIDs) do
+        if mapID == playerMap then playerMapInSet = true end
+        local ids = C_AreaPoiInfo.GetDelvesForMap(mapID) or {}
+        for _, poiID in ipairs(ids) do
+            local info = C_AreaPoiInfo.GetAreaPOIInfo(mapID, poiID)
+            local mapInfo = C_Map.GetMapInfo(mapID)
+            self:Print(("  map %d (%s): poi %d name=%q atlas=%q%s")
+                :format(
+                    mapID,
+                    mapInfo and mapInfo.name or "?",
+                    poiID,
+                    info and info.name or "<nil info>",
+                    info and info.atlasName or "",
+                    info and "" or "  <-- GetAreaPOIInfo nil"))
+            total = total + 1
+        end
+    end
+
+    self:Print(("DelveBuddy: %d delve POI entries found. player map in scan set: %s")
+        :format(total, tostring(playerMapInSet)))
 end
 
 -- Only for finding item IDs of items (to find IDs of new bounty items, e.g.)

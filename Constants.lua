@@ -15,6 +15,8 @@ DelveBuddy.Zone = {
     Voidstorm = 2405,
     ZulAman = 2437,
     Harandar = 2413,
+    -- Midnight S2
+    CoiledIsle = 2512,
 }
 
 -- Maps Midnight delve POI IDs (both active and inactive) to their "Delver's Call" quest ID.
@@ -39,6 +41,7 @@ DelveBuddy.MidnightZone = {
     [2405] = true, -- Voidstorm
     [2437] = true, -- ZulAman
     [2413] = true, -- Harandar
+    [2512] = true, -- CoiledIsle
 }
 
 -- Blizzard typos in story variant widget text, mapped to the correct achievement criteria string.
