@@ -16,7 +16,7 @@ SOURCE_DIR="$REPO_ROOT"
 # Destination folders
 LIVE_DEST="/Applications/World of Warcraft/_retail_/Interface/AddOns/DelveBuddy"
 BETA_DEST="/Applications/World of Warcraft/_beta_/Interface/AddOns/DelveBuddy"
-PTR_DEST="/Applications/World of Warcraft/_xptr_/Interface/AddOns/DelveBuddy"
+PTR_DEST="/Applications/World of Warcraft/_ptr_/Interface/AddOns/DelveBuddy"
 
 echo "Deploying DelveBuddy from:"
 echo "  SOURCE_DIR=$SOURCE_DIR"
