@@ -10,76 +10,75 @@ local rewardQualityByType = {
 }
 
 local crestCurrencyByType = {
-    adventurer = DelveBuddy.IDS.Currency.AdventurerDawncrest,
-    veteran = DelveBuddy.IDS.Currency.VeteranDawncrest,
-    champion = DelveBuddy.IDS.Currency.ChampionDawncrest,
-    hero = DelveBuddy.IDS.Currency.HeroDawncrest,
-    myth = DelveBuddy.IDS.Currency.MythDawncrest,
+    adventurer = DelveBuddy.IDS.Currency.AdventurerCrest,
+    veteran = DelveBuddy.IDS.Currency.VeteranCrest,
+    champion = DelveBuddy.IDS.Currency.ChampionCrest,
+    hero = DelveBuddy.IDS.Currency.HeroCrest,
+    myth = DelveBuddy.IDS.Currency.MythCrest,
 }
 
--- issue 3: hasGildedStash = false removed from all tiers; only tier 11 sets it true
 local rewardsByTier = {
-    [1] = { loot = { type = "adventurer", value = 220 }, vault = { type = "veteran", value = 233 } },
-    [2] = { loot = { type = "adventurer", value = 224 }, vault = { type = "veteran", value = 237 } },
-    [3] = { loot = { type = "adventurer", value = 227 }, vault = { type = "veteran", value = 240 } },
+    [1] = { loot = { type = "adventurer", value = 266 }, vault = { type = "veteran", value = 279 } },
+    [2] = { loot = { type = "adventurer", value = 269 }, vault = { type = "veteran", value = 282 } },
+    [3] = { loot = { type = "adventurer", value = 272 }, vault = { type = "veteran", value = 285 } },
     [4] = {
-        loot = { type = "adventurer", value = 230 },
-        vault = { type = "veteran", value = 243 },
+        loot = { type = "adventurer", value = 276 },
+        vault = { type = "veteran", value = 289 },
         crest = { type = "adventurer", value = 5 },
-        bountyLoot = { type = "veteran", value = 237 },
+        bountyLoot = { type = "veteran", value = 282 },
         bountyCrest = { type = "veteran", value = 8 },
     },
     [5] = {
-        loot = { type = "adventurer", value = 233 },
-        vault = { type = "champion", value = 246 },
+        loot = { type = "adventurer", value = 279 },
+        vault = { type = "champion", value = 292 },
         crest = { type = "veteran", value = 5 },
-        bountyLoot = { type = "veteran", value = 243 },
+        bountyLoot = { type = "veteran", value = 289 },
         bountyCrest = { type = "veteran", value = 16 },
     },
     [6] = {
-        loot = { type = "veteran", value = 237 },
-        vault = { type = "champion", value = 250 },
+        loot = { type = "veteran", value = 282 },
+        vault = { type = "champion", value = 295 },
         crest = { type = "veteran", value = 10 },
-        bountyLoot = { type = "champion", value = 246 },
+        bountyLoot = { type = "champion", value = 292 },
         bountyCrest = { type = "champion", value = 8 },
     },
     [7] = {
-        loot = { type = "champion", value = 246 },
-        vault = { type = "champion", value = 253 },
+        loot = { type = "champion", value = 292 },
+        vault = { type = "champion", value = 298 },
         crest = { type = "champion", value = 4 },
-        bountyLoot = { type = "champion", value = 250 },
+        bountyLoot = { type = "champion", value = 295 },
         bountyCrest = { type = "champion", value = 16 },
     },
     [8] = {
-        loot = { type = "champion", value = 250 },
-        vault = { type = "hero", value = 259 },
+        loot = { type = "champion", value = 295 },
+        vault = { type = "hero", value = 298 },
         crest = { type = "champion", value = 6 },
         nemesisCrest = { type = "champion", value = 5 },
-        bountyLoot = { type = "hero", value = 259 },
+        bountyLoot = { type = "hero", value = 305 },
         bountyCrest = { type = "hero", value = 14 },
     },
     [9] = {
-        loot = { type = "champion", value = 250 },
-        vault = { type = "hero", value = 259 },
+        loot = { type = "champion", value = 295 },
+        vault = { type = "hero", value = 305 },
         crest = { type = "champion", value = 8 },
         nemesisCrest = { type = "champion", value = 5 },
-        bountyLoot = { type = "hero", value = 259 },
+        bountyLoot = { type = "hero", value = 305 },
         bountyCrest = { type = "hero", value = 16 },
     },
     [10] = {
-        loot = { type = "champion", value = 250 },
-        vault = { type = "hero", value = 259 },
+        loot = { type = "champion", value = 295 },
+        vault = { type = "hero", value = 305 },
         crest = { type = "champion", value = 10 },
         nemesisCrest = { type = "hero", value = 5 },
-        bountyLoot = { type = "hero", value = 259 },
+        bountyLoot = { type = "hero", value = 305 },
         bountyCrest = { type = "hero", value = 18 },
     },
     [11] = {
-        loot = { type = "champion", value = 250 },
-        vault = { type = "hero", value = 259 },
+        loot = { type = "champion", value = 295 },
+        vault = { type = "hero", value = 305 },
         crest = { type = "hero", value = 5 },
         nemesisCrest = { type = "hero", value = 5 },
-        bountyLoot = { type = "hero", value = 259 },
+        bountyLoot = { type = "hero", value = 305 },
         bountyCrest = { type = "hero", value = 20 },
         hasGildedStash = true,
     },
@@ -122,7 +121,7 @@ end
 local function getCrestIconAndName(reward)
     local info = getCrestCurrencyInfo(reward)
     local icon = (info and info.iconFileID) and DelveBuddy:TextureIcon(info.iconFileID, 16) .. " " or ""
-    local name = (info and info.name) or "Dawncrest"
+    local name = (info and info.name) or "Mistcrest"
     return icon, name
 end
 
@@ -229,7 +228,7 @@ end
 function DelveBuddy:ShowDelveRewardsTooltip(owner)
     if not owner then return end
 
-    local heroCrestInfo = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.HeroDawncrest)
+    local heroCrestInfo = C_CurrencyInfo.GetCurrencyInfo(self.IDS.Currency.HeroCrest)
 
     self:HideDelveRewardsTooltip()
 

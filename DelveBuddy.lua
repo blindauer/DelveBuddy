@@ -1007,19 +1007,17 @@ function DelveBuddy:EnsureWeeklyRewardsReady()
 end
 
 local TierToiLvl = {
-    233, -- T1
-    237,
-    240,
-    243,
-    246,
-    253,
-    256,
-    259, -- T8
-    259,
-    259,
-    259, -- T11 (max delve)
-    263, -- T12 (T4 Ritual Site)
-    269, -- T13 (T5 Ritual Site)
+    279, -- T1
+    282,
+    285,
+    289,
+    292,
+    298,
+    302,
+    305, -- T8
+    305,
+    305,
+    305, -- T11 (max delve)
 }
 
 function DelveBuddy:RewardTierToiLvl(tierID)

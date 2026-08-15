@@ -51,11 +51,11 @@ DelveBuddy.StoryVariantTypoFixes = {
 
 DelveBuddy.IDS = {
     Currency = {
-        AdventurerDawncrest = 3383,
-        VeteranDawncrest = 3341,
-        ChampionDawncrest = 3343,
-        HeroDawncrest = 3345,
-        MythDawncrest = 3347,
+        AdventurerCrest = 3442,
+        VeteranCrest = 3443,
+        ChampionCrest = 3444,
+        HeroCrest = 3445,
+        MythCrest = 3446,
         RestoredCofferKey = 3028,
         CofferKeyShard = 3310,
     },
