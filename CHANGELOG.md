@@ -1,7 +1,10 @@
 = DelveBuddy Changelog =
 
-== 2.4 == (Beta, In Progress for 12.1)
+== 2.4 ==
+Fixes:
+* Updated for 12.1
 * Fixed detection of new delves in Coiled Isle
+Misc:
 * Added debugging code to help find delves
 
 == 2.3.2 ==

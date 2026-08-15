@@ -1,6 +1,13 @@
 == DelveBuddy TODO ==
 
 === Midnight ===
+
+==== Season 2 ====
+* Change nemesis item (it's no longer Beacon of Hope)
+* Verify coffer keys, shards
+* Verify new Coiled Isle delves showing up
+
+* Enhancement: ability to move the UI (user request)
 * Enhancement: /command to show/hide UI (user request)
 * Enhancement: only show nemesis item if not looted bounty this week?
 * Enhancement: allow enabling/disabling of specific columns?
