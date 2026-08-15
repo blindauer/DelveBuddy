@@ -6,6 +6,7 @@
 * Change nemesis item (it's no longer Beacon of Hope)
 * Verify coffer keys, shards
 * Verify new Coiled Isle delves showing up
+* Rewards tooltip completely wrong (needs updating for S2)
 
 * Enhancement: ability to move the UI (user request)
 * Enhancement: /command to show/hide UI (user request)
