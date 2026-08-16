@@ -74,7 +74,7 @@ DelveBuddy.IDS = {
         World = 6
     },
     Spell = {
-        BountyBuff = 1254631,
+        BountyBuff = 1293799,
     },
     Achievement = {
         DelveLoremaster = 61741,  -- "Delve Loremaster: Midnight"
