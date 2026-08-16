@@ -35,3 +35,6 @@ rm -rf "$RELEASE_FOLDER"
 
 # 6. Done
 echo "✅ Created $RELEASES_DIR/$ZIP_NAME"
+
+# 7. Open Releases folder
+open "$RELEASES_DIR"
