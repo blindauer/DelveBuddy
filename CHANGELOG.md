@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.4.1 == (In Progress)
+Fixes:
+* Many updates for 12.1 and Season 2
+
 == 2.4 ==
 Fixes:
 * Updated for 12.1
