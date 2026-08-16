@@ -63,7 +63,7 @@ DelveBuddy.IDS = {
         BountyLooted = 86371,
     },
     Item = {
-        BountyItem = 252415,
+        BountyItem = 274374,
         RadiantEcho = 246771,
         NemesisLure = 253342,
     },
