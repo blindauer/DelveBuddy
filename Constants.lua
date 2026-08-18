@@ -64,8 +64,7 @@ DelveBuddy.IDS = {
     },
     Item = {
         BountyItem = 274374,
-        RadiantEcho = 246771,
-        NemesisLure = 253342,
+        NemesisLure = 275910,
     },
     Widget = {
         GildedStash = 7591,
@@ -74,7 +73,7 @@ DelveBuddy.IDS = {
         World = 6
     },
     Spell = {
-        BountyBuff = 1293799,
+        BountyBuff = 1254631,
     },
     Achievement = {
         DelveLoremaster = 61741,  -- "Delve Loremaster: Midnight"

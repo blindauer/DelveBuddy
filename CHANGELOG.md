@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.4.2 ==
+Fixes:
+* Fixed nemesis lure item detection
+
 == 2.4.1 ==
 Fixes:
 * Many updates for 12.1 and Season 2

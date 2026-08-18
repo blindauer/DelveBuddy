@@ -3,11 +3,8 @@
 === Midnight ===
 
 ==== Season 2 ====
-* Change nemesis item (it's no longer Beacon of Hope)
-* Verify coffer keys, shards
-* Verify new Coiled Isle delves showing up
-* Verify new bounty item ID, buff ID, quest ID for looting it
-* Rewards tooltip completely wrong (needs updating for S2)
+* Verify new nemesis lure item
+* Rewards tooltip needs verification
 
 * Enhancement: ability to move the UI (user request)
 * Enhancement: /command to show/hide UI (user request)
