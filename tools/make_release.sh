@@ -36,5 +36,11 @@ rm -rf "$RELEASE_FOLDER"
 # 6. Done
 echo "✅ Created $RELEASES_DIR/$ZIP_NAME"
 
-# 7. Open Releases folder
+# 7a. Open Releases folder
 open "$RELEASES_DIR"
+
+# 7b. Open GitHub releases page
+open "https://github.com/blindauer/DelveBuddy/releases"
+
+# 7c. Open CurseForge authors page
+open "https://authors.curseforge.com/#/projects/1328635/files"
