@@ -65,6 +65,7 @@ DelveBuddy.IDS = {
     Item = {
         BountyItem = 274374,
         NemesisLure = 275910,
+        DelveOBot7001 = 230850,
     },
     Widget = {
         GildedStash = 7591,
