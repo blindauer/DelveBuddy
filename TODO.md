@@ -3,9 +3,12 @@
 === Midnight ===
 
 ==== Season 2 ====
+* Implement toggle to disable follower role warning
 * Verify new nemesis lure item
 * Rewards tooltip needs verification
 
+* Put Delve-O-Bot 7001 back (it can be upgraded to Midnight delves)
+* Put Delver's Mana-Bound Ethergate in the UI?
 * Enhancement: ability to move the UI (user request)
 * Enhancement: /command to show/hide UI (user request)
 * Enhancement: only show nemesis item if not looted bounty this week?
