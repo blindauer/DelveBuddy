@@ -171,6 +171,14 @@ function LivePlayerState:CompanionRoleSet()
     return roleSet
 end
 
+-- True when the player is in a party but is not the leader. In a group delve the
+-- leader's companion is the one that's used, so a follower's own companion config
+-- (e.g. an unset role) doesn't matter.
+function LivePlayerState:IsInPartyAsNonLeader()
+    if not IsInGroup() then return false end
+    return not UnitIsGroupLeader("player")
+end
+
 function LivePlayerState:IsPlayerTimerunning()
     if C_ChatInfo.IsTimerunningPlayer(UnitGUID("player")) then
         return true
@@ -280,6 +288,12 @@ function MockPlayerState:CompanionRoleSet()
     local v = self._values["CompanionRoleSet"]
     if v ~= nil then return v end
     return LivePlayerState:CompanionRoleSet()
+end
+
+function MockPlayerState:IsInPartyAsNonLeader()
+    local v = self._values["IsInPartyAsNonLeader"]
+    if v ~= nil then return v end
+    return LivePlayerState:IsInPartyAsNonLeader()
 end
 
 function MockPlayerState:IsPlayerTimerunning()

@@ -304,6 +304,7 @@ function DelveBuddy:GetKeyCount()               return self.PlayerState:GetKeyCo
 function DelveBuddy:GetShardCount()             return self.PlayerState:GetShardCount()             end
 function DelveBuddy:CompanionRoleSet()          return self.PlayerState:CompanionRoleSet()          end
 function DelveBuddy:IsPlayerTimerunning()       return self.PlayerState:IsPlayerTimerunning()       end
+function DelveBuddy:IsInPartyAsNonLeader()      return self.PlayerState:IsInPartyAsNonLeader()      end
 
 -- Returns true (done), false (not done), or nil (delve/variant not found in achievement data).
 function DelveBuddy:IsStoryVariantComplete(delveName, variantName)
@@ -362,11 +363,13 @@ end
 
 function DelveBuddy:ShouldShowCompanionRoleWarning()
     -- No option to disable this for now, because there's really no reason not to have it set, 
-    -- it's pretty dire if you don't.
+    -- it's pretty dire if you don't. The exception is being a non-leader in a party: the
+    -- leader's companion is the one in use, so our own role setting is irrelevant.
     local result =
         self:IsDelveInProgress()
         and not self:IsDelveComplete()
         and not self:CompanionRoleSet()
+        and not self:IsInPartyAsNonLeader()
 
     self:Log("ShouldShowCompanionRoleWarning: %s", tostring(result))
     return result
@@ -1114,6 +1117,7 @@ function DelveBuddy:PrintDebugInfo()
     self:Print("Companion role set: " .. tostring(roleSet))
     self:Print("Companion curios set: " .. tostring(curiosSet))
     self:Print("Companion config: " .. detail)
+    self:Print("In party as non-leader: " .. tostring(self:IsInPartyAsNonLeader()))
     self:Print("Player iLevel: " .. tostring(self:GetPlayerItemLevel()))
     self:Print("Has available vault rewards: " .. tostring(self:HasAvailableVaultRewards()))
 end

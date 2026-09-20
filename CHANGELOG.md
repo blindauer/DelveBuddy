@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.4.4 ==
+Enhancements:
+* Supress follower role warning if you're in a party and not the leader
+
 == 2.4.3 ==
 Enhancements:
 * Re-enabled Delve-O-Bot 7001 in the Delves tooltip, now that it can be upgraded to work in Midnight delves
