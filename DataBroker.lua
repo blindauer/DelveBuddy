@@ -528,6 +528,22 @@ DelveBuddyMenu.initialize = function(self, level)
         info.tooltipText = "Reminds you to use your " .. bountyName .. " (if you have one) when in a Bountiful Delve."
         info.tooltipOnButton = true
         UIDropDownMenu_AddButton(info, level)
+
+        -- Checkbox: nemesis item reminder
+        info = UIDropDownMenu_CreateInfo()
+        local nemesisName = DelveBuddy:GetNemesisLureItemName()
+        info.text = nemesisName
+        info.checked = DelveBuddy.db.global.reminders.nemesisLure
+        info.keepShownOnClick = true
+        info.isNotRadio = true
+        info.func = function(_, _, _, checked)
+            DelveBuddy.db.global.reminders.nemesisLure = checked
+        end
+        info.tooltipTitle = nemesisName .. " reminder"
+        info.tooltipText = "Reminds you to use your " .. nemesisName .. " for a chance at a "
+            .. bountyName .. ", once you reach the delve's halfway checkpoint without one."
+        info.tooltipOnButton = true
+        UIDropDownMenu_AddButton(info, level)
     elseif level == 2 and UIDROPDOWNMENU_MENU_VALUE == "TOOLTIP_SCALE" then
         local entry = CreateTooltipScaleDropdownEntry()
         -- Ensure the slider reflects current DB value on open

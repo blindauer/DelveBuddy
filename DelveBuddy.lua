@@ -28,6 +28,7 @@ function DelveBuddy:OnInitialize()
     DelveBuddyDB.global.reminders = DelveBuddyDB.global.reminders or {}
     if DelveBuddyDB.global.reminders.cofferKey == nil then DelveBuddyDB.global.reminders.cofferKey = true end
     if DelveBuddyDB.global.reminders.delversBounty == nil then DelveBuddyDB.global.reminders.delversBounty = true end
+    if DelveBuddyDB.global.reminders.nemesisLure == nil then DelveBuddyDB.global.reminders.nemesisLure = true end
     if DelveBuddyDB.global.showAllDelves == nil then DelveBuddyDB.global.showAllDelves = false end
 
     -- Slash commands
@@ -59,6 +60,10 @@ function DelveBuddy:OnEnable()
         "ZONE_CHANGED_NEW_AREA",
         "BAG_UPDATE_DELAYED",
     }, 1, "OnBountyCheck")
+
+    -- Watch the delve header widget's life count; a mid-run increase means the
+    -- halfway checkpoint was reached, which is when the Nemesis item unlocks.
+    self:RegisterBucketEvent({ "UPDATE_UI_WIDGET" }, 1, "UpdateDelveCheckpointState")
 
     self:CollectDelveData()
 end
@@ -149,8 +154,11 @@ function DelveBuddy:SlashCommand(input)
         elseif which == "bounty" and onoff ~= nil then
             self.db.global.reminders.delversBounty = onoff
             self:Print("Reminders: " .. self:GetDelversBountyItemName() .. " " .. (onoff and "ON" or "OFF"))
+        elseif which == "nemesis" and onoff ~= nil then
+            self.db.global.reminders.nemesisLure = onoff
+            self:Print("Reminders: " .. self:GetNemesisLureItemName() .. " " .. (onoff and "ON" or "OFF"))
         else
-            self:Print("Usage: /db reminders <coffer||bounty> <on||off>")
+            self:Print("Usage: /db reminders <coffer||bounty||nemesis> <on||off>")
         end
     elseif cmd == "waypoints" then
         local choice = (arg or ""):lower()
@@ -305,6 +313,8 @@ function DelveBuddy:GetShardCount()             return self.PlayerState:GetShard
 function DelveBuddy:CompanionRoleSet()          return self.PlayerState:CompanionRoleSet()          end
 function DelveBuddy:IsPlayerTimerunning()       return self.PlayerState:IsPlayerTimerunning()       end
 function DelveBuddy:IsInPartyAsNonLeader()      return self.PlayerState:IsInPartyAsNonLeader()      end
+function DelveBuddy:GetDelveLivesRemaining()    return self.PlayerState:GetDelveLivesRemaining()    end
+function DelveBuddy:GetDelveDeathCount()        return self.PlayerState:GetDelveDeathCount()        end
 
 -- Returns true (done), false (not done), or nil (delve/variant not found in achievement data).
 function DelveBuddy:IsStoryVariantComplete(delveName, variantName)
@@ -400,6 +410,63 @@ function DelveBuddy:ShouldShowBounty()
     return result
 end
 
+-- ── Delve halfway checkpoint ──────────────────────────────────────────────────
+-- There's no API that reports the checkpoint directly. Reaching it grants one 
+-- extra life, so watch the "lives remaining" aura and treat any mid-run increase as
+-- the checkpoint. State is per-session: a /reload inside a delve loses it, which
+-- costs us a reminder rather than producing a false one.
+
+function DelveBuddy:HasReachedDelveCheckpoint()
+    return self.delveCheckpointReached == true
+end
+
+function DelveBuddy:UpdateDelveCheckpointState()
+    if not self:IsDelveInProgress() then
+        if self.delveLastLives ~= nil or self.delveCheckpointReached then
+            self:Log("UpdateDelveCheckpointState: no delve in progress, clearing checkpoint state")
+        end
+        self.delveLastLives = nil
+        self.delveCheckpointReached = false
+        return
+    end
+
+    local lives = self:GetDelveLivesRemaining()
+    if lives == nil then return end
+
+    -- Deaths only ever go up and lives only go down per death, so their sum is the
+    -- number of lives the run has granted: flat until the checkpoint hands one over.
+    -- Using it means a death and a checkpoint in the same tick still register.
+    local granted = lives + (self:GetDelveDeathCount() or 0)
+
+    local previous = self.delveLastLives
+    self.delveLastLives = granted
+
+    if previous and granted > previous and not self.delveCheckpointReached then
+        self.delveCheckpointReached = true
+        self:Log("UpdateDelveCheckpointState: checkpoint reached (lives granted %d -> %d)", previous, granted)
+        -- Re-run the reminder chain now; otherwise the Nemesis reminder would wait
+        -- for the next zone/bag event, which may not come before the delve ends.
+        self:OnBountyCheck()
+    end
+end
+
+function DelveBuddy:ShouldShowNemesisLure()
+    -- The Nemesis drops a chest containing a bounty, so this is only worth doing when
+    -- there's no bounty already in hand, in effect, or already looted this week.
+    local result =
+        self.db.global.reminders.nemesisLure
+        and self:IsInBountifulDelve()
+        and not self:IsDelveComplete()
+        and self:HasNemesisLureItem()
+        and not self:HasDelversBountyItem()
+        and not self:HasDelversBountyBuff()
+        and not self:WasBountyLootedThisWeek()
+        and self:HasReachedDelveCheckpoint()
+
+    self:Log("ShouldShowNemesisLure: %s", tostring(result))
+    return result
+end
+
 function DelveBuddy:GetCharacterKey()
     local name = UnitName("player")
     local realm = GetRealmName():gsub("%s+", "") -- remove spaces from realm
@@ -419,6 +486,8 @@ function DelveBuddy:OnBountyCheck()
             self:ShowKeyWarning()
         elseif self:ShouldShowBounty() then
             self:StartBountyFlashing()
+        elseif self:ShouldShowNemesisLure() then
+            self:StartNemesisLureFlashing()
         end
     end)
 end
@@ -540,7 +609,14 @@ function DelveBuddy:GetGildedStashCounts()
 end
 
 function DelveBuddy:FlashDelversBounty()
-    local itemName = self:GetDelversBountyItemName()
+    self:FlashActionButtonForItem(self:GetDelversBountyItemName())
+end
+
+function DelveBuddy:FlashNemesisLure()
+    self:FlashActionButtonForItem(self:GetNemesisLureItemName())
+end
+
+function DelveBuddy:FlashActionButtonForItem(itemName)
     if not itemName then return end
 
     for i = 1, 12 do
@@ -584,29 +660,47 @@ function DelveBuddy:GetNemesisLureItemId()
     return DelveBuddy.IDS.Item.NemesisLure
 end
 
+function DelveBuddy:GetNemesisLureItemName()
+    return C_Item.GetItemNameByID(self:GetNemesisLureItemId()) or "Nemesis item"
+end
+
 function DelveBuddy:GetDelversBountyBuffId()
     return self.IDS.Spell.BountyBuff
 end
 
-local flashTicker = nil
+local flashTickers = {}
 
-function DelveBuddy:StartBountyFlashing()
-    self:FlashDelversBounty()
-    self:ShowBountyNotice()
+-- Flash + announce now, then keep repeating once a minute for as long as the
+-- reminder still applies. One ticker per reminder key.
+function DelveBuddy:StartReminderFlashing(key, shouldShow, flash, notice)
+    flash(self)
+    notice(self)
 
-    if flashTicker then
-        flashTicker:Cancel()
+    if flashTickers[key] then
+        flashTickers[key]:Cancel()
     end
 
-    flashTicker = C_Timer.NewTicker(60, function()
-        if self:ShouldShowBounty() then
-            self:FlashDelversBounty()
-            self:ShowBountyNotice()
+    flashTickers[key] = C_Timer.NewTicker(60, function()
+        if shouldShow(self) then
+            flash(self)
+            notice(self)
         else
-            flashTicker:Cancel()
-            flashTicker = nil
+            if flashTickers[key] then
+                flashTickers[key]:Cancel()
+                flashTickers[key] = nil
+            end
         end
     end)
+end
+
+function DelveBuddy:StartBountyFlashing()
+    self:StartReminderFlashing("bounty",
+        self.ShouldShowBounty, self.FlashDelversBounty, self.ShowBountyNotice)
+end
+
+function DelveBuddy:StartNemesisLureFlashing()
+    self:StartReminderFlashing("nemesisLure",
+        self.ShouldShowNemesisLure, self.FlashNemesisLure, self.ShowNemesisLureNotice)
 end
 
 function DelveBuddy:ShowCompanionRoleWarning()
@@ -619,6 +713,11 @@ end
 
 function DelveBuddy:ShowBountyNotice()
     self:DisplayRaidWarning("|cffffd700" .. self:GetDelversBountyItemName() .. " available!|r", false)
+end
+
+function DelveBuddy:ShowNemesisLureNotice()
+    self:DisplayRaidWarning("|cffffd700No " .. self:GetDelversBountyItemName() .. " yet looted this week \226\128\148 use "
+        .. self:GetNemesisLureItemName() .. " to get one!|r", false)
 end
 
 function DelveBuddy:DisplayRaidWarning(msg, playSound)
@@ -1113,6 +1212,9 @@ function DelveBuddy:PrintDebugInfo()
     self:Print("Has " .. self:GetDelversBountyItemName() .. " buff: " .. tostring(self:HasDelversBountyBuff()))
     self:Print("Was " .. self:GetDelversBountyItemName() .. " looted this week: " .. tostring(self:WasBountyLootedThisWeek()))
     self:Print("Has Nemesis Lure item: " .. tostring(self:HasNemesisLureItem()))
+    self:Print("Delve lives remaining: " .. tostring(self:GetDelveLivesRemaining()))
+    self:Print("Delve death count: " .. tostring(self:GetDelveDeathCount()))
+    self:Print("Delve checkpoint reached: " .. tostring(self:HasReachedDelveCheckpoint()))
     local roleSet, curiosSet, detail = self:GetActiveCompanionConfigFlags()
     self:Print("Companion role set: " .. tostring(roleSet))
     self:Print("Companion curios set: " .. tostring(curiosSet))

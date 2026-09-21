@@ -20,6 +20,7 @@
     * Rewards cheat sheet to show all rewards given from each tier delve
 * Reminders & Warnings
     * Reminder to use Trovehunter's Bounty when inside a Bountiful Delve
+    * Reminder to use the nemesis item for a chance at a Trovehunter's Bounty, when you have none and haven't looted one this week
     * Warning when entering a Bountiful Delve without a Restored Coffer Key
     * Warning when entering a Delve if your companion doesn't have an assigned role
 
@@ -35,7 +36,7 @@
 * **Slash Commands:**
     * `/db minimap` — Show/hide the minimap icon.
     * `/db scale <0.75-2.0>` -- Set tooltip scale
-    * `/db reminders <coffer|bounty> <on|off>` -- Enable/disable reminders
+    * `/db reminders <coffer|bounty|nemesis> <on|off>` -- Enable/disable reminders
     * `/db waypoints <blizzard|tomtom|both>` -- Set waypoint providers
     * `/db debugLogging <on|off>` — Enable/disable debug logs
     * `/db debuginfo` - Print useful debugging info

@@ -123,33 +123,40 @@ function LivePlayerState:GetPlayerLevel()
     return UnitLevel("player")
 end
 
-function LivePlayerState:GetCurrentDelveTier()
-    -- Uses the scenario header widget — the same source the default UI uses to display tier.
+-- The delve scenario header widget — the same source the default UI draws the
+-- tier and the remaining-life pips from. Returns nil when it isn't up.
+local function GetDelvesHeaderWidgetInfo(context)
     local WIDGET_TYPE_DELVES = Enum.UIWidgetVisualizationType
         and Enum.UIWidgetVisualizationType.ScenarioHeaderDelves or 29
     local _, _, _, _, _, _, _, _, _, _, _, widgetSetID = C_Scenario.GetStepInfo()
     if not widgetSetID or widgetSetID == 0 then
-        DelveBuddy:Log("GetCurrentDelveTier: no widgetSetID")
-        return 0
+        DelveBuddy:Log("%s: no widgetSetID", context)
+        return nil
     end
     local widgets = C_UIWidgetManager.GetAllWidgetsBySetID(widgetSetID)
     if not widgets then
-        DelveBuddy:Log("GetCurrentDelveTier: no widgets for setID=%s", tostring(widgetSetID))
-        return 0
+        DelveBuddy:Log("%s: no widgets for setID=%s", context, tostring(widgetSetID))
+        return nil
     end
     for _, w in ipairs(widgets) do
         if w.widgetType == WIDGET_TYPE_DELVES then
             local info = C_UIWidgetManager.GetScenarioHeaderDelvesWidgetVisualizationInfo(w.widgetID)
             if info and info.shownState ~= Enum.WidgetShownState.Hidden then
-                local tier = tonumber(info.tierText and info.tierText:match("%d+")) or 0
-                DelveBuddy:Log("GetCurrentDelveTier: tierText=%q tier=%s",
-                    tostring(info.tierText), tostring(tier))
-                return tier
+                return info
             end
         end
     end
-    DelveBuddy:Log("GetCurrentDelveTier: no delves widget found in setID=%s", tostring(widgetSetID))
-    return 0
+    DelveBuddy:Log("%s: no delves widget found in setID=%s", context, tostring(widgetSetID))
+    return nil
+end
+
+function LivePlayerState:GetCurrentDelveTier()
+    local info = GetDelvesHeaderWidgetInfo("GetCurrentDelveTier")
+    if not info then return 0 end
+
+    local tier = tonumber(info.tierText and info.tierText:match("%d+")) or 0
+    DelveBuddy:Log("GetCurrentDelveTier: tierText=%q tier=%s", tostring(info.tierText), tostring(tier))
+    return tier
 end
 
 function LivePlayerState:WasBountyLootedThisWeek()
@@ -174,6 +181,52 @@ end
 -- True when the player is in a party but is not the leader. In a group delve the
 -- leader's companion is the one that's used, so a follower's own companion config
 -- (e.g. an unset role) doesn't matter.
+-- The delve header widget's lives currency. Identified by icon where possible,
+-- since position would break if Blizzard ever added a second currency; falls back
+-- to the first entry, which is where it sits today.
+local DELVE_LIVES_ICON_FILE_ID = 6013778
+
+local function GetDelveLivesCurrency()
+    local info = GetDelvesHeaderWidgetInfo("GetDelveLivesCurrency")
+    if not info or type(info.currencies) ~= "table" then return nil end
+
+    for _, currency in ipairs(info.currencies) do
+        if type(currency) == "table" and currency.iconFileID == DELVE_LIVES_ICON_FILE_ID then
+            return currency
+        end
+    end
+
+    local first = info.currencies[1]
+    if type(first) == "table" then
+        DelveBuddy:Log("GetDelveLivesCurrency: no icon match (icon=%s), falling back to currencies[1]",
+            tostring(first.iconFileID))
+        return first
+    end
+    return nil
+end
+
+-- Remaining lives, as Blizzard's own UI renders it. Returns nil when the widget isn't up.
+function LivePlayerState:GetDelveLivesRemaining()
+    local currency = GetDelveLivesCurrency()
+    if not currency then return nil end
+
+    local lives = tonumber(currency.text and currency.text:match("%d+"))
+    DelveBuddy:Log("GetDelveLivesRemaining: text=%q lives=%s", tostring(currency.text), tostring(lives))
+    return lives
+end
+
+-- Deaths so far, parsed from the lives currency's tooltip ("Total deaths: N").
+-- The label is localized, so take the last number in the string. Returns nil if
+-- it can't be read, in which case callers fall back to watching lives alone.
+function LivePlayerState:GetDelveDeathCount()
+    local currency = GetDelveLivesCurrency()
+    if not currency or type(currency.tooltip) ~= "string" then return nil end
+
+    local deaths = tonumber(currency.tooltip:match("(%d+)%s*$"))
+    DelveBuddy:Log("GetDelveDeathCount: tooltip=%q deaths=%s", currency.tooltip, tostring(deaths))
+    return deaths
+end
+
 function LivePlayerState:IsInPartyAsNonLeader()
     if not IsInGroup() then return false end
     return not UnitIsGroupLeader("player")
@@ -288,6 +341,18 @@ function MockPlayerState:CompanionRoleSet()
     local v = self._values["CompanionRoleSet"]
     if v ~= nil then return v end
     return LivePlayerState:CompanionRoleSet()
+end
+
+function MockPlayerState:GetDelveLivesRemaining()
+    local v = self._values["GetDelveLivesRemaining"]
+    if v ~= nil then return v end
+    return LivePlayerState:GetDelveLivesRemaining()
+end
+
+function MockPlayerState:GetDelveDeathCount()
+    local v = self._values["GetDelveDeathCount"]
+    if v ~= nil then return v end
+    return LivePlayerState:GetDelveDeathCount()
 end
 
 function MockPlayerState:IsInPartyAsNonLeader()

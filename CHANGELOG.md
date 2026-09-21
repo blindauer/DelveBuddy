@@ -1,8 +1,9 @@
 = DelveBuddy Changelog =
 
-== 2.4.4 ==
+== 2.4.4-beta.1 ==
 Enhancements:
 * Supress follower role warning if you're in a party and not the leader
+* New reminder to use the nemesis item to get a bounty, when you have no bounty and haven't looted one this week
 
 == 2.4.3 ==
 Enhancements:
