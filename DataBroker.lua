@@ -812,6 +812,20 @@ function DelveBuddy:PopulateDelveSection(tip)
         delveOBotButton:ClearAllPoints()
     end
 
+    tip:SetScript("OnHide", function(self)
+        self:SetScript("OnUpdate", nil)
+        if not InCombatLockdown() then
+            if delveOBotButton then
+                delveOBotButton:Hide()
+                delveOBotButton:ClearAllPoints()
+            end
+            if delversBountyButton then
+                delversBountyButton:Hide()
+                delversBountyButton:ClearAllPoints()
+            end
+        end
+    end)
+
     local isMaxLevel = self:GetPlayerLevel() >= 90
     -- Sub-90 characters never have bountiful delves; default them to All.
     local showAll = self.db.global.showAllDelves or not isMaxLevel
@@ -912,15 +926,6 @@ function DelveBuddy:PopulateDelveSection(tip)
             end
         end)
 
-        -- Clear the OnUpdate script and detach the button when the tip is hidden
-        tip:HookScript("OnHide", function(self)
-            self:SetScript("OnUpdate", nil)
-            if not InCombatLockdown() and delveOBotButton then
-                delveOBotButton:Hide()
-                delveOBotButton:ClearAllPoints()
-            end
-        end)
-
         tip:SetLineScript(toyLine, "OnEnter", function()
             GameTooltip:Hide()
             GameTooltip:SetOwner(tip, "ANCHOR_NONE")
@@ -968,14 +973,6 @@ function DelveBuddy:PopulateDelveSection(tip)
         end)
         tip:SetLineScript(itemLine, "OnLeave", function()
             GameTooltip:Hide()
-        end)
-
-        -- Ensure the button is cleared when the tip hides
-        tip:HookScript("OnHide", function(self)
-            if not InCombatLockdown() and delversBountyButton then
-                delversBountyButton:Hide()
-                delversBountyButton:ClearAllPoints()
-            end
         end)
     end
 

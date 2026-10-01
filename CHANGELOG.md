@@ -1,9 +1,11 @@
 = DelveBuddy Changelog =
 
-== 2.4.4-beta.1 ==
+== 2.4.4 ==
 Enhancements:
 * Supress follower role warning if you're in a party and not the leader
 * New reminder to use the nemesis item to get a bounty, when you have no bounty and haven't looted one this week
+Fixes:
+* Fixed bug that caused LUA errors when trying to show the Delve-O-Bot toy on the menu
 
 == 2.4.3 ==
 Enhancements:
