@@ -1,5 +1,9 @@
 = DelveBuddy Changelog =
 
+== 2.4.5 ==
+Fixes:
+* Incorporate latest LibButtonGlow, fixing a crash when flashing the bounty item
+
 == 2.4.4 ==
 Enhancements:
 * Supress follower role warning if you're in a party and not the leader
