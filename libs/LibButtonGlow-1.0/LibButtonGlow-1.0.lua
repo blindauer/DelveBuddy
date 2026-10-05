@@ -28,11 +28,13 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ]]
 local MAJOR_VERSION = "LibButtonGlow-1.0"
-local MINOR_VERSION = 8
+local MINOR_VERSION = 10
 
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib, oldversion = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
+
+local Midnight = (select(4, GetBuildInfo())) >= 120000
 
 local Masque = LibStub("Masque", true)
 
@@ -56,12 +58,13 @@ local function OverlayGlow_OnHide(self)
 	end
 end
 
+local AnimateTexCoords = TextureUtil and TextureUtil.AnimateTexCoords or AnimateTexCoords
 local function OverlayGlow_OnUpdate(self, elapsed)
 	AnimateTexCoords(self.ants, 256, 256, 48, 48, 22, elapsed, 0.01)
 	local cooldown = self:GetParent().cooldown
 	-- we need some threshold to avoid dimming the glow during the gdc
 	-- (using 1500 exactly seems risky, what if casting speed is slowed or something?)
-	if cooldown and cooldown:IsShown() and cooldown:GetCooldownDuration() > 3000 then
+	if not Midnight and cooldown and cooldown:IsShown() and cooldown:GetCooldownDuration() > 3000 then
 		self:SetAlpha(0.5)
 	else
 		self:SetAlpha(1.0)
